@@ -31,9 +31,10 @@ namespace Branch.GRPC.Services
                 return await result.Content.ReadAsAsync<BranchList>();
         }
 
-        public async Task<BranchModel> GetBranch(int id)
+        public async Task<BranchModel> GetBranch(int branchCode)
         {
-                var result = await _client.GetAsync(endPointUrl + id);
+                string requestString = "{'code':{'$eq':"+branchCode+"}}";
+                var result = await _client.GetAsync($"{endPointUrl}?q={requestString}");
 
                 return await result.Content.ReadAsAsync<BranchModel>();
         }
