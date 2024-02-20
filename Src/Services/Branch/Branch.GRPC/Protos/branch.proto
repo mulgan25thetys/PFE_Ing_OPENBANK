@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option csharp_namespace = "Branch.GRPC.Protos";
+
+service BranchProtoService {
+	rpc GetBranch (GetBranchRequest) return (BranchModel);
+}
+
+message GetBranchRequest {
+	int id = 1;
+}
+
+message BranchModel {
+	int32 idbranch =1;
+	string region =2;
+	string name =3;
+	string specialisation=4;
+	string email=5;
+	string address=6;
+	string manager=7;
+	string manager_net=8;
+	string phone=9;
+	string fax=10;
+	string codeisic=11;
+	string status=12;
+}
