@@ -1,10 +1,10 @@
-﻿using Branch.GRPC.Models;
-using Branch.GRPC.Services.Interfaces;
+﻿using Branchs.Grpc.Models;
+using Branchs.Grpc.Services.Interfaces;
 using Newtonsoft.Json;
 using System.Text;
-using Branch.GRPC.Models.Response;
+using Branchs.Grpc.Models.Response;
 
-namespace Branch.GRPC.Services
+namespace Branchs.Grpc.Services
 {
     public class BranchService : IBranchService
     {

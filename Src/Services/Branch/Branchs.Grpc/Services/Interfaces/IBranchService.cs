@@ -1,8 +1,8 @@
-﻿using Branch.GRPC.Models;
-using Branch.GRPC.Models.Response;
+﻿using Branchs.Grpc.Models;
+using Branchs.Grpc.Models.Response;
 using System.Linq.Expressions;
 
-namespace Branch.GRPC.Services.Interfaces
+namespace Branchs.Grpc.Services.Interfaces
 {
     public interface IBranchService
     {

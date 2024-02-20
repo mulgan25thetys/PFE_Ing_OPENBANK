@@ -1,5 +1,5 @@
 ﻿
-namespace Branch.GRPC.Models
+namespace Branchs.Grpc.Models
 {
     public class BranchModel
     {
@@ -18,5 +18,19 @@ namespace Branch.GRPC.Models
         public int STATUS { get; set; }
         #endregion
 
+        #region Constructors
+        public BranchModel()
+        {
+            this.STATUS = 0;
+        }
+        public BranchModel(string region,string name,string address, string specilisation)
+        {
+            this.NAME = name;
+            this.REGION = region;
+            this.ADDRESS = address;
+            this.SPECIALISATION = specilisation;
+            this.STATUS = 0;
+        }
+        #endregion
     }
 }

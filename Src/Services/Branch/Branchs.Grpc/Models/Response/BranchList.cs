@@ -1,4 +1,4 @@
-﻿namespace Branch.GRPC.Models.Response
+﻿namespace Branchs.Grpc.Models.Response
 {
     public class BranchList
     {

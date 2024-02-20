@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "Branch.GRPC.Protos";
+option csharp_namespace = "Branchs.Grpc.Protos";
 
 service BranchProtoService {
 	rpc GetBranch (GetBranchRequest) return (BranchModel);
@@ -29,3 +29,4 @@ message BranchModel {
 	string fax=11;
 	string status=12;
 }
+

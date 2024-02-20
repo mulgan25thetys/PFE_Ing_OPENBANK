@@ -1,6 +1,16 @@
+using Account.API.Services;
+using Account.API.Services.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddHttpClient<IAccountService, AccountService>(c =>
+                c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
+
+builder.Services.AddGrpcClient<BranchProtoService>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:BranchUrl"]);
+});
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
