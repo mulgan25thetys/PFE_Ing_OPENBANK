@@ -20,8 +20,7 @@ namespace Branch.GRPC.Services
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             //Setting endPoint
-            endPointUrl = $"/ords/{_config.GetValue<string>("OrdsSettings:DatabaseUser")}" +
-                $"/{_config.GetValue<string>("OrdsSettings:DatabaseTableName")}/";
+            endPointUrl = _config.GetValue<string>("OrdsSettings:Uri");
         }
 
         private async Task<BranchList> GetAllBranches()
@@ -33,10 +32,17 @@ namespace Branch.GRPC.Services
 
         public async Task<BranchModel> GetBranch(int branchCode)
         {
-                string requestString = "{ \"code\":{ \"$eq\":\"" + branchCode + "\"} }";
+             string requestString = "{ \"code\":{ \"$eq\":\"" + branchCode + "\"} }";
 
-                BranchList list = await GetBranchesByFilter(requestString);
-            return list.Items[0];
+             BranchList list = await GetBranchesByFilter(requestString);
+            if (list != null && list.Items.Count > 0)
+            {
+                return list.Items.FirstOrDefault<BranchModel>();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public async Task<BranchList> GetBranchesByFilter(string filter)
@@ -60,7 +66,14 @@ namespace Branch.GRPC.Services
             string requestString = "{ \"name\":{ \"$like\":\"%" + name + "%\"} }";
 
             BranchList list = await GetBranchesByFilter(requestString);
-            return list.Items[0];
+            if (list != null && list.Items.Count > 0)
+            {
+                return list.Items.FirstOrDefault<BranchModel>();
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

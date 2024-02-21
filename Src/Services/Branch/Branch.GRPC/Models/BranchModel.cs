@@ -15,7 +15,7 @@ namespace Branch.GRPC.Models
         public string MANAGER_NET { get; set; }
         public string PHONE { get; set; }
         public string FAX { get; set; }
-        public int STATUS { get; set; }
+        public string STATUS { get; set; }
         #endregion
 
     }

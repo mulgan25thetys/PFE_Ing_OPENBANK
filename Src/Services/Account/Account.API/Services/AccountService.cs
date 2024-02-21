@@ -1,6 +1,7 @@
 ﻿using Account.API.Models;
 using Account.API.Models.Requests;
 using Account.API.Models.Responses;
+using Account.API.Services.Grpc;
 using Account.API.Services.Interfaces;
 using Newtonsoft.Json;
 using System.Net.Http;
@@ -14,12 +15,15 @@ namespace Account.API.Services
         private readonly IConfiguration _config;
         private readonly HttpClient _client;
         private string endPointUrl = "";
+        private readonly BranchService _branchService;
 
-        public AccountService(ILogger<AccountService> logger, IConfiguration configuration, HttpClient httpClient)
+        public AccountService(ILogger<AccountService> logger, BranchService branchService,
+            IConfiguration configuration, HttpClient httpClient)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _client = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _branchService = branchService ?? throw new ArgumentNullException(nameof(branchService));
 
             //Setting endPoint
             endPointUrl = $"/ords/{_config.GetValue<string>("OracleSettings:DatabaseUser")}" +
@@ -31,29 +35,47 @@ namespace Account.API.Services
             #region Account Model Construction
             Random generator = new Random();
             AccountModel model = new AccountModel();
-            model.Acc_Number = generator.Next(0, 100000);
-            model.Acc_Created_At = DateTime.Now;
-            model.Acc_Updated_At = DateTime.Now;
-            model.Acc_Balance = account.Acc_Balance;
-            model.Acc_Owner_Address = account.Acc_Owner_Address;
-            model.Acc_Owner_Email = account.Acc_Owner_Email;
-            model.Acc_Owner_Firstname = account.Acc_Owner_Firstname;
-            model.Acc_Owner_Lastname = account.Acc_Owner_Lastname;
-            model.Acc_Owner_Phone = account.Acc_Owner_Phone;
-            model.Acc_Owner_Post_Code = account.Acc_Owner_Post_Code;
+            model.ACC_NUMBER = generator.NextInt64(0, 100000000000);
+            model.ACC_BANK_DETAILS_KEY = _config.GetValue<int>("BankSetting:BankDetailsKey");
+            model.BANK_CODE = _config.GetValue<string>("BankSetting:CodeBIC");
+            model.BANK_NAME = _config.GetValue<string>("BankSetting:Name");
+            model.ACC_CREATED_AT = DateTime.Now;
+            model.ACC_UPDATED_AT = DateTime.Now;
+            model.ACC_BALANCE = 0;
+            model.ACC_OWNER_ADDRESS = account.Acc_Owner_Address;
+            model.ACC_OWNER_EMAIL = account.Acc_Owner_Email;
+            model.ACC_OWNER_FIRSTNAME = account.Acc_Owner_Firstname;
+            model.ACC_OWNER_LASTNAME = account.Acc_Owner_Lastname;
+            model.ACC_OWNER_PHONE = account.Acc_Owner_Phone;
+            model.ACC_OWNER_POST_CODE = account.Acc_Owner_Post_Code;
+            model.ACC_STATUS = AccountStatus.ENABLED.ToString(); 
+            model.ACC_IBAN = _config.GetValue<string>("AccounSettings:CountryCode")+ generator.Next(0, 100)+ generator.NextInt64(1000000000000000000) + model.ACC_BANK_DETAILS_KEY;
+            //branch grpc service 
+            var branch = await _branchService.GetBranch(account.Branch_Name);
+            model.BRANCH_CODE = branch.Code;
+
             #endregion
-            var accountPost = JsonConvert.SerializeObject(model);
 
-            var response = _client.PostAsync(endPointUrl, new StringContent(accountPost, Encoding.UTF8, "application/json"));
+            try
+            {
+                var accountPost = JsonConvert.SerializeObject(model);
 
-            return await response.Result.Content.ReadAsAsync<AccountModel>();
+                var response = _client.PostAsync(endPointUrl, new StringContent(accountPost, Encoding.UTF8, "application/json"));
+                _logger.LogInformation("Adding account success!");
+                return await response.Result.Content.ReadAsAsync<AccountModel>();
+            }
+            catch (Exception ex) {
+                _logger.LogError("Adding account failed! "+ex.Message);
+                return new AccountModel();
+            }
+
         }
 
         public async Task<AccountModel> GetAccount(Int64 accountNumber)
         {
             string requestString  =  "{ \"acc_number\":{ \"$eq\":\""+ accountNumber +"\"} }";
             AccountList list = await GetAllFilteringAccounts(requestString);
-            return list.Items[0];
+            return list.Items.FirstOrDefault<AccountModel>();
         }
 
         public async Task<AccountList> GetAllAccounts()

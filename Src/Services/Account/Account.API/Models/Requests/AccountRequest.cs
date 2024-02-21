@@ -9,6 +9,5 @@
         public string Acc_Owner_Phone { get; set; }
         public string Acc_Owner_Address { get; set; }
         public int Acc_Owner_Post_Code { get; set; }
-        public Decimal Acc_Balance { get; set; }
     }
 }
