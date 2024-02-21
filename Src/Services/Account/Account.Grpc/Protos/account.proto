@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option csharp_namespace = "Account.Grpc.Protos";
+
+service AccountProtoService {
+	rpc GetAccount (GetAccountRequest) returns (AccountObject);
+}
+
+message GetAccountRequest {
+	int64 account_number = 1;
+}
+
+message AccountObject {
+	int64 acc_id = 1;
+	string acc_owner_firstname =2;
+	string acc_owner_lastname = 3;
+	string acc_owner_email =4;
+	string acc_owner_phone=5;
+	string acc_owner_address=6;
+	string acc_owner_post_code=7;
+	string bank_name=8;
+	int32 branch_code=9;
+	int64 acc_number=10;
+	int32 acc_bank_details_key=11;
+	string acc_status=12;
+	string acc_created_at=13;
+	string acc_updated_at=14;
+	double acc_balance=15;
+	string bank_code=16;
+	string acc_iban=17;
+}
