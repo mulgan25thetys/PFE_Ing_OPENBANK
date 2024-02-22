@@ -11,11 +11,11 @@ namespace Branch.GRPC.Models
         public string SPECIALISATION { get; set; }
         public string EMAIL { get; set; }
         public string ADDRESS { get; set; }
-        public string MANAGER { get; set; }
-        public string MANAGER_NET { get; set; }
         public string PHONE { get; set; }
         public string FAX { get; set; }
         public string STATUS { get; set; }
+        public string MANAGER { get; set; }
+        public string MANAGERNET { get; set; }
         #endregion
 
     }

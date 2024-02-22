@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -7,9 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+	  <PackageReference Include="AutoMapper" Version="13.0.1" />
+	  <PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
+	  <PackageReference Include="MediatR" Version="11.0.0" />
+	  <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	  <PackageReference Include="Serilog" Version="3.1.1" />
 	  <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
 	  <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
@@ -17,16 +19,13 @@
 	  <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
 	  <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
 	  <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="9.0.3" />
-    <PackageReference Include="System.Net.Http.Formatting.Extension" Version="5.2.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+	  <PackageReference Include="System.Net.Http.Formatting.Extension" Version="5.2.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Extensions\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="..\..\Branch\Branch.GRPC\Protos\branch.proto" GrpcServices="Client">
-      <Link>Protos\branch.proto</Link>
+    <Protobuf Include="..\..\Account\Account.Grpc\Protos\account.proto" GrpcServices="Client">
+      <Link>Protos\account.proto</Link>
     </Protobuf>
   </ItemGroup>
 

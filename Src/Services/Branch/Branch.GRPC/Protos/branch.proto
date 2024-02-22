@@ -23,9 +23,9 @@ message BranchResponse {
 	string specialisation=5;
 	string email=6;
 	string address=7;
-	string manager=8;
-	string manager_net=9;
-	string phone=10;
-	string fax=11;
-	string status=12;
+	string phone=8;
+	string fax=9;
+	string status=10;
+	string manager=11;
+	string managernet=12;
 }

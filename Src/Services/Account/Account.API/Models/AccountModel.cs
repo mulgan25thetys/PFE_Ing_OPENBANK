@@ -8,22 +8,21 @@ namespace Account.API.Models
     }
     public class AccountModel
     {
-        public Int64 ACC_ID { get; set; }
-        public string ACC_OWNER_FIRSTNAME { get; set; }
-        public string ACC_OWNER_LASTNAME { get; set; }
-        public string ACC_OWNER_EMAIL { get; set; }
-        public string ACC_OWNER_PHONE { get; set; }
-        public string ACC_OWNER_ADDRESS { get; set; }
-        public int ACC_OWNER_POST_CODE { get; set; }
-        public string BANK_NAME { get; set; }
-        public int BRANCH_CODE { get; set; }
-        public Int64 ACC_NUMBER { get; set; }
-        public int ACC_BANK_DETAILS_KEY { get; set; }
-        public string ACC_STATUS { get; set; }
-        public DateTime ACC_CREATED_AT { get; set; }
-        public DateTime ACC_UPDATED_AT { get; set; }
-        public Decimal ACC_BALANCE { get; set; }
-        public string BANK_CODE { get; set; }
-        public string ACC_IBAN { get; set; }
+        public Int64 ACCNUMBER { get; set; }
+        public string ACCOWNERFIRSTNAME { get; set; }
+        public string ACCOWNERLASTNAME { get; set; }
+        public string ACCOWNEREMAIL { get; set; }
+        public string ACCOWNERPHONE { get; set; }
+        public string ACCOWNERADDRESS { get; set; }
+        public int ACCOWNERPOSTCODE { get; set; }
+        public string BANKNAME { get; set; }
+        public string BANKCODE { get; set; }
+        public int BRANCHCODE { get; set; }
+        public int ACCBANKDETAILSKEY { get; set; }
+        public string ACCIBAN { get; set; }
+        public double ACCBALANCE { get; set; }
+        public DateTime ACCCREATEDAT { get; set; }
+        public DateTime ACCUPDATEDAT { get; set; }
+        public string ACCSTATUS { get; set; }
     }
 }

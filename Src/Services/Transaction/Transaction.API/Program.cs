@@ -1,22 +1,28 @@
-using Account.API.Services;
-using Account.API.Services.Grpc;
-using Account.API.Services.Interfaces;
-using Branch.GRPC.Protos;
+using Account.Grpc.Protos;
+using MediatR;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
+using Transaction.API.Services;
+using Transaction.API.Services.Grpc;
+using Transaction.API.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddScoped<BranchService>();
+builder.Services.AddScoped<AccountService>();
 
-builder.Services.AddHttpClient<IAccountService, AccountService>(c =>
+builder.Services.AddHttpClient<ITransactionService, TransactionService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
 
-builder.Services.AddGrpcClient<BranchProtoService.BranchProtoServiceClient>(options =>
+builder.Services.AddGrpcClient<AccountProtoService.AccountProtoServiceClient>(options =>
 {
-    options.Address = new Uri(builder.Configuration["GrpcSettings:BranchUrl"]);
+    options.Address = new Uri(builder.Configuration["GrpcSettings:AccountUrl"]);
 });
+
+//MediatR Configuration
+builder.Services.AddMediatR(typeof(Program));
+//AutoMapper Configuration
+builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -33,7 +39,7 @@ builder.Host.UseSerilog((context, configuration) =>
                  .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(context.Configuration["ElasticConfiguration:Uri"]))
                  {
                      AutoRegisterTemplate = true,
-                     IndexFormat = "Account.api-logs-" +
+                     IndexFormat = "Transaction.api-logs-" +
                      $"{context.HostingEnvironment.EnvironmentName?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}",
                      NumberOfReplicas = 1,
                      NumberOfShards = 2,

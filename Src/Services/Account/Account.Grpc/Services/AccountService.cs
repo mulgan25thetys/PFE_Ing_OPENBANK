@@ -25,9 +25,9 @@ namespace Account.Grpc.Services
 
         public async Task<AccountModel> GetAccount(long accountNumber)
         {
-            string requestString = "{ \"acc_number\":{ \"$eq\":\"" + accountNumber + "\"} }";
-            AccountList list = await GetAllFilteringAccounts(requestString);
-            return list.Items.FirstOrDefault<AccountModel>();
+            var response = await _client.GetAsync(endPointUrl + accountNumber);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsAsync<AccountModel>();
         }
 
         private async Task<AccountList> GetAllFilteringAccounts(string filter)
