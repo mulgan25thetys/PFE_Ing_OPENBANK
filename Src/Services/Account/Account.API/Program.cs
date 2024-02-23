@@ -1,7 +1,10 @@
+using Account.API.EventBusConsumer;
 using Account.API.Services;
 using Account.API.Services.Grpc;
 using Account.API.Services.Interfaces;
 using Branch.GRPC.Protos;
+using EventBus.Message.Common;
+using MassTransit;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 
@@ -17,6 +20,23 @@ builder.Services.AddGrpcClient<BranchProtoService.BranchProtoServiceClient>(opti
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:BranchUrl"]);
 });
+
+builder.Services.AddAutoMapper(typeof(Program));
+
+builder.Services.AddMassTransit(config =>
+{
+    config.AddConsumer<TransactionConsumer>();
+    config.UsingRabbitMq((ctx, cfg) =>
+    {
+        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
+        cfg.ReceiveEndpoint(EventBusConstants.TransactionQueue, c =>
+        {
+            c.ConfigureConsumer<TransactionConsumer>(ctx);
+        });
+    });
+});
+
+builder.Services.AddMassTransitHostedService();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

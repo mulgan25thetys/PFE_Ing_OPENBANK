@@ -1,7 +1,10 @@
 using Account.Grpc.Protos;
+using EventBus.Message.Common;
+using MassTransit;
 using MediatR;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
+using Transaction.API.EventBusConsumer;
 using Transaction.API.Services;
 using Transaction.API.Services.Grpc;
 using Transaction.API.Services.Interfaces;
@@ -18,6 +21,21 @@ builder.Services.AddGrpcClient<AccountProtoService.AccountProtoServiceClient>(op
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:AccountUrl"]);
 });
+
+//RabbitMQ & Masstransit configuration
+builder.Services.AddMassTransit(config =>
+{
+    config.AddConsumer<AccountConsumer>();
+    config.UsingRabbitMq((ctx, cfg) =>
+    {
+        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
+        cfg.ReceiveEndpoint(EventBusConstants.AccountQueue, c =>
+        {
+            c.ConfigureConsumer<AccountConsumer>(ctx);
+        });
+    });
+});
+builder.Services.AddMassTransitHostedService();
 
 //MediatR Configuration
 builder.Services.AddMediatR(typeof(Program));

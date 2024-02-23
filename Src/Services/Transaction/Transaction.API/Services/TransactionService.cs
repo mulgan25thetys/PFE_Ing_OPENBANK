@@ -27,14 +27,14 @@ namespace Transaction.API.Services
             endPointUrl = $"/ords/{_config.GetValue<string>("OracleSettings:DatabaseUser")}" +
                 $"/{_config.GetValue<string>("OracleSettings:DatabaseTableName")}/";
         }
-        public async Task<bool> AddTransactionAsync(TransactionModel transaction)
+        public async Task<TransactionModel> AddTransactionAsync(TransactionModel transaction)
         {
             var transactionPost = JsonConvert.SerializeObject(transaction);
 
                 var response = await _client.PostAsync(endPointUrl, new StringContent(transactionPost, Encoding.UTF8, "application/json"));
                 response.EnsureSuccessStatusCode();
                 _logger.LogInformation("Adding transaction success!");
-                return true;
+                return await response.Content.ReadAsAsync<TransactionModel>();
         }
 
         public async Task<TransactionList> GetAllTransactionsAsync(long account_number)
@@ -50,6 +50,19 @@ namespace Transaction.API.Services
             var response = await _client.GetAsync(endPointUrl + transactionId);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsAsync<TransactionModel>();
+        }
+
+        public async Task<bool> UpdateTransactionAsync(TransactionModel transaction)
+        {
+            TransactionModel model = await _client.GetAsync(endPointUrl + transaction.TRANS_ID).Result.Content.ReadAsAsync<TransactionModel>();
+            model.TRANS_UPDATED_AT = DateTime.Now;
+            model.TRANS_STATUS = transaction.TRANS_STATUS;
+            var transactionPost = JsonConvert.SerializeObject(model);
+
+            var response = await _client.PutAsync(endPointUrl + model.TRANS_ID, new StringContent(transactionPost, Encoding.UTF8, "application/json"));
+            response.EnsureSuccessStatusCode();
+            _logger.LogInformation("Updating transaction success!");
+            return true;
         }
     }
 }

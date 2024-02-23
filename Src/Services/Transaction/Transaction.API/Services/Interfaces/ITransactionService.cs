@@ -5,7 +5,8 @@ namespace Transaction.API.Services.Interfaces
 {
     public interface ITransactionService
     {
-        public Task<bool> AddTransactionAsync(TransactionModel transaction);
+        public Task<TransactionModel> AddTransactionAsync(TransactionModel transaction);
+        public Task<bool> UpdateTransactionAsync(TransactionModel transaction);
         public Task<TransactionList> GetAllTransactionsAsync(Int64 account_number);
         public Task<TransactionModel> GetTransactionAsync(Int64 transactionId);
     }

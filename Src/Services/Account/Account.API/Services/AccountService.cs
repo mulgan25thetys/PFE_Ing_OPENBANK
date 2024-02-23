@@ -3,9 +3,13 @@ using Account.API.Models.Requests;
 using Account.API.Models.Responses;
 using Account.API.Services.Grpc;
 using Account.API.Services.Interfaces;
+using AutoMapper;
+using EventBus.Message.Events;
+using MassTransit;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Text;
+using System.Transactions;
 
 namespace Account.API.Services
 {
@@ -13,17 +17,22 @@ namespace Account.API.Services
     {
         private readonly ILogger<AccountService> _logger;
         private readonly IConfiguration _config;
+        private readonly IMapper _mapper;
         private readonly HttpClient _client;
         private string endPointUrl = "";
         private readonly BranchService _branchService;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public AccountService(ILogger<AccountService> logger, BranchService branchService,
+        public AccountService(ILogger<AccountService> logger, IMapper mapper,
+            BranchService branchService, IPublishEndpoint publishEndpoint,
             IConfiguration configuration, HttpClient httpClient)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _client = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _branchService = branchService ?? throw new ArgumentNullException(nameof(branchService));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _publishEndpoint = publishEndpoint ?? throw new ArgumentNullException(nameof(publishEndpoint));
 
             //Setting endPoint
             endPointUrl = $"/ords/{_config.GetValue<string>("OracleSettings:DatabaseUser")}" +
@@ -67,9 +76,9 @@ namespace Account.API.Services
 
         public async Task<AccountModel> GetAccount(Int64 accountNumber)
         {
-            string requestString  =  "{ \"acc_number\":{ \"$eq\":\""+ accountNumber +"\"} }";
-            AccountList list = await GetAllFilteringAccounts(requestString);
-            return list.Items.FirstOrDefault<AccountModel>();
+            var response = await _client.GetAsync(endPointUrl + accountNumber);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsAsync<AccountModel>();
         }
 
         public async Task<AccountList> GetAllAccounts()
@@ -93,6 +102,30 @@ namespace Account.API.Services
                 _logger.LogError(ex.Message);
                 return new AccountList();
             }
+        }
+
+        public async Task<bool> UpdateAccount(AccountModel account, Int64 transactionId)
+        {
+            AccountModel model = await _client.GetAsync(endPointUrl + account.ACCNUMBER).Result.Content.ReadAsAsync<AccountModel>();
+            model.ACCBALANCE = account.ACCBALANCE;
+            model.ACCUPDATEDAT = DateTime.Now;
+            var accountPost = JsonConvert.SerializeObject(model);
+
+            var response = await _client.PutAsync(endPointUrl + account.ACCNUMBER, new StringContent(accountPost, Encoding.UTF8, "application/json"));
+            
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Updating account success!");
+
+                await _publishEndpoint.Publish(new TransactionEvent() { TRANS_ID = transactionId, TRANS_STATUS = TRANS_STATUS.SUCCESS.ToString() });
+            }
+            else
+            {
+                _logger.LogInformation("Updating account failed!");
+
+                await _publishEndpoint.Publish(new TransactionEvent() { TRANS_ID = transactionId, TRANS_STATUS = TRANS_STATUS.FAILED.ToString() });
+            }
+            return await Task.FromResult(true);
         }
     }
 }

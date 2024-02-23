@@ -5,7 +5,7 @@ using Transaction.API.Services.Interfaces;
 
 namespace Transaction.API.Features.Commands
 {
-    public class TransactionCmdHandler : IRequestHandler<TransactionCmd, bool>
+    public class TransactionCmdHandler : IRequestHandler<TransactionCmd, TransactionModel>
     {
         private readonly ILogger<TransactionCmdHandler> _logger;
         private readonly IMapper _mapper;
@@ -18,19 +18,14 @@ namespace Transaction.API.Features.Commands
             _service = service ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<bool> Handle(TransactionCmd request, CancellationToken cancellationToken)
+        async Task<TransactionModel> IRequestHandler<TransactionCmd, TransactionModel>.Handle(TransactionCmd request, CancellationToken cancellationToken)
         {
             var transactionModel = _mapper.Map<TransactionModel>(request);
 
-            var result = await _service.AddTransactionAsync(transactionModel);
+            var transaction = await _service.AddTransactionAsync(transactionModel);
 
-            if (result == true)
-            {
-                _logger.LogInformation($"One Transaction has been created");
-            }else{
-                _logger.LogError($"Transaction created failed!");
-            }
-            return result;
+            _logger.LogInformation($"One Transaction has been created");
+            return transaction;
         }
     }
 }
