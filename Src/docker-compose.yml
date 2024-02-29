@@ -2,6 +2,9 @@ version: '3.4'
 
 services:
 
+  oracle_rest_data_service:
+    image: container-registry.oracle.com/database/free:latest
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
 
@@ -10,11 +13,73 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
+  
+  portainer:
+    image: portainer/portainer-ce
+
+  branch.api:
+    image: ${DOCKER_REGISTRY-}branchapi
+    build:
+      context: .
+      dockerfile: Services/Branch/Branch.API/Dockerfile
+
+  branch.grpc:
+    image: ${DOCKER_REGISTRY-}branchgrpc
+    build:
+      context: .
+      dockerfile: Services/Branch/Branch.GRPC/Dockerfile
+
+  account.api:
+    image: ${DOCKER_REGISTRY-}accountapi
+    build:
+      context: .
+      dockerfile: Services/Account/Account.API/Dockerfile
+
+
+  account.grpc:
+    image: ${DOCKER_REGISTRY-}accountgrpc
+    build:
+      context: .
+      dockerfile: Services/Account/Account.Grpc/Dockerfile
+
+  transaction.api:
+    image: ${DOCKER_REGISTRY-}transactionapi
+    build:
+      context: .
+      dockerfile: Services/Transaction/Transaction.API/Dockerfile
+
+  statement.api:
+    image: ${DOCKER_REGISTRY-}statementapi
+    build:
+      context: .
+      dockerfile: Services/Statement/Statement.API/Dockerfile
+
+  ocelotapigw:
+    image: ${DOCKER_REGISTRY-}ocelotapigw
+    build:
+      context: .
+      dockerfile: ApiGateways/OcelotApiGW/Dockerfile
 
 networks:
   elastic:
     driver: bridge
   rabbitmq_go_net:
     driver: bridge
+  ords_net:
+    driver: bridge
+  gateway_net:
+    driver: bridge
 volumes:
   elasticsearch-data:
+  portainer_data:
+
+
+
+
+
+
+
+
+
+
+

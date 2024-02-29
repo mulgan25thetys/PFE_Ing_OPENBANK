@@ -54,12 +54,12 @@ namespace Transaction.API.Services
 
         public async Task<bool> UpdateTransactionAsync(TransactionModel transaction)
         {
-            TransactionModel model = await _client.GetAsync(endPointUrl + transaction.TRANS_ID).Result.Content.ReadAsAsync<TransactionModel>();
-            model.TRANS_UPDATED_AT = DateTime.Now;
-            model.TRANS_STATUS = transaction.TRANS_STATUS;
+            TransactionModel model = await _client.GetAsync(endPointUrl + transaction.TRANSID).Result.Content.ReadAsAsync<TransactionModel>();
+            model.UPDATEDAT = DateTime.Now;
+            model.STATUS = transaction.STATUS;
             var transactionPost = JsonConvert.SerializeObject(model);
 
-            var response = await _client.PutAsync(endPointUrl + model.TRANS_ID, new StringContent(transactionPost, Encoding.UTF8, "application/json"));
+            var response = await _client.PutAsync(endPointUrl + model.TRANSID, new StringContent(transactionPost, Encoding.UTF8, "application/json"));
             response.EnsureSuccessStatusCode();
             _logger.LogInformation("Updating transaction success!");
             return true;

@@ -26,7 +26,7 @@ builder.Host.UseSerilog((context, configuration) =>
                  .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(context.Configuration["ElasticConfiguration:Uri"]))
                  {
                      AutoRegisterTemplate = true,
-                     IndexFormat = $"Branch.api-logs-" +
+                     IndexFormat = "Branch.api-logs-" +
                      $"{context.HostingEnvironment.EnvironmentName?.ToLower().Replace(".", "-")}-{DateTime.UtcNow:yyyy-MM}",
                      NumberOfReplicas = 1,
                      NumberOfShards = 2,

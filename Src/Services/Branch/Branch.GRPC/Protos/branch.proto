@@ -16,16 +16,17 @@ message GetOneBranchByNameRequest {
 }
 
 message BranchResponse {
-	int32 idbranch =1;
-	int32 code =2;
-	string region =3;
-	string name =4;
-	string specialisation=5;
-	string email=6;
-	string address=7;
-	string phone=8;
-	string fax=9;
-	string status=10;
-	string manager=11;
-	string managernet=12;
+	int32 code =1;
+	string region =2;
+	string name =3;
+	string specialisation=4;
+	string email=5;
+	string address=6;
+	string phone=7;
+	string fax=8;
+	string status=9;
+	string manager=10;
+	string managernet=11;
+	string createdat=12;
+	string updatedat=13;
 }

@@ -6,7 +6,7 @@
     }
     enum TRANS_TYPE
     {
-        WITHDRAWAL, DEPOSIT
+        WITHDRAWAL, DEPOSIT, TRANSFERT
     }
     public class TransactionModel
     {

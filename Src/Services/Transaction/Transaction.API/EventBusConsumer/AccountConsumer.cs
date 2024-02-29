@@ -19,11 +19,11 @@ namespace Transaction.API.EventBusConsumer
 
         public async Task Consume(ConsumeContext<TransactionEvent> context)
         {
-            TransactionModel transaction = new TransactionModel() { TRANS_STATUS = context.Message.TRANS_STATUS, 
-                TRANS_ID = context.Message.TRANS_ID}; 
+            TransactionModel transaction = new TransactionModel() { STATUS = context.Message.STATUS, 
+                TRANSID = context.Message.TRANSID}; 
 
             await _service.UpdateTransactionAsync(transaction);
-            _logger.LogInformation($"TransactionEvent consumed successfully. Updated Transaction Id : {transaction.TRANS_ID}", transaction);
+            _logger.LogInformation($"TransactionEvent consumed successfully. Updated Transaction Id : {transaction.TRANSID}", transaction);
         }
     }
 }

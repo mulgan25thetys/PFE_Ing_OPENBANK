@@ -1,10 +1,14 @@
 ﻿
 namespace Branch.GRPC.Models
 {
+    public enum BranchStatus
+    {
+        CLOSED, OPENED
+    }
     public class BranchModel
     {
+
         #region Fields
-        public int IDBRANCH { get; set; }
         public int CODE { get; set; }
         public string REGION { get; set; }
         public string NAME { get; set; }
@@ -16,7 +20,8 @@ namespace Branch.GRPC.Models
         public string STATUS { get; set; }
         public string MANAGER { get; set; }
         public string MANAGERNET { get; set; }
+        public DateTime CREATEDAT { get; set; }
+        public DateTime UPDATEDAT { get; set; }
         #endregion
-
     }
 }

@@ -14,7 +14,7 @@ using TRANS_STATUS = Transaction.API.Models.TRANS_STATUS;
 
 namespace Transaction.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class TransactionsController : ControllerBase
     {
@@ -40,20 +40,20 @@ namespace Transaction.API.Controllers
         public async Task<ActionResult<bool>> AddWithdrawal(WithDrawalRequest request)
         {
             Random random = new Random();
-            TransactionCmd transactionCmd = new TransactionCmd() { Trans_Id = random.NextInt64(10000000000), Trans_Amount = request.Trans_Amount,
-            Trans_Author = request.Trans_Author, Trans_Description = request.Trans_Description, Trans_Created_At = DateTime.Now,
-            Trans_Updated_At = DateTime.Now, Trans_Type = TRANS_TYPE.WITHDRAWAL.ToString(), Trans_Status = TRANS_STATUS.WAITING.ToString()};
+            TransactionCmd transactionCmd = new TransactionCmd() { TransId = random.NextInt64(10000000000), Amount = request.Trans_Amount,
+            Author = request.Trans_Author, Description = request.Trans_Description, CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now, Type = TRANS_TYPE.WITHDRAWAL.ToString(), Status = TRANS_STATUS.WAITING.ToString()};
 
             var debitedAccount = await accountService.GetAccountDataAsync(request.Trans_Debited_Acc);
-            transactionCmd.Trans_Debited_Acc = debitedAccount.Accnumber;
+            transactionCmd.DebitedAcc = debitedAccount.Accnumber;
 
             TransactionModel result = await _mediator.Send(transactionCmd);
             if (result != null )
             {
                 var eventMessage = _mapper.Map<AccountEvent>(debitedAccount);
 
-                eventMessage.ACCBALANCE = debitedAccount.Accbalance - request.Trans_Amount;
-                eventMessage.TRANSACTIONEVENTID = result.TRANS_ID;
+                eventMessage.BALANCE = debitedAccount.Balance - request.Trans_Amount;
+                eventMessage.TRANSACTIONEVENTID = result.TRANSID;
                 await _publisher.Publish(eventMessage);
                 return true;
             }
@@ -70,23 +70,23 @@ namespace Transaction.API.Controllers
             Random random = new Random();
             TransactionCmd transactionCmd = new TransactionCmd()
             {
-                Trans_Id = random.NextInt64(10000000000),
-                Trans_Amount = request.Trans_Amount,
-                Trans_Author = request.Trans_Author,
-                Trans_Description = request.Trans_Description,
-                Trans_Created_At = DateTime.Now,
-                Trans_Updated_At = DateTime.Now,
-                Trans_Type = TRANS_TYPE.DEPOSIT.ToString(),
-                Trans_Status = TRANS_STATUS.WAITING.ToString(),
-                Trans_Credited_Acc = creditedAccount.Accnumber,
+                TransId = random.NextInt64(10000000000),
+                Amount = request.Trans_Amount,
+                Author = request.Trans_Author,
+                Description = request.Trans_Description,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                Type = TRANS_TYPE.DEPOSIT.ToString(),
+                Status = TRANS_STATUS.WAITING.ToString(),
+                CreditedAcc = creditedAccount.Accnumber,
             };
 
             TransactionModel result = await _mediator.Send(transactionCmd);
             if (result != null)
             {
                 var eventMessage = _mapper.Map<AccountEvent>(creditedAccount);
-                eventMessage.ACCBALANCE = creditedAccount.Accbalance + request.Trans_Amount;
-                eventMessage.TRANSACTIONEVENTID = result.TRANS_ID;
+                eventMessage.BALANCE = creditedAccount.Balance + request.Trans_Amount;
+                eventMessage.TRANSACTIONEVENTID = result.TRANSID;
                 await _publisher.Publish(eventMessage);
                 return true;
             }
@@ -104,30 +104,30 @@ namespace Transaction.API.Controllers
             Random random = new Random();
             TransactionCmd transactionCmd = new TransactionCmd()
             {
-                Trans_Id = random.NextInt64(10000000000),
-                Trans_Amount = request.Trans_Amount,
-                Trans_Author = request.Trans_Author,
-                Trans_Description = request.Trans_Description,
-                Trans_Created_At = DateTime.Now,
-                Trans_Updated_At = DateTime.Now,
-                Trans_Type = TRANS_TYPE.DEPOSIT.ToString(),
-                Trans_Status = TRANS_STATUS.WAITING.ToString(),
-                Trans_Credited_Acc = creditedAccount.Accnumber,
-                Trans_Debited_Acc = debitedAccount.Accnumber,
+                TransId = random.NextInt64(10000000000),
+                Amount = request.Trans_Amount,
+                Author = request.Trans_Author,
+                Description = request.Trans_Description,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                Type = TRANS_TYPE.TRANSFERT.ToString(),
+                Status = TRANS_STATUS.WAITING.ToString(),
+                CreditedAcc = creditedAccount.Accnumber,
+                DebitedAcc = debitedAccount.Accnumber,
             };
 
             TransactionModel result = await _mediator.Send(transactionCmd);
             if (result != null)
             { //debited account
                 var eventMessage = _mapper.Map<AccountEvent>(debitedAccount);
-                eventMessage.ACCBALANCE = debitedAccount.Accbalance - request.Trans_Amount;
-                eventMessage.TRANSACTIONEVENTID = result.TRANS_ID;
+                eventMessage.BALANCE = debitedAccount.Balance - request.Trans_Amount;
+                eventMessage.TRANSACTIONEVENTID = result.TRANSID;
                 await _publisher.Publish(eventMessage);
                 System.Threading.Thread.Sleep(1000);
                 //credited account
                 var eventMessage2 = _mapper.Map<AccountEvent>(creditedAccount);
-                eventMessage2.ACCBALANCE = creditedAccount.Accbalance + request.Trans_Amount;
-                eventMessage2.TRANSACTIONEVENTID = result.TRANS_ID;
+                eventMessage2.BALANCE = creditedAccount.Balance + request.Trans_Amount;
+                eventMessage2.TRANSACTIONEVENTID = result.TRANSID;
                 await _publisher.Publish(eventMessage2);
                 return true;
             }

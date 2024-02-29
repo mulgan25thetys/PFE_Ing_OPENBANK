@@ -23,26 +23,11 @@ namespace Branch.GRPC.Services
             endPointUrl = _config.GetValue<string>("OrdsSettings:Uri");
         }
 
-        private async Task<BranchList> GetAllBranches()
-        {
-                var result = await _client.GetAsync(endPointUrl);
-
-                return await result.Content.ReadAsAsync<BranchList>();
-        }
-
         public async Task<BranchModel> GetBranch(int branchCode)
         {
-             string requestString = "{ \"code\":{ \"$eq\":\"" + branchCode + "\"} }";
-
-             BranchList list = await GetBranchesByFilter(requestString);
-            if (list != null && list.Items.Count > 0)
-            {
-                return list.Items.FirstOrDefault<BranchModel>();
-            }
-            else
-            {
-                return null;
-            }
+            var response = await _client.GetAsync(endPointUrl + branchCode);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsAsync<BranchModel>();
         }
 
         public async Task<BranchList> GetBranchesByFilter(string filter)

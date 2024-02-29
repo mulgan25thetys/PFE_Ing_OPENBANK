@@ -4,7 +4,14 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
-        "eventbus.message": "StartDebugging"
+        "eventbus.message": "StartDebugging",
+        "ocelotapigw": "StartDebugging",
+        "branch.api": "StartDebugging",
+        "branch.grpc": "StartDebugging",
+        "account.api": "StartDebugging",
+        "account.grpc": "StartDebugging",
+        "transaction.api": "StartDebugging",
+        "statement.api": "StartDebugging"
       }
     }
   }

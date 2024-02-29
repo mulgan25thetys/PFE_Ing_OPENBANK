@@ -1,4 +1,5 @@
 ﻿using Branch.API.Models;
+using Branch.API.Models.Requests;
 using Branch.API.Models.Response;
 using Branch.API.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -9,7 +10,7 @@ using System.Text;
 
 namespace Branch.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class BranchsController : ControllerBase
     {
@@ -34,18 +35,18 @@ namespace Branch.API.Controllers
             return await _service.GetAllBranches();
         }
 
-        [HttpGet("{id}", Name = "GetById")]
+        [HttpGet("{code}", Name = "GetByCode")]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.NotFound)]
-        public async Task<ActionResult<BranchModel>> GetBranch(int id)
+        public async Task<ActionResult<BranchModel>> GetBranch(int code)
         {
-            return await _service.GetBranch(id);
+            return await _service.GetBranch(code);
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.BadRequest)]
-        public async Task<ActionResult<BranchModel>> Addbranch([FromBody] BranchModel branch)
+        public async Task<ActionResult<bool>> Addbranch([FromBody] BranchRequest branch)
         {
             return await _service.AddBranch(branch);
         }
@@ -53,7 +54,7 @@ namespace Branch.API.Controllers
         [HttpPut]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.BadRequest)]
-        public async Task<ActionResult<BranchModel>> Editbranch([FromBody] BranchModel branch)
+        public async Task<ActionResult<bool>> Editbranch([FromBody] BranchModel branch)
         {
             return await _service.UpdateBranch(branch);
         }

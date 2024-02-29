@@ -1,6 +1,19 @@
 version: '3.4'
 
 services:
+  oracle_rest_data_service:
+    container_name: oracle_rest_data_service
+    restart: always
+    ports:
+       - "8521:1521"
+       - "8500:5500"
+       - "8023:8080"
+       - "9043:8443"
+    environment:
+       - ORACLE_PWD=E
+    networks:
+       - ords_net
+
   elasticsearch:
     container_name: elasticsearch
     restart: always
@@ -39,3 +52,152 @@ services:
        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
     networks:
        - rabbitmq_go_net
+
+  portainer:
+    container_name: portainer
+    restart: always
+    ports:
+       - "8088:8000"
+       - "9000:9000" 
+    volumes:
+       -  /var/run/docker.sock:/var/run/docker.sock
+       - portainer_data:/data
+
+
+  branch.api:
+    container_name: branch.api
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "OracleSettings:OrdsDatabaseUrl=http://oracle_rest_data_service:8080"
+      - "OracleSettings:DatabaseUser=ordsuser"
+      - "OracleSettings:DatabaseTableName=branch"
+      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+    depends_on:
+      - oracle_rest_data_service
+      - elasticsearch
+    ports:
+      - "8000:80"
+    networks:
+      - elastic
+      - ords_net
+      - gateway_net
+
+  branch.grpc:
+    container_name: branch.grpc
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "OrdsSettings:Uri=http://oracle_rest_data_service:8080/ords/ordsuser/branch/"
+      - "OrdsSettings:DatabaseUrl=http://oracle_rest_data_service:8080"
+      - "OrdsSettings:DatabaseUser=ordsuser"
+      - "OrdsSettings:DatabaseTableName=branch"
+    depends_on:
+      - oracle_rest_data_service
+    ports:
+      - "8001:80"
+    networks:
+      - ords_net
+      - gateway_net
+
+  account.api:
+    container_name: account.api
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "OracleSettings:OrdsDatabaseUrl=http://oracle_rest_data_service:8080"
+      - "OracleSettings:DatabaseUser=ordsuser"
+      - "OracleSettings:DatabaseTableName=account"
+      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+      - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
+      - "GrpcSettings:BranchUrl=http://branch.grpc"
+    ports:
+      - "8003:80"
+    depends_on:
+      - oracle_rest_data_service
+      - elasticsearch
+      - rabbitmq
+    networks:
+      - elastic
+      - ords_net
+      - rabbitmq_go_net
+      - gateway_net 
+
+  account.grpc:
+    container_name: account.grpc
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "OrdsSettings:Uri=http://oracle_rest_data_service:8080/ords/ordsuser/account/"
+      - "OrdsSettings:DatabaseUrl=http://oracle_rest_data_service:8080"
+      - "OrdsSettings:DatabaseUser=ordsuser"
+      - "OrdsSettings:DatabaseTableName=account"
+    ports:
+      - "8004:80"
+    depends_on:
+      - oracle_rest_data_service
+    networks:
+      - ords_net
+      - gateway_net 
+
+  transaction.api:
+    container_name: transaction.api
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "OracleSettings:OrdsDatabaseUrl=http://oracle_rest_data_service:8080"
+      - "OracleSettings:DatabaseUser=ordsuser"
+      - "OracleSettings:DatabaseTableName=transaction"
+      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+      - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
+      - "GrpcSettings:AccountUrl=http://account.grpc"
+    ports:
+      - "8005:80"
+    depends_on:
+      - oracle_rest_data_service
+      - elasticsearch
+      - rabbitmq
+    networks:
+      - elastic
+      - ords_net
+      - rabbitmq_go_net
+      - gateway_net 
+
+  statement.api:
+    container_name: statement.api
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "OracleSettings:OrdsDatabaseUrl=http://oracle_rest_data_service:8080"
+      - "OracleSettings:DatabaseUser=ordsuser"
+      - "OracleSettings:DatabaseTableName=transaction"
+      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+      - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
+      - "GrpcSettings:BranchUrl=http://branch.grpc"
+      - "GrpcSettings:AccountUrl=http://account.grpc"
+    ports:
+      - "8006:80"
+    depends_on:
+      - oracle_rest_data_service
+      - elasticsearch
+      - rabbitmq
+    networks:
+      - elastic
+      - ords_net
+      - rabbitmq_go_net
+      - gateway_net
+
+  ocelotapigw:
+    container_name: ocelotapigw
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - branch.api
+      - account.api
+      - transaction.api
+      - statement.api
+    ports:
+      - "8010:80"
+    networks:
+      - gateway_net

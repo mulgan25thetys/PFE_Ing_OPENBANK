@@ -41,7 +41,7 @@ namespace Statement.API.Services
 
             return new StatementModel() {Account_Number = accountModel.Accnumber, Bank_Name = accountModel.Bankname,
             Branch_Address = brancModel.Address, Statement_Name = accountModel.Bankname + " " + brancModel.Address, 
-            Statement_Owner_Address = accountModel.Accowneraddress, Statement_Owner_Name = accountModel.Accownerlastname + " "+accountModel.Accownerfirstname,
+            Statement_Owner_Address = accountModel.Owneraddress, Statement_Owner_Name = accountModel.Ownerlastname + " "+accountModel.Ownerfirstname,
             Transactions = transactionList};
         }
     }

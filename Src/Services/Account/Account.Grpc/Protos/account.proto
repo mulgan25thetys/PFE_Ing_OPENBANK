@@ -13,19 +13,19 @@ message GetAccountRequest {
 
 message AccountObject {
 	int64 accnumber = 1;
-	string accownerfirstname =2;
-	string accownerlastname = 3;
-	string accowneremail =4;
-	string accownerphone=5;
-	string accowneraddress=6;
-	int32 accownerpostcode=7;
+	string ownerfirstname =2;
+	string ownerlastname = 3;
+	string owneremail =4;
+	string ownerphone=5;
+	string owneraddress=6;
+	int32 ownerpostcode=7;
 	string bankname=8;
 	string bankcode=9;
 	int32 branchcode=10;
-	int32 accbankdetailskey=11;
-	string acciban=12;
-	double accbalance=13;
-	string acccreatedat=14;
-	string accupdatedat=15;
-	string accstatus=16;
+	int32 bankdetailskey=11;
+	string iban=12;
+	double balance=13;
+	string createdat=14;
+	string updatedat=15;
+	string status=16;
 }

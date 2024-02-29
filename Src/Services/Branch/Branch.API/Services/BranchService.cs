@@ -3,6 +3,7 @@ using Branch.API.Services.Interfaces;
 using Newtonsoft.Json;
 using System.Text;
 using Branch.API.Models.Response;
+using Branch.API.Models.Requests;
 
 namespace Branch.API.Services
 {
@@ -24,27 +25,52 @@ namespace Branch.API.Services
                 $"/{_config.GetValue<string>("OracleSettings:DatabaseTableName")}/";
         }
 
-        public async Task<BranchModel> AddBranch(BranchModel branch)
+        public async Task<bool> AddBranch(BranchRequest branch)
         {
-            var branchPost = JsonConvert.SerializeObject(branch);
+            _logger.LogInformation("Addition of a branch in progress...");
+                BranchModel model = new BranchModel() { ADDRESS = branch.ADDRESS, SPECIALISATION = branch.SPECIALISATION,
+                EMAIL = branch.EMAIL, FAX = branch.FAX, MANAGER = branch.MANAGER, MANAGERNET = branch.MANAGERNET, NAME = branch.NAME,
+                PHONE = branch.PHONE, REGION = branch.REGION, STATUS = BranchStatus.UNKNOWN.ToString(), CODE = branch.CODE, CREATEDAT = DateTime.Now,
+                UPDATEDAT = DateTime.Now};
 
-            var response = _client.PostAsync(endPointUrl, new StringContent(branchPost, Encoding.UTF8, "application/json"));
+                var branchPost = JsonConvert.SerializeObject(model);
 
-            return await response.Result.Content.ReadAsAsync<BranchModel>();
+                var response = await _client.PostAsync(endPointUrl, new StringContent(branchPost, Encoding.UTF8, "application/json"));
+                response.EnsureSuccessStatusCode();
+            if (response.IsSuccessStatusCode == false)
+            {
+                _logger.LogError($"Addition of the branch with code ${branch.CODE} failed");
+            }
+            else
+            {
+                _logger.LogInformation($"Branch with code ${branch.CODE} added successfully!");
+            }
+                await response.Content.ReadAsAsync<BranchModel>();
+                return true;
         }
 
         public async Task<BranchList> GetAllBranches()
         {
+            try
+            {
                 var result = await _client.GetAsync(endPointUrl);
 
                 return await result.Content.ReadAsAsync<BranchList>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return new BranchList();
+            }
         }
 
         public async Task<BranchModel> GetBranch(int id)
         {
-                var result = await _client.GetAsync(endPointUrl + id);
+            var result = await _client.GetAsync(endPointUrl + id);
 
-                return await result.Content.ReadAsAsync<BranchModel>();
+            result.EnsureSuccessStatusCode();
+            return await result.Content.ReadAsAsync<BranchModel>();
+           
         }
 
         public async Task<BranchList> GetBranchesByFilter(string filter)
@@ -63,14 +89,25 @@ namespace Branch.API.Services
             }
         }
 
-        public async Task<BranchModel> UpdateBranch(BranchModel branch)
+        public async Task<bool> UpdateBranch(BranchModel branch)
         {
+            var exitedBranch = await this.GetBranch(branch.CODE);
+            branch.CREATEDAT = exitedBranch.CREATEDAT;
+            branch.UPDATEDAT = DateTime.Now;
+            try
+            {
                 var branchPost = JsonConvert.SerializeObject(branch);
 
-                var response = _client.PutAsync(endPointUrl + branch.IDBRANCH, new StringContent(branchPost, Encoding.UTF8, "application/json"));
+                var response = _client.PutAsync(endPointUrl + branch.CODE, new StringContent(branchPost, Encoding.UTF8, "application/json"));
 
-                return await response.Result.Content.ReadAsAsync<BranchModel>();
-            
+                await response.Result.Content.ReadAsAsync<BranchModel>();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Updating branch failed! "+ex.Message);
+                return false;
+            }
         }
     }
 }
