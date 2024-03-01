@@ -49,11 +49,11 @@ namespace Branch.API.Services
                 return true;
         }
 
-        public async Task<BranchList> GetAllBranches()
+        public async Task<BranchList> GetAllBranches(int? page, int? size)
         {
             try
             {
-                var result = await _client.GetAsync(endPointUrl);
+                var result = await _client.GetAsync($"{endPointUrl}?offet={page}&limit={size}");
 
                 return await result.Content.ReadAsAsync<BranchList>();
             }
@@ -73,19 +73,19 @@ namespace Branch.API.Services
            
         }
 
-        public async Task<BranchList> GetBranchesByFilter(string filter)
+        public async Task<BranchList> GetBranchesByFilter(string filter, int? page, int? size)
         {
             try
             {
                 var filterJson = JsonConvert.DeserializeObject(filter);
-                var result = await _client.GetAsync($"{endPointUrl}?q={filter}");
+                var result = await _client.GetAsync($"{endPointUrl}?q={filter}&offet={page}&limit={size}");
 
                 return await result.Content.ReadAsAsync<BranchList>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return await GetAllBranches();
+                return await GetAllBranches(1,10);
             }
         }
 

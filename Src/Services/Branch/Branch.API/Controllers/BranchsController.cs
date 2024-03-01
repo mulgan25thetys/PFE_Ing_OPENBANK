@@ -27,12 +27,21 @@ namespace Branch.API.Controllers
         [ProducesResponseType(typeof(BranchList), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<BranchList>> GetAllBranchs()
         {
-            if (HttpContext.Request.Query.Count > 0 && HttpContext.Request.Query["q"].ToString() != null)
+            int page = 1;
+            int size = 10;
+            string filter = "";
+            if (HttpContext.Request.Query.Count > 0)
             {
-                return await _service.GetBranchesByFilter(HttpContext.Request.Query["q"].ToString());
+                page = HttpContext.Request.Query["page"].ToString() != null ? Int32.Parse(HttpContext.Request.Query["page"].ToString()) : page;
+                size = HttpContext.Request.Query["size"].ToString() != null ? Int32.Parse(HttpContext.Request.Query["size"].ToString()) : size;
+                filter = HttpContext.Request.Query["q"].ToString() != null ? HttpContext.Request.Query["q"].ToString()  : filter;
             }
-            
-            return await _service.GetAllBranches();
+
+            if (filter !=null && filter.Length > 0 )
+            {
+                return await _service.GetBranchesByFilter(filter, page, size);
+            }
+            return await _service.GetAllBranches(page, size);
         }
 
         [HttpGet("{code}", Name = "GetByCode")]
