@@ -35,8 +35,19 @@ namespace Statement.API.Services
             var accountModel = await _accountService.GetAccountAsync(account_number);
             var brancModel = await _branchService.GetBranchAsync(accountModel.Branchcode);
 
-            var response = await _client.GetAsync(endPointUrl + date_filter);  
-            response.EnsureSuccessStatusCode();
+            var response = await _client.GetAsync(endPointUrl + date_filter);
+
+            try
+            {
+                response.EnsureSuccessStatusCode();
+            }catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    response = await _client.GetAsync(endPointUrl);
+                }
+            }
             TransactionList transactionList = await response.Content.ReadAsAsync<TransactionList>();
 
             return new StatementModel() {Account_Number = accountModel.Accnumber, Bank_Name = accountModel.Bankname,
