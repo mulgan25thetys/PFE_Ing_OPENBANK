@@ -13,6 +13,17 @@ services:
        - ORACLE_PWD=E
     networks:
        - ords_net
+  
+  identityDb:
+    container_name: identityDb
+    environment:
+       - SA_PASSWORD=SwN12345678@Pass
+       - ACCEPT_EULA=Y
+    restart: always
+    ports:
+       - "1433:1433"
+    networks:
+      - identity_net
 
   elasticsearch:
     container_name: elasticsearch
@@ -201,3 +212,20 @@ services:
       - "8010:80"
     networks:
       - gateway_net
+
+  identity.api:
+    container_name: identity.api
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+      - "ConnectionStrings:AuthConnectionString=Server=userdb;Database=UserDb;User Id=sa;Password=SwN12345678@Pass;"
+    depends_on:
+      - identityDb
+      - elasticsearch
+    ports:
+      - "8007:80"
+    networks:
+      - identity_net
+      - elastic
+

@@ -11,7 +11,8 @@
         "account.api": "StartDebugging",
         "account.grpc": "StartDebugging",
         "transaction.api": "StartDebugging",
-        "statement.api": "StartDebugging"
+        "statement.api": "StartDebugging",
+        "identity.api": "StartDebugging"
       }
     }
   }

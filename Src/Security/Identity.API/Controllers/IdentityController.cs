@@ -109,22 +109,32 @@ namespace Identity.API.Controllers
 
             user = user == null ? await _userManager.FindByEmailAsync(authDto.Login) : user;
 
-            if (user == null || await _userManager.CheckPasswordAsync(user, authDto.Password) == false)
+            if (user != null || await _userManager.CheckPasswordAsync(user, authDto.Password))
+            {
+                //var result = await _signInManager.PasswordSignInAsync(user, authDto.Password, true, true);
+
+                //if (result.Succeeded == false)
+                //{
+                //    return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Can not sign in!");
+                //}
+
+                if (!user.EmailConfirmed)
+                {
+                    return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Please confirm your email address: " + user.Email);
+                }
+            }
+            else
             {
                 return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Bad Credentials!");
             }
-
-            if (!user.EmailConfirmed)
-            {
-                return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Please confirm your email address: "+user.Email);
-            }
+            
 
             try
             {
                 return await SetTwoFactorAuthentication(user);
             }catch(Exception ex)
             {
-                _logger.LogError("Two factor authentication failed! "+ex.Message);
+                _logger.LogError("Two factor authentication: sending sms failed! "+ex.Message);
                 return this.Ok(new AuthenticationResponse()
                 {
                     Login = authDto.Login,
@@ -314,17 +324,13 @@ namespace Identity.API.Controllers
 
         private async Task<IActionResult> SetTwoFactorAuthentication(IdentityUser user)
         {
-            var authenticatorKey = await _userManager.GetAuthenticatorKeyAsync(user);
-            var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
-            if (string.IsNullOrEmpty(authenticatorKey))
-            {
-                await _userManager.ResetAuthenticatorKeyAsync(user);
-                authenticatorKey = await _userManager.GetAuthenticatorKeyAsync(user);
-            }
-            foreach (var code in recoveryCodes)
-            {
-                System.Console.WriteLine( "code! "+code.ToString());
-            }
+            //var authenticatorKey = await _userManager.GetAuthenticatorKeyAsync(user);
+            //var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
+            //if (string.IsNullOrEmpty(authenticatorKey))
+            //{
+            //    await _userManager.ResetAuthenticatorKeyAsync(user);
+            //    authenticatorKey = await _userManager.GetAuthenticatorKeyAsync(user);
+            //}
 
             return Ok(await _sender.SendSms(user.PhoneNumber));
         }

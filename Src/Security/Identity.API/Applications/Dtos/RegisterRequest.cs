@@ -9,7 +9,7 @@ namespace Identity.API.Applications.Dtos
         [DataType(DataType.EmailAddress)]
         public string Email { get; set; }
         [DataType(DataType.PhoneNumber)]
-        [RegularExpression("\\(?\\d{3}\\)?[-\\.]? *\\d{3}[-\\.]? *[-\\.]?\\d{4}", ErrorMessage = "Phone number is not correct!")]
+        [RegularExpression("\\+?[1-9][0-9]{10,16}", ErrorMessage = "Phone number is not correct!")]
         public string Phone { get; set; }
         [Required]
         [DataType(DataType.Password)]
