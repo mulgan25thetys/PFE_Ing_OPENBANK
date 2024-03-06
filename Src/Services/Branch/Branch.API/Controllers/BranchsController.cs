@@ -2,6 +2,7 @@
 using Branch.API.Models.Requests;
 using Branch.API.Models.Response;
 using Branch.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -12,6 +13,7 @@ namespace Branch.API.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
+    [Authorize]
     public class BranchsController : ControllerBase
     {
         private IBranchService _service;

@@ -1,8 +1,11 @@
 using Branch.API.Extensions;
 using Branch.API.Services;
 using Branch.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +36,23 @@ builder.Host.UseSerilog((context, configuration) =>
                  })
                  .Enrich.WithProperty("Environnement", context.HostingEnvironment.EnvironmentName)
                  .ReadFrom.Configuration(context.Configuration);
+});
+
+//Configuration of Authorization with JWT
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+}).AddJwtBearer(options =>
+{
+    options.Authority = identityUrl;
+    options.RequireHttpsMetadata = false;
+    options.Audience = "branch";
 });
 
 var app = builder.Build();

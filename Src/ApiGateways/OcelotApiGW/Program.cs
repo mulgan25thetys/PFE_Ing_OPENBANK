@@ -20,6 +20,21 @@ builder.WebHost
         loggingBuilder.AddConsole();
         loggingBuilder.AddDebug();
     });
+
+var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
+var authenticationProviderKey = "IdentityApiKey";
+//…
+builder.Services.AddAuthentication()
+    .AddJwtBearer(authenticationProviderKey, x =>
+    {
+        x.Authority = identityUrl;
+        x.RequireHttpsMetadata = false;
+        x.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+        {
+            ValidAudiences = new[] { "branch" }
+        };
+    });
+
 var app = builder.Build();
 
 app.UseRouting();

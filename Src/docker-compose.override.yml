@@ -17,7 +17,7 @@ services:
   identityDb:
     container_name: identityDb
     environment:
-       - SA_PASSWORD=SwN12345678@Pass
+       - SA_PASSWORD=Identity2024@Pass
        - ACCEPT_EULA=Y
     restart: always
     ports:
@@ -44,7 +44,7 @@ services:
     container_name: kibana
     restart: always
     ports:
-        - 5601:5601
+        - 5610:5610
     depends_on:
         - elasticsearch
     environment:
@@ -68,8 +68,8 @@ services:
     container_name: portainer
     restart: always
     ports:
-       - "8088:8000"
-       - "9000:9000" 
+       - "8098:8000"
+       - "9025:9025" 
     volumes:
        -  /var/run/docker.sock:/var/run/docker.sock
        - portainer_data:/data
@@ -88,7 +88,7 @@ services:
       - oracle_rest_data_service
       - elasticsearch
     ports:
-      - "8000:80"
+      - "8002:80"
     networks:
       - elastic
       - ords_net
@@ -163,7 +163,7 @@ services:
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
       - "GrpcSettings:AccountUrl=http://account.grpc"
     ports:
-      - "8005:80"
+      - "8015:80"
     depends_on:
       - oracle_rest_data_service
       - elasticsearch
@@ -198,6 +198,23 @@ services:
       - rabbitmq_go_net
       - gateway_net
 
+  identity.api:
+    container_name: identity.api
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+      - "ConnectionStrings:AuthConnectionString=Server=identityDb;Database=UserDb;User Id=sa;Password=Identity2024@Pass;"
+    depends_on:
+      - identityDb
+      - elasticsearch
+    ports:
+      - "8007:80"
+    networks:
+      - identity_net
+      - elastic
+      - gateway_net
+
   ocelotapigw:
     container_name: ocelotapigw
     restart: always
@@ -208,24 +225,9 @@ services:
       - account.api
       - transaction.api
       - statement.api
+      - identity.api
     ports:
-      - "8010:80"
+      - "8020:80"
     networks:
       - gateway_net
-
-  identity.api:
-    container_name: identity.api
-    restart: always
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
-      - "ConnectionStrings:AuthConnectionString=Server=userdb;Database=UserDb;User Id=sa;Password=SwN12345678@Pass;"
-    depends_on:
-      - identityDb
-      - elasticsearch
-    ports:
-      - "8007:80"
-    networks:
-      - identity_net
-      - elastic
 

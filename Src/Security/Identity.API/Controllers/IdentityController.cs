@@ -16,7 +16,7 @@ using System.Text;
 
 namespace Identity.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class IdentityController : ControllerBase
     {
@@ -49,7 +49,7 @@ namespace Identity.API.Controllers
         }
 
         #region Register
-        [Route("register", Name = "Index")]
+        [Route("register")]
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] RegisterRequest authDto)
         {
@@ -120,7 +120,8 @@ namespace Identity.API.Controllers
 
                 if (!user.EmailConfirmed)
                 {
-                    return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Please confirm your email address: " + user.Email);
+                    return await SendEmailTokenToConfirm(user);
+                    //return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Please confirm your email address: " + user.Email);
                 }
             }
             else
@@ -148,8 +149,8 @@ namespace Identity.API.Controllers
 
         #region Forgot Password
         [HttpPost]
-        [Route("Forgot-password")]
-        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest forgotPassword)
+        [Route("Forgot-Password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest forgotPassword)
         {
             try
             {
@@ -189,7 +190,7 @@ namespace Identity.API.Controllers
         #region Reset Password
         [HttpPut]
         [Route("Reset-Password")]
-        public async Task<IActionResult> ResetPassword(PasswordResetRequest passwordReset)
+        public async Task<IActionResult> ResetPassword([FromBody] PasswordResetRequest passwordReset)
         {
             try
             {
@@ -221,22 +222,22 @@ namespace Identity.API.Controllers
         [HttpGet]
         [Route("Confirm-Email")]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmEmail(string email, string token)
+        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequest request)
         {
             try
             {
-                if (email == null || token == null)
+                if (request.Email == null || request.Token == null)
                 {
                     return BadRequest();
                 }
 
-                var user = await _userManager.FindByEmailAsync(email);
+                var user = await _userManager.FindByEmailAsync(request.Email);
                 if (user == null)
                 {
                     return NotFound(user);
                 }
 
-                var result = await _userManager.ConfirmEmailAsync(user, token);
+                var result = await _userManager.ConfirmEmailAsync(user, request.Token);
                 if (result.Succeeded)
                 {
                     return Ok(new AuthenticationResponse() { Email = user.Email, Login = user.Email, UserName = user.UserName, Token = await this.GenerateJwtToken(user) });
