@@ -84,9 +84,11 @@ services:
       - "OracleSettings:DatabaseUser=ordsuser"
       - "OracleSettings:DatabaseTableName=branch"
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+      - "IdentityUrl=http://identity.api"
     depends_on:
       - oracle_rest_data_service
       - elasticsearch
+      - identity.api
     ports:
       - "8002:80"
     networks:
@@ -220,6 +222,7 @@ services:
     restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - "IdentityUrl=http://identity.api" 
     depends_on:
       - branch.api
       - account.api

@@ -7,10 +7,14 @@ using Serilog.Sinks.Elasticsearch;
 using Identity.API.Extensions;
 using Identity.API.Services.Interfaces;
 using Identity.API.Services;
+using Microsoft.IdentityModel.Logging;
+using Microsoft.AspNetCore.Rewrite;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+//Configuration de la partie JWT Tokens
+builder.Services.AddCustomAuthentication(builder.Configuration);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -39,9 +43,6 @@ builder.Services.AddDefaultIdentity<IdentityUser>(config =>
   .AddSignInManager()
   .AddEntityFrameworkStores<IdentityContext>();
 
-//Configuration de la partie JWT Tokens
-builder.Services.AddCustomAuthentication(builder.Configuration);
-
 
 //Configuration of Serilog (ELK)
 builder.Host.UseSerilog((context, configuration) =>
@@ -69,15 +70,25 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    IdentityModelEventSource.ShowPII = true;
+    app.UseDeveloperExceptionPage();
 }
+//migration automatique vers la base de donnees
+app.MigrateDatabase<IdentityContext>((context, services) => {});
+
+//var option = new RewriteOptions();
+//option.AddRedirect("^$", "swagger");
+//app.UseRewriter(option);
 
 app.UseAuthentication();
 
-//migration automatique vers la base de donnees
-app.MigrateDatabase<IdentityContext>((context, services) =>
-{
-});
+app.UseRouting();
 
-app.MapControllers();
+app.UseAuthorization();
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
 
 app.Run();

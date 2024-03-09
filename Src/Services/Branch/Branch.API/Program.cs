@@ -1,11 +1,18 @@
 using Branch.API.Extensions;
+using Branch.API.Middlewares;
 using Branch.API.Services;
 using Branch.API.Services.Interfaces;
+using Branch.API.Utils;
+using Branch.API.Utils.Interfaces;
+using Branch.API.Utils.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,23 +45,41 @@ builder.Host.UseSerilog((context, configuration) =>
                  .ReadFrom.Configuration(context.Configuration);
 });
 
-//Configuration of Authorization with JWT
-JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+#region Configuration of Authorization with JWT
+var section = builder.Configuration.GetSection("JWT");
+var options = section.Get<JwtOptions>();
+var key = Encoding.UTF8.GetBytes(options.Secret);
+section.Bind(options);
+builder.Services.Configure<JwtOptions>(section);
 
-var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
+builder.Services.AddSingleton<IJwtUtils, JwtUtils>();
+builder.Services.AddTransient<JwtMiddleware>();
 
-builder.Services.AddAuthentication(options =>
+builder.Services.AddAuthentication(x =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(x =>
+    {
+        x.RequireHttpsMetadata = false;
+        x.SaveToken = true;
+        x.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+    });
 
-}).AddJwtBearer(options =>
+builder.Services.AddAuthorization(x =>
 {
-    options.Authority = identityUrl;
-    options.RequireHttpsMetadata = false;
-    options.Audience = "branch";
+    x.DefaultPolicy = new AuthorizationPolicyBuilder()
+        .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+        .RequireAuthenticatedUser()
+        .Build();
 });
-
+#endregion
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -62,11 +87,21 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
 }
+
+app.UseRouting();
+
+app.UseMiddleware<JwtMiddleware>();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
 
 app.MigrateDatabase<Program>();
 

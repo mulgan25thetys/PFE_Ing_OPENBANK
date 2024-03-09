@@ -1,5 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Branch.API.Utils;
+using Identity.API.Utils.Interfaces;
+using Identity.API.Utils.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Ocelot.DependencyInjection;
 using System.Text;
 
 namespace Identity.API.Applications.Security
@@ -8,6 +13,11 @@ namespace Identity.API.Applications.Security
     {
         public static void AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
+            var jwt = new JwtOptions();
+            var section = configuration.GetSection("jwt");
+            section.Bind(jwt);
+            services.Configure<JwtOptions>(section);
+            services.AddSingleton<IJwtUtils, JwtUtils>();
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -16,16 +26,17 @@ namespace Identity.API.Applications.Security
             }).AddCookie()
             .AddJwtBearer(option =>
             {
-                string myKey = configuration["JWT:Secret"];
                 option.SaveToken = true;
-                option.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+                option.Authority = jwt.ValidIssuer;
+                option.RequireHttpsMetadata = false;
+                option.TokenValidationParameters = new TokenValidationParameters()
                 {
-                    ValidateIssuer = false,
+                    //ValidateIssuer = false,
                     ValidateAudience = false,
-                    ValidAudience = configuration["JWT:ValidAudience"],
-                    ValidIssuer = configuration["JWT:ValidIssuer"],
-                    ClockSkew = TimeSpan.Zero,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]))
+                    //ValidAudience = configuration["JWT:ValidAudience"],
+                    //ValidIssuer = configuration["JWT:ValidIssuer"],
+                    //ClockSkew = TimeSpan.Zero,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Secret))
                 };
             });
         }

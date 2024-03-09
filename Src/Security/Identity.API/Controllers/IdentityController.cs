@@ -3,6 +3,8 @@ using Identity.API.Applications.Models;
 using Identity.API.Applications.Networks;
 using Identity.API.Models;
 using Identity.API.Services.Interfaces;
+using Identity.API.Utils.Interfaces;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -27,16 +29,15 @@ namespace Identity.API.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly ISenderService _sender;
         private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly IAuthorizationService _authorization;
+        private readonly IJwtUtils _jwtUtils;
 
         public IdentityController(UserManager<IdentityUser> userManager,
-            ISenderService email,
+            ISenderService email, IJwtUtils jwtUtils,
             IWebHostEnvironment webHostEnvironment,
             IConfiguration configuration,
             RoleManager<IdentityRole> roleManager,
             ILogger<IdentityController> logger,
-            SignInManager<IdentityUser> signInManager,
-            IAuthorizationService authorization)
+            SignInManager<IdentityUser> signInManager)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
@@ -45,7 +46,7 @@ namespace Identity.API.Controllers
             _env = webHostEnvironment ?? throw new ArgumentException(nameof(webHostEnvironment));
             _sender = email ?? throw new ArgumentNullException(nameof(email));
             _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
-            _authorization = authorization ?? throw new ArgumentNullException(nameof(authorization));
+            _jwtUtils = jwtUtils ?? throw new ArgumentNullException(nameof(jwtUtils));
         }
 
         #region Register
@@ -117,7 +118,6 @@ namespace Identity.API.Controllers
                 //{
                 //    return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Can not sign in!");
                 //}
-
                 if (!user.EmailConfirmed)
                 {
                     return await SendEmailTokenToConfirm(user);
@@ -136,13 +136,7 @@ namespace Identity.API.Controllers
             }catch(Exception ex)
             {
                 _logger.LogError("Two factor authentication: sending sms failed! "+ex.Message);
-                return this.Ok(new AuthenticationResponse()
-                {
-                    Login = authDto.Login,
-                    Email = user.Email,
-                    UserName = user.UserName,
-                    Token = await this.GenerateJwtToken(user)
-                });
+                return this.Ok(_jwtUtils.GetToken(user.Id));
             }
         }
         #endregion
@@ -240,7 +234,7 @@ namespace Identity.API.Controllers
                 var result = await _userManager.ConfirmEmailAsync(user, request.Token);
                 if (result.Succeeded)
                 {
-                    return Ok(new AuthenticationResponse() { Email = user.Email, Login = user.Email, UserName = user.UserName, Token = await this.GenerateJwtToken(user) });
+                    return Ok(new AuthenticationResponse() { Email = user.Email, Login = user.Email, UserName = user.UserName, Token = _jwtUtils.GetToken(user.Id) });
                 }
 
                 return BadRequest("Email not confirmed successfully!");
@@ -272,8 +266,9 @@ namespace Identity.API.Controllers
         #endregion
 
         #region Private methods
-        private async Task<string> GenerateJwtToken(IdentityUser user)
+        private async Task<AuthenticationToken> GenerateJwtToken(IdentityUser user)
         {
+            var expirationTimeStamp = DateTime.Now.AddMinutes(5);
             var userRoles = await this._userManager.GetRolesAsync(user);
 
             var authClaims = new List<Claim>
@@ -295,7 +290,8 @@ namespace Identity.API.Controllers
                         claims: authClaims,
                         signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                         );
-            return new JwtSecurityTokenHandler().WriteToken(token);
+
+            return new AuthenticationToken() { Value = new JwtSecurityTokenHandler().WriteToken(token) };
         }
 
         private async Task<IActionResult> SendEmailTokenToConfirm(IdentityUser user)

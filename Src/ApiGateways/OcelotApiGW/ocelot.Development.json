@@ -6,13 +6,17 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "branch.api",
-          "Port": "80"
+          "Host": "localhost",
+          "Port": "5000"
         }
       ],
       "UpstreamPathTemplate": "/Branchs",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": [ ]
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Branchs/{code}",
@@ -202,8 +206,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "identity.api",
-          "Port": "80"
+          "Host": "localhost",
+          "Port": "5007"
         }
       ],
       "UpstreamPathTemplate": "/auth/register",
@@ -214,8 +218,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "identity.api",
-          "Port": "80"
+          "Host": "localhost",
+          "Port": "5007"
         }
       ],
       "UpstreamPathTemplate": "/auth/login",

@@ -7,14 +7,14 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8002"
+          "Port": "5000"
         }
       ],
       "UpstreamPathTemplate": "/Branchs",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
-        "AuthenticationProviderKey": "IdentityApiKey",
+        "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
       }
     },
@@ -24,7 +24,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8002"
+          "Port": "5000"
         }
       ],
       "UpstreamPathTemplate": "/Branchs/{code}",
@@ -207,7 +207,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8007"
+          "Port": "5007"
         }
       ],
       "UpstreamPathTemplate": "/auth/register",
@@ -219,7 +219,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8007"
+          "Port": "5007"
         }
       ],
       "UpstreamPathTemplate": "/auth/login",
@@ -231,7 +231,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8007"
+          "Port": "5007"
         }
       ],
       "UpstreamPathTemplate": "/auth/forgot-password",
@@ -243,7 +243,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8007"
+          "Port": "5007"
         }
       ],
       "UpstreamPathTemplate": "/auth/reset-password",
@@ -255,7 +255,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8007"
+          "Port": "5007"
         }
       ],
       "UpstreamPathTemplate": "/auth/confirm-email",
@@ -267,7 +267,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8007"
+          "Port": "5007"
         }
       ],
       "UpstreamPathTemplate": "/auth/logout",

@@ -1,4 +1,6 @@
-﻿namespace Identity.API.Applications.Dtos
+﻿using Microsoft.AspNetCore.Authentication;
+
+namespace Identity.API.Applications.Dtos
 {
     public class AuthenticationResponse
     {

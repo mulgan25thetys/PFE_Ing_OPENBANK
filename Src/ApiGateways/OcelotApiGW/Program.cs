@@ -1,12 +1,10 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
-using System.Configuration;
 using Ocelot.Cache.CacheManager;
-using Ocelot.Values;
-using System.Text;
+using OcelotApiGW.Middlewares;
+using OcelotApiGW.Applications;
+
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddOcelot()
-    .AddCacheManager(settings => settings.WithDictionaryHandle());
 
 builder.WebHost
     .ConfigureAppConfiguration((hostContext, config) =>
@@ -21,23 +19,33 @@ builder.WebHost
         loggingBuilder.AddDebug();
     });
 
-var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
-var authenticationProviderKey = "IdentityApiKey";
-//…
-builder.Services.AddAuthentication()
-    .AddJwtBearer(authenticationProviderKey, x =>
-    {
-        x.Authority = identityUrl;
-        x.RequireHttpsMetadata = false;
-        x.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
-        {
-            ValidAudiences = new[] { "branch" }
-        };
-    });
+//Authentication JWT
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
+builder.Services.AddCors(options =>
+ {
+     options.AddPolicy("CorsPolicy",
+         builder => builder.AllowAnyOrigin()
+             .AllowAnyMethod()
+             .AllowAnyHeader());
+ });
+
+builder.Services.AddOcelot().AddCacheManager(settings => settings.WithDictionaryHandle());
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+
 app.UseRouting();
+
+app.UseMiddleware<RequestResponseLogging>();
+
+app.UseAuthentication();
+
+app.UseCors("CorsPolicy");
 
 app.UseEndpoints(endpoints =>
 {
@@ -46,5 +54,7 @@ app.UseEndpoints(endpoints =>
         await context.Response.WriteAsync("Hello World!");
     });
 });
+
 await app.UseOcelot();
+
 app.Run();
