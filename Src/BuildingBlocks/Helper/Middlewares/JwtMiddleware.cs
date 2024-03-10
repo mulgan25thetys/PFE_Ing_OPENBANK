@@ -1,7 +1,8 @@
-﻿using OcelotApiGW.API.Utils.Interfaces;
+﻿using Helper.Utils.Interfaces;
+using Microsoft.AspNetCore.Http;
 using System;
 
-namespace OcelotApiGW.API.Middlewares
+namespace Helper.Middlewares
 {
     public class JwtMiddleware : IMiddleware
     {
@@ -21,12 +22,13 @@ namespace OcelotApiGW.API.Middlewares
             if (!string.IsNullOrEmpty(token))
             {
                 // Verify the token using the IJwtBuilder
-                var userId = jwtUtils.ValidateToken(token);
+                var loggedUser = jwtUtils.ValidateTokenAndGetLoggedUser(token);
 
-                if (userId != null)
+                if (loggedUser != null)
                 {
                     // Store the userId in the HttpContext items for later use
-                    context.Items["userId"] = userId;
+                    context.Items["userId"] = loggedUser.userId;
+                    context.Items["userRole"] = loggedUser.userRole;
                 }
                 else
                 {

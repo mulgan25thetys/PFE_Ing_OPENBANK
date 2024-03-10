@@ -43,6 +43,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Agreement", "Agreement", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AccountAccess", "AccountAccess", "{7491070E-CC5A-4F14-813B-15D495974DD1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helper", "BuildingBlocks\Helper\Helper.csproj", "{A0DCC1DD-4862-4D1D-95C0-B2DCBC5C4406}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,6 +91,10 @@ Global
 		{308144F2-C318-4B2C-8084-6AD9BAB80333}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{308144F2-C318-4B2C-8084-6AD9BAB80333}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{308144F2-C318-4B2C-8084-6AD9BAB80333}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0DCC1DD-4862-4D1D-95C0-B2DCBC5C4406}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0DCC1DD-4862-4D1D-95C0-B2DCBC5C4406}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0DCC1DD-4862-4D1D-95C0-B2DCBC5C4406}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0DCC1DD-4862-4D1D-95C0-B2DCBC5C4406}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -109,6 +115,7 @@ Global
 		{308144F2-C318-4B2C-8084-6AD9BAB80333} = {73455740-9F7E-40C4-8756-230C72113E64}
 		{0494FC1D-05E3-41A4-B369-CB5A9B1D3E0F} = {BF40296F-3524-44EC-9AE5-F85471EDD78E}
 		{7491070E-CC5A-4F14-813B-15D495974DD1} = {BF40296F-3524-44EC-9AE5-F85471EDD78E}
+		{A0DCC1DD-4862-4D1D-95C0-B2DCBC5C4406} = {98ECD4F4-F897-4A46-ADD1-B24F02933B5F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1C993C2B-4E67-469C-B41C-78A89AB4D886}

@@ -39,13 +39,14 @@ namespace Account.API.Services
                 $"/{_config.GetValue<string>("OracleSettings:DatabaseTableName")}/";
         }
 
-        public async Task<AccountModel> AddAccount(AccountRequest account)
+        public async Task<AccountModel> AddAccount(AccountRequest account, string? ownerId = "")
         {
             #region Account Model Construction
             Random generator = new Random();
             AccountModel model = new AccountModel();
+            model.OWNERID = ownerId;
             model.ACCNUMBER = generator.NextInt64(0, 100000000000);
-            model.BANKDETAILSKEY = _config.GetValue<int>("BankSetting:BankDetailsKey");
+            model.BANKDETAILSKEY = int.Parse(_config.GetValue<string>("BankSetting:BankDetailsKey"));
             model.BANKCODE = _config.GetValue<string>("BankSetting:CodeBIC");
             model.BANKNAME = _config.GetValue<string>("BankSetting:Name");
             model.CREATEDAT = DateTime.Now;
@@ -74,21 +75,33 @@ namespace Account.API.Services
 
         }
 
-        public async Task<AccountModel> GetAccount(Int64 accountNumber)
+        public async Task<AccountModel> GetAccount(Int64 accountNumber, string? ownerId = "")
         {
-            var response = await _client.GetAsync(endPointUrl + accountNumber);
+            string filter = ownerId != "" ? "?q= { \"accnumber\":{ \"$eq\":\""+ accountNumber + "\" }, \"ownerid\" : { \"$eq\":\"" + ownerId + "\" }  }" : accountNumber.ToString();
+            var response = await _client.GetAsync(endPointUrl + filter);
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsAsync<AccountModel>();
+            AccountList list = await response.Content.ReadAsAsync<AccountList>();
+            return list.Items.FirstOrDefault();
         }
 
-        public async Task<AccountList> GetAllAccounts()
+        public async Task<AccountList> GetAllAccounts(string? ownerId = "")
         {
-            var response = await _client.GetAsync(endPointUrl);
+            if (ownerId == "")
+            {
+                var response = await _client.GetAsync(endPointUrl);
 
-            return await response.Content.ReadAsAsync<AccountList>();
+                return await response.Content.ReadAsAsync<AccountList>();
+            }
+            else
+            {
+                string filter = "?q= {\"ownerid\" : { \"$eq\":\"" + ownerId + "\" } }";
+                var response = await _client.GetAsync(endPointUrl + filter);
+
+                return await response.Content.ReadAsAsync<AccountList>();
+            }
         }
 
-        public async Task<AccountList> GetAllFilteringAccounts(string filter)
+        public async Task<AccountList> GetAllFilteringAccounts(string filter, string? ownerId = "")
         {
             try
             {

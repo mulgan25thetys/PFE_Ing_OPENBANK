@@ -1,4 +1,4 @@
-﻿namespace Branch.API.Utils.Models
+﻿namespace Helper.Utils.Models
 {
     public class JwtOptions
     {

@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
-namespace OcelotApiGW.Middlewares
+namespace Helper.Middlewares
 {
     public class RequestResponseLogging
     {

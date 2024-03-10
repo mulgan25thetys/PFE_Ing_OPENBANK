@@ -1,18 +1,10 @@
 using Branch.API.Extensions;
-using Branch.API.Middlewares;
+using Helper.Middlewares;
 using Branch.API.Services;
 using Branch.API.Services.Interfaces;
-using Branch.API.Utils;
-using Branch.API.Utils.Interfaces;
-using Branch.API.Utils.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
+using Helper.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,40 +38,9 @@ builder.Host.UseSerilog((context, configuration) =>
 });
 
 #region Configuration of Authorization with JWT
-var section = builder.Configuration.GetSection("JWT");
-var options = section.Get<JwtOptions>();
-var key = Encoding.UTF8.GetBytes(options.Secret);
-section.Bind(options);
-builder.Services.Configure<JwtOptions>(section);
-
-builder.Services.AddSingleton<IJwtUtils, JwtUtils>();
-builder.Services.AddTransient<JwtMiddleware>();
-
-builder.Services.AddAuthentication(x =>
-{
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(x =>
-    {
-        x.RequireHttpsMetadata = false;
-        x.SaveToken = true;
-        x.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = false,
-            ValidateAudience = false
-        };
-    });
-
-builder.Services.AddAuthorization(x =>
-{
-    x.DefaultPolicy = new AuthorizationPolicyBuilder()
-        .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
-        .RequireAuthenticatedUser()
-        .Build();
-});
+builder.Services.AddJwtAuthentication(builder.Configuration);
 #endregion
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -57,14 +57,73 @@
         }
       ],
       "UpstreamPathTemplate": "/Accounts",
-      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "UpstreamHttpMethod": [ "GET" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
       },
       "RouteClaimsRequirement": {
-        "Role": [ "ADMIN", "CUSTOMER" ]
+        "Role": "ADMIN"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Accounts/Custom",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "account.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/Accounts/Custom",
+      "UpstreamHttpMethod": [ "GET" ],
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": "CUSTOMER"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Accounts",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "account.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/Accounts",
+      "UpstreamHttpMethod": [ "POST" ],
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": "CUSTOMER"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Accounts/{account_number}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "account.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/Accounts/Custom/{account_number}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": "CUSTOMER"
       }
     },
     {
@@ -83,9 +142,10 @@
         "AllowedScopes": []
       },
       "RouteClaimsRequirement": {
-        "Role": [ "ADMIN", "CUSTOMER" ]
+        "Role": "ADMIN"
       }
     },
+
     //Transaction API
     {
       "DownstreamPathTemplate": "/api/v1/Transactions/add-withdrawal",

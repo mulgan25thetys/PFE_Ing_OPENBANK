@@ -6,10 +6,10 @@ namespace Account.API.Services.Interfaces
 {
     public interface IAccountService
     {
-        Task<AccountModel> AddAccount(AccountRequest account);
+        Task<AccountModel> AddAccount(AccountRequest account, string? ownerId);
         Task<bool> UpdateAccount(AccountModel account, Int64 transactionId);
-        Task<AccountModel> GetAccount(Int64 accountNumber);
-        Task<AccountList> GetAllAccounts();
-        Task<AccountList> GetAllFilteringAccounts(string filter);
+        Task<AccountModel> GetAccount(Int64 accountNumber, string? ownerId="");
+        Task<AccountList> GetAllAccounts(string? ownerId = "");
+        Task<AccountList> GetAllFilteringAccounts(string filter, string? ownerId = "");
     }
 }

@@ -24,5 +24,6 @@ namespace Account.Grpc.Models
         public DateTime CREATEDAT { get; set; }
         public DateTime UPDATEDAT { get; set; }
         public string STATUS { get; set; }
+        public string OWNERID { get; set; }
     }
 }

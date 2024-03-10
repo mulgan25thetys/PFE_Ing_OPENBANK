@@ -1,5 +1,6 @@
-﻿using OcelotApiGW.API.Utils.Interfaces;
-using OcelotApiGW.API.Utils.Models;
+﻿using Helper.Utils.Interfaces;
+using Helper.Utils.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -7,7 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Branch.API.Utils
+namespace Helper.Utils
 {
     public class JwtUtils : IJwtUtils
     {
@@ -17,30 +18,13 @@ namespace Branch.API.Utils
         {
             _options = options.Value ?? throw new ArgumentNullException(nameof(options));
         }
-        public string GetToken(string userId)
-        {
-            var signingKey = new SymmetricSecurityKey
-                             (Encoding.UTF8.GetBytes(_options.Secret));
-            var signingCredentials = new SigningCredentials
-                                     (signingKey, SecurityAlgorithms.HmacSha256);
-            var claims = new[]
-            {
-            new Claim("userId", userId)
-        };
-            var expirationDate = DateTime.Now.AddMinutes(_options.ExpiryMinutes);
-            var jwt = new JwtSecurityToken(claims: claims,
-                      signingCredentials: signingCredentials, expires: expirationDate);
-            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
-            return encodedJwt;
-        }
-
-        public string ValidateToken(string token)
+        public LoggedUser ValidateTokenAndGetLoggedUser(string token)
         {
             var principal = GetPrincipal(token);
             if (principal == null)
             {
-                return string.Empty;
+                return null;
             }
 
             ClaimsIdentity identity;
@@ -50,15 +34,16 @@ namespace Branch.API.Utils
             }
             catch (NullReferenceException)
             {
-                return string.Empty;
+                return null;
             }
             var userIdClaim = identity?.FindFirst("userId");
+            var userRoleClaim = identity?.FindFirst("Role");
             if (userIdClaim == null)
             {
-                return string.Empty;
+                return null;
             }
             var userId = userIdClaim.Value;
-            return userId;
+            return new LoggedUser() { userId = userId, userRole = userRoleClaim.Value};
         }
 
         private ClaimsPrincipal GetPrincipal(string token)

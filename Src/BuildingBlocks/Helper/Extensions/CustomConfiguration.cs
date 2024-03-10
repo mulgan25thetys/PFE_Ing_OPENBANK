@@ -1,15 +1,17 @@
-﻿using Branch.API.Utils;
+﻿using Helper.Middlewares;
+using Helper.Utils;
+using Helper.Utils.Interfaces;
+using Helper.Utils.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using OcelotApiGW.API.Middlewares;
-using OcelotApiGW.API.Utils.Interfaces;
-using OcelotApiGW.API.Utils.Models;
 using System.Text;
 
-namespace OcelotApiGW.Applications
+namespace Helper.Extensions
 {
-    public static class JwtAuthentication
+    public static class CustomConfiguration
     {
         public static void AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {

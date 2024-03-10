@@ -28,4 +28,5 @@ message AccountObject {
 	string createdat=14;
 	string updatedat=15;
 	string status=16;
+	string ownerid=17;
 }

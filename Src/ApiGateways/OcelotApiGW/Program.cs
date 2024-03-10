@@ -1,8 +1,8 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Ocelot.Cache.CacheManager;
-using OcelotApiGW.Middlewares;
-using OcelotApiGW.Applications;
+using Helper.Middlewares;
+using Helper.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
