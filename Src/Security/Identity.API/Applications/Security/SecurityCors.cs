@@ -4,7 +4,6 @@ using Identity.API.Utils.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Ocelot.DependencyInjection;
 using System.Text;
 
 namespace Identity.API.Applications.Security
@@ -17,7 +16,7 @@ namespace Identity.API.Applications.Security
             var section = configuration.GetSection("jwt");
             section.Bind(jwt);
             services.Configure<JwtOptions>(section);
-            services.AddSingleton<IJwtUtils, JwtUtils>();
+            services.AddScoped<IJwtUtils, JwtUtils>();
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

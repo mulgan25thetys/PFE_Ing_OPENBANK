@@ -35,6 +35,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(config =>
 {
     config.SignIn.RequireConfirmedEmail = false;
     config.SignIn.RequireConfirmedAccount = true;
+    config.Password.RequireNonAlphanumeric = false;
 
 }).AddRoles<IdentityRole>()
   .AddRoleManager<RoleManager<IdentityRole>>()

@@ -6,16 +6,32 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": "5000"
+          "Host": "branch.api",
+          "Port": "80"
         }
       ],
       "UpstreamPathTemplate": "/Branchs",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT" ],
+      "UpstreamHttpMethod": [ "GET" ],
+      "FileCacheOptions": { "TtlSeconds": 30 }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Branchs",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "branch.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/Branchs",
+      "UpstreamHttpMethod": [ "POST", "PUT" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": [ ]
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": "ADMIN"
       }
     },
     {
@@ -42,7 +58,14 @@
       ],
       "UpstreamPathTemplate": "/Accounts",
       "UpstreamHttpMethod": [ "GET", "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Accounts/{account_number}",
@@ -54,7 +77,14 @@
         }
       ],
       "UpstreamPathTemplate": "/Accounts/{account_number}",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
+      }
     },
     //Transaction API
     {
@@ -68,7 +98,11 @@
       ],
       "UpstreamPathTemplate": "/Transactions/add-withdrawal",
       "UpstreamHttpMethod": [ "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Transactions/add-deposit",
@@ -81,7 +115,11 @@
       ],
       "UpstreamPathTemplate": "/Transactions/add-deposit",
       "UpstreamHttpMethod": [ "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Transactions/transfert-account",
@@ -94,7 +132,11 @@
       ],
       "UpstreamPathTemplate": "/Transactions/transfert-account",
       "UpstreamHttpMethod": [ "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Transactions",
@@ -107,7 +149,14 @@
       ],
       "UpstreamPathTemplate": "/Transactions",
       "UpstreamHttpMethod": [ "GET" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Transactions/{transactionId}",
@@ -126,6 +175,13 @@
         "Period": "5s",
         "PeriodTimespan": 1,
         "Limit": 1
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     //Statement API
@@ -140,7 +196,14 @@
         }
       ],
       "UpstreamPathTemplate": "/Statements/{account_number}",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Statements/ByStartDate/{account_number}/{start_date}",
@@ -159,6 +222,13 @@
         "Period": "5s",
         "PeriodTimespan": 1,
         "Limit": 1
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     {
@@ -178,6 +248,13 @@
         "Period": "5s",
         "PeriodTimespan": 1,
         "Limit": 1
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     {
@@ -197,6 +274,13 @@
         "Period": "5s",
         "PeriodTimespan": 1,
         "Limit": 1
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     //Identity API
@@ -206,8 +290,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": "5007"
+          "Host": "identity.api",
+          "Port": "80"
         }
       ],
       "UpstreamPathTemplate": "/auth/register",
@@ -218,8 +302,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": "5007"
+          "Host": "identity.api",
+          "Port": "80"
         }
       ],
       "UpstreamPathTemplate": "/auth/login",

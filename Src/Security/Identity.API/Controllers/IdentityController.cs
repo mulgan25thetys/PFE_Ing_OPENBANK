@@ -49,6 +49,60 @@ namespace Identity.API.Controllers
             _jwtUtils = jwtUtils ?? throw new ArgumentNullException(nameof(jwtUtils));
         }
 
+        #region ADD USer
+        [Route("add-user")]
+        [HttpPost]
+        public async Task<IActionResult> AddUser([FromBody] AddUserRequest authDto)
+        {
+            IdentityUser user = new IdentityUser();
+            user.Email = authDto.Email;
+
+            IdentityUser existedUser = await _userManager.FindByEmailAsync(user.Email);
+            if (existedUser != null)
+            {
+                return this.StatusCode(StatusCodes.Status409Conflict, "Email address is already in used!");
+            }
+
+            int indexOfPoint = user.Email.IndexOf('.');
+            int indexString = indexOfPoint == -1 ? user.Email.IndexOf('@') : indexOfPoint;
+            user.NormalizedEmail = user.Email;
+            user.UserName = user.Email.Substring(0, indexString);
+            user.TwoFactorEnabled = true;
+            string password = GetRandomString(10);
+
+            //Add customer role if not exist
+            var checkIfRoleExist = await this._roleManager.RoleExistsAsync(authDto.Role.ToString());
+
+            if (!checkIfRoleExist)
+            {
+                await this._roleManager.CreateAsync(new IdentityRole()
+                {
+                    Name = authDto.Role.ToString(),
+                    NormalizedName = authDto.Role.ToString(),
+                });
+            }
+
+            var success = await this._userManager.CreateAsync(user, password);
+
+            if (success.Succeeded)
+            {
+                IEnumerable<string> roles = new List<string>() { authDto.Role.ToString() };
+
+                IdentityResult identityResult = await this._userManager.AddToRolesAsync(user, roles);
+
+                if (identityResult.Succeeded)
+                {
+                    return await SendEmailTokenToConfirm(user, true, password);
+                }
+                return Problem(identityResult.ToString());
+            }
+            else
+            {
+                return BadRequest(success.Errors);
+            }
+        }
+        #endregion 
+
         #region Register
         [Route("register")]
         [HttpPost]
@@ -136,7 +190,7 @@ namespace Identity.API.Controllers
             }catch(Exception ex)
             {
                 _logger.LogError("Two factor authentication: sending sms failed! "+ex.Message);
-                return this.Ok(_jwtUtils.GetToken(user.Id));
+                return this.Ok( await _jwtUtils.GetToken(user));
             }
         }
         #endregion
@@ -234,7 +288,7 @@ namespace Identity.API.Controllers
                 var result = await _userManager.ConfirmEmailAsync(user, request.Token);
                 if (result.Succeeded)
                 {
-                    return Ok(new AuthenticationResponse() { Email = user.Email, Login = user.Email, UserName = user.UserName, Token = _jwtUtils.GetToken(user.Id) });
+                    return Ok(new AuthenticationResponse() { Email = user.Email, Login = user.Email, UserName = user.UserName, Token = await _jwtUtils.GetToken(user) });
                 }
 
                 return BadRequest("Email not confirmed successfully!");
@@ -266,35 +320,7 @@ namespace Identity.API.Controllers
         #endregion
 
         #region Private methods
-        private async Task<AuthenticationToken> GenerateJwtToken(IdentityUser user)
-        {
-            var expirationTimeStamp = DateTime.Now.AddMinutes(5);
-            var userRoles = await this._userManager.GetRolesAsync(user);
-
-            var authClaims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name, user.UserName),
-                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    };
-
-            foreach (var userRole in userRoles)
-            {
-                authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-            }
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
-
-            var token = new JwtSecurityToken(
-                        issuer: _configuration["JWT:ValidIssuer"],
-                        audience: _configuration["JWT:ValidAudience"],
-                        expires: DateTime.Now.AddHours(3),
-                        claims: authClaims,
-                        signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-                        );
-
-            return new AuthenticationToken() { Value = new JwtSecurityTokenHandler().WriteToken(token) };
-        }
-
-        private async Task<IActionResult> SendEmailTokenToConfirm(IdentityUser user)
+        private async Task<IActionResult> SendEmailTokenToConfirm(IdentityUser user, bool? isAdminUser =false, string? password="" )
         {
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             _logger.LogInformation("Sending email to address "+ user.Email+" with token :" + token);
@@ -303,10 +329,16 @@ namespace Identity.API.Controllers
                           "<p>A sign in attempt requires further verification. To complete the sign in, use the verification token.</p> " +
                           "</br> " +
                           "<ul> " +
-                          "<li>Token : "+token+"</li>" +
-                          "</ul> " +
-                          "</br>" +
-                          "<p>Thanks,</p>";
+                          "<li>Username :" + user.UserName + "</li>";
+                                    
+            if (isAdminUser == true)
+            {
+                body += "<li>Password : " + password + "</li>";
+            }
+            body += "<li>Token : " + token + "</li>"+
+                     "</ul> " +
+                     "</br>" +
+                   "<p>Thanks,</p>";
 
             Email email = new Email() { Body = body, Subject = "Please verify your Email", To = user.Email };
             SenderResponse result = await _sender.SendEmail(email);
@@ -330,6 +362,20 @@ namespace Identity.API.Controllers
             //}
 
             return Ok(await _sender.SendSms(user.PhoneNumber));
+        }
+
+        private string GetRandomString(int number)
+        {
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var stringChars = new char[number];
+            var random = new Random();
+
+            for (int i = 0; i < stringChars.Length; i++)
+            {
+                stringChars[i] = chars[random.Next(chars.Length)];
+            }
+
+            return new String(stringChars);
         }
         #endregion
     }

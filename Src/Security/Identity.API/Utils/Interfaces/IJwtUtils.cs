@@ -1,8 +1,10 @@
-﻿namespace Identity.API.Utils.Interfaces
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace Identity.API.Utils.Interfaces
 {
     public interface IJwtUtils
     {
-        string GetToken(string userId);
+        Task<string> GetToken(IdentityUser user);
         string ValidateToken(string token);
     }
 }

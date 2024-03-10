@@ -1,5 +1,7 @@
-﻿using Identity.API.Utils.Interfaces;
+﻿using Identity.API.Applications.Dtos;
+using Identity.API.Utils.Interfaces;
 using Identity.API.Utils.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -12,21 +14,32 @@ namespace Branch.API.Utils
     public class JwtUtils : IJwtUtils
     {
         private readonly JwtOptions _options;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public JwtUtils(IOptions<JwtOptions> options)
+        public JwtUtils(IOptions<JwtOptions> options, UserManager<IdentityUser> userManager)
         {
             _options = options.Value ?? throw new ArgumentNullException(nameof(options));
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+
         }
-        public string GetToken(string userId)
+        public async Task<string> GetToken(IdentityUser user)
         {
+            var userRoles = await this._userManager.GetRolesAsync(user);
             var signingKey = new SymmetricSecurityKey
                              (Encoding.UTF8.GetBytes(_options.Secret));
             var signingCredentials = new SigningCredentials
                                      (signingKey, SecurityAlgorithms.HmacSha256);
-            var claims = new[]
+            var claims = new List<Claim>
             {
-            new Claim("userId", userId)
-        };
+               new Claim("userId", user.Id),
+               new Claim(ClaimTypes.Name, user.UserName),
+               new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+
+            };
+            foreach (var userRole in userRoles)
+            {
+                claims.Add(new Claim("Role", userRole));
+            }
             var expirationDate = DateTime.Now.AddMinutes(_options.ExpiryMinutes);
             var jwt = new JwtSecurityToken(claims: claims,
                       signingCredentials: signingCredentials, expires: expirationDate);

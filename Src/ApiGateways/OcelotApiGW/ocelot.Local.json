@@ -11,11 +11,27 @@
         }
       ],
       "UpstreamPathTemplate": "/Branchs",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT" ],
+      "UpstreamHttpMethod": [ "GET" ],
+      "FileCacheOptions": { "TtlSeconds": 30 }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Branchs",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": "5000"
+        }
+      ],
+      "UpstreamPathTemplate": "/Branchs",
+      "UpstreamHttpMethod": [ "POST", "PUT" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": "ADMIN"
       }
     },
     {
@@ -37,12 +53,19 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8003"
+          "Port": "5003"
         }
       ],
       "UpstreamPathTemplate": "/Accounts",
       "UpstreamHttpMethod": [ "GET", "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Accounts/{account_number}",
@@ -50,11 +73,18 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8003"
+          "Port": "5003"
         }
       ],
       "UpstreamPathTemplate": "/Accounts/{account_number}",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
+      }
     },
     //Transaction API
     {
@@ -63,12 +93,16 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8015"
+          "Port": "5015"
         }
       ],
       "UpstreamPathTemplate": "/Transactions/add-withdrawal",
       "UpstreamHttpMethod": [ "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Transactions/add-deposit",
@@ -76,12 +110,16 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8015"
+          "Port": "5015"
         }
       ],
       "UpstreamPathTemplate": "/Transactions/add-deposit",
       "UpstreamHttpMethod": [ "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Transactions/transfert-account",
@@ -89,12 +127,16 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8015"
+          "Port": "5015"
         }
       ],
       "UpstreamPathTemplate": "/Transactions/transfert-account",
       "UpstreamHttpMethod": [ "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Transactions",
@@ -102,12 +144,19 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8015"
+          "Port": "5015"
         }
       ],
       "UpstreamPathTemplate": "/Transactions",
       "UpstreamHttpMethod": [ "GET" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Transactions/{transactionId}",
@@ -115,7 +164,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8015"
+          "Port": "5015"
         }
       ],
       "UpstreamPathTemplate": "/Transactions/{transactionId}",
@@ -126,6 +175,13 @@
         "Period": "5s",
         "PeriodTimespan": 1,
         "Limit": 1
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     //Statement API
@@ -136,11 +192,18 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8006"
+          "Port": "5006"
         }
       ],
       "UpstreamPathTemplate": "/Statements/{account_number}",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Statements/ByStartDate/{account_number}/{start_date}",
@@ -148,7 +211,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8006"
+          "Port": "5006"
         }
       ],
       "UpstreamPathTemplate": "/Statements/ByStartDate/{account_number}/{start_date}",
@@ -159,6 +222,13 @@
         "Period": "5s",
         "PeriodTimespan": 1,
         "Limit": 1
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     {
@@ -167,7 +237,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8006"
+          "Port": "5006"
         }
       ],
       "UpstreamPathTemplate": "/Statements/ByEndDate/{account_number}/{end_date}",
@@ -178,6 +248,13 @@
         "Period": "5s",
         "PeriodTimespan": 1,
         "Limit": 1
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     {
@@ -186,7 +263,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": "8006"
+          "Port": "5006"
         }
       ],
       "UpstreamPathTemplate": "/Statements/BetweenDates/{account_number}/{start_date}/{end_date}",
@@ -197,6 +274,13 @@
         "Period": "5s",
         "PeriodTimespan": 1,
         "Limit": 1
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "RouteClaimsRequirement": {
+        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     //Identity API

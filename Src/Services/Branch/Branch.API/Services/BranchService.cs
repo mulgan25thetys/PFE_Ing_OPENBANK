@@ -36,17 +36,17 @@ namespace Branch.API.Services
                 var branchPost = JsonConvert.SerializeObject(model);
 
                 var response = await _client.PostAsync(endPointUrl, new StringContent(branchPost, Encoding.UTF8, "application/json"));
-                response.EnsureSuccessStatusCode();
+                //response.EnsureSuccessStatusCode();
             if (response.IsSuccessStatusCode == false)
             {
                 _logger.LogError($"Addition of the branch with code ${branch.CODE} failed");
+                return false;
             }
             else
             {
                 _logger.LogInformation($"Branch with code ${branch.CODE} added successfully!");
-            }
-                await response.Content.ReadAsAsync<BranchModel>();
                 return true;
+            }
         }
 
         public async Task<BranchList> GetAllBranches(int? page, int? size)
