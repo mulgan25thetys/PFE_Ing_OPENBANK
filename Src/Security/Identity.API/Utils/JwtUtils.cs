@@ -9,7 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Branch.API.Utils
+namespace Identity.API.Utils
 {
     public class JwtUtils : IJwtUtils
     {
@@ -39,6 +39,7 @@ namespace Branch.API.Utils
             foreach (var userRole in userRoles)
             {
                 claims.Add(new Claim("Role", userRole));
+                claims.Add(new Claim(ClaimTypes.Role, userRole));
             }
             var expirationDate = DateTime.Now.AddMinutes(_options.ExpiryMinutes);
             var jwt = new JwtSecurityToken(claims: claims,
@@ -47,7 +48,32 @@ namespace Branch.API.Utils
 
             return encodedJwt;
         }
+        public LoggedUser GetLoggedUser(string token)
+        {
+            var principal = GetPrincipal(token);
+            if (principal == null)
+            {
+                return null;
+            }
 
+            ClaimsIdentity identity;
+            try
+            {
+                identity = (ClaimsIdentity)principal.Identity;
+            }
+            catch (NullReferenceException)
+            {
+                return null;
+            }
+            var userIdClaim = identity?.FindFirst("userId");
+            var userRoleClaim = identity?.FindFirst("Role");
+            if (userIdClaim == null)
+            {
+                return null;
+            }
+            var userId = userIdClaim.Value;
+            return new LoggedUser() { userId = userId, userRole = userRoleClaim.Value };
+        }
         public string ValidateToken(string token)
         {
             var principal = GetPrincipal(token);

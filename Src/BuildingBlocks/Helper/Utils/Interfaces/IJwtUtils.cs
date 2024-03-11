@@ -1,9 +1,12 @@
 ﻿using Helper.Utils.Models;
+using Microsoft.AspNetCore.Identity;
+using System.Threading.Tasks;
 
 namespace Helper.Utils.Interfaces
 {
     public interface IJwtUtils
     {
-        LoggedUser ValidateTokenAndGetLoggedUser(string token);
+        LoggedUser GetLoggedUser(string token);
+        string ValidateToken(string token);
     }
 }

@@ -45,6 +45,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AccountAccess", "AccountAcc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helper", "BuildingBlocks\Helper\Helper.csproj", "{A0DCC1DD-4862-4D1D-95C0-B2DCBC5C4406}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Account.Access.API", "Services\AccountAccess\Account.Access.API\Account.Access.API.csproj", "{11F7E27C-8D04-4834-959C-7DDAB06CEE52}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,6 +97,10 @@ Global
 		{A0DCC1DD-4862-4D1D-95C0-B2DCBC5C4406}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0DCC1DD-4862-4D1D-95C0-B2DCBC5C4406}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0DCC1DD-4862-4D1D-95C0-B2DCBC5C4406}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11F7E27C-8D04-4834-959C-7DDAB06CEE52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11F7E27C-8D04-4834-959C-7DDAB06CEE52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11F7E27C-8D04-4834-959C-7DDAB06CEE52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11F7E27C-8D04-4834-959C-7DDAB06CEE52}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -116,6 +122,7 @@ Global
 		{0494FC1D-05E3-41A4-B369-CB5A9B1D3E0F} = {BF40296F-3524-44EC-9AE5-F85471EDD78E}
 		{7491070E-CC5A-4F14-813B-15D495974DD1} = {BF40296F-3524-44EC-9AE5-F85471EDD78E}
 		{A0DCC1DD-4862-4D1D-95C0-B2DCBC5C4406} = {98ECD4F4-F897-4A46-ADD1-B24F02933B5F}
+		{11F7E27C-8D04-4834-959C-7DDAB06CEE52} = {7491070E-CC5A-4F14-813B-15D495974DD1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1C993C2B-4E67-469C-B41C-78A89AB4D886}

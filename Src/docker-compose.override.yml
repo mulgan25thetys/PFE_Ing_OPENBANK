@@ -44,7 +44,7 @@ services:
     container_name: kibana
     restart: always
     ports:
-        - 5610:5610
+        - 5601:5601
     depends_on:
         - elasticsearch
     environment:
@@ -69,7 +69,7 @@ services:
     restart: always
     ports:
        - "8098:8000"
-       - "9025:9025" 
+       - "9000:9000" 
     volumes:
        -  /var/run/docker.sock:/var/run/docker.sock
        - portainer_data:/data

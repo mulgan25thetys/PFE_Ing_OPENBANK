@@ -9,12 +9,12 @@ using Identity.API.Services.Interfaces;
 using Identity.API.Services;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.AspNetCore.Rewrite;
+using Identity.API.Applications.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-//Configuration de la partie JWT Tokens
-builder.Services.AddCustomAuthentication(builder.Configuration);
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -64,6 +64,9 @@ builder.Host.UseSerilog((context, configuration) =>
                  .ReadFrom.Configuration(context.Configuration);
 });
 
+//Configuration de la partie JWT Tokens
+builder.Services.AddCustomAuthentication(builder.Configuration);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -71,7 +74,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    IdentityModelEventSource.ShowPII = true;
     app.UseDeveloperExceptionPage();
 }
 //migration automatique vers la base de donnees
@@ -81,9 +83,11 @@ app.MigrateDatabase<IdentityContext>((context, services) => {});
 //option.AddRedirect("^$", "swagger");
 //app.UseRewriter(option);
 
-app.UseAuthentication();
-
 app.UseRouting();
+
+app.UseMiddleware<JwtMiddleware>();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

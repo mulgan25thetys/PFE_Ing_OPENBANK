@@ -1,8 +1,8 @@
-﻿using Helper.Utils.Interfaces;
+﻿using Identity.API.Utils.Interfaces;
 using Microsoft.AspNetCore.Http;
 using System;
 
-namespace Helper.Middlewares
+namespace Identity.API.Applications.Middlewares
 {
     public class JwtMiddleware : IMiddleware
     {

@@ -21,7 +21,7 @@ namespace Helper.Extensions
             section.Bind(options);
             services.Configure<JwtOptions>(section);
 
-            services.AddSingleton<IJwtUtils, JwtUtils>();
+            services.AddScoped<IJwtUtils, JwtUtils>();
             services.AddTransient<JwtMiddleware>();
 
             services.AddAuthentication(x =>

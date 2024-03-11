@@ -50,12 +50,14 @@ namespace Identity.API.Controllers
         }
 
         #region ADD USer
+        [Authorize(Roles = "ADMIN" )]
         [Route("add-user")]
         [HttpPost]
         public async Task<IActionResult> AddUser([FromBody] AddUserRequest authDto)
         {
             IdentityUser user = new IdentityUser();
             user.Email = authDto.Email;
+            user.PhoneNumber = authDto.Phone;
 
             IdentityUser existedUser = await _userManager.FindByEmailAsync(user.Email);
             if (existedUser != null)

@@ -1,6 +1,7 @@
 ﻿using Helper.Utils.Interfaces;
 using Helper.Utils.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -19,7 +20,32 @@ namespace Helper.Utils
             _options = options.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public LoggedUser ValidateTokenAndGetLoggedUser(string token)
+        public string ValidateToken(string token)
+        {
+            var principal = GetPrincipal(token);
+            if (principal == null)
+            {
+                return string.Empty;
+            }
+
+            ClaimsIdentity identity;
+            try
+            {
+                identity = (ClaimsIdentity)principal.Identity;
+            }
+            catch (NullReferenceException)
+            {
+                return string.Empty;
+            }
+            var userIdClaim = identity?.FindFirst("userId");
+            if (userIdClaim == null)
+            {
+                return string.Empty;
+            }
+            var userId = userIdClaim.Value;
+            return userId;
+        }
+        public LoggedUser GetLoggedUser(string token)
         {
             var principal = GetPrincipal(token);
             if (principal == null)
