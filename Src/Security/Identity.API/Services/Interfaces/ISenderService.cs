@@ -6,6 +6,6 @@ namespace Identity.API.Services.Interfaces
     public interface ISenderService
     {
         public Task<SenderResponse> SendEmail(Email email);
-        public Task<SenderResponse> SendSms(string phoneNumber);
+        public Task<bool> SendSms(IdentityMessage message);
     }
 }

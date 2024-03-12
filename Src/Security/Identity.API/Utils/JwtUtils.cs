@@ -48,6 +48,24 @@ namespace Identity.API.Utils
 
             return encodedJwt;
         }
+        public async Task<string> GetNotAuthenticatedToken(IdentityUser user)
+        {
+            var signingKey = new SymmetricSecurityKey
+                             (Encoding.UTF8.GetBytes(_options.Secret));
+            var signingCredentials = new SigningCredentials
+                                     (signingKey, SecurityAlgorithms.HmacSha256);
+            var claims = new List<Claim>
+            {
+               new Claim(ClaimTypes.Name, user.UserName),
+
+            };
+            var expirationDate = DateTime.Now.AddMinutes(_options.ExpiryMinutes);
+            var jwt = new JwtSecurityToken(claims: claims,
+                      signingCredentials: signingCredentials, expires: expirationDate);
+            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+            return encodedJwt;
+        }
         public LoggedUser GetLoggedUser(string token)
         {
             var principal = GetPrincipal(token);

@@ -9,6 +9,8 @@ using Identity.API.Services.Interfaces;
 using Twilio.Clients;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
+using Twilio.TwiML.Messaging;
+using static ASPSMSX2.ASPSMSX2SoapClient;
 
 namespace Identity.API.Services
 {
@@ -71,24 +73,41 @@ namespace Identity.API.Services
             return new SenderResponse() { Status = true, Message = "Email sent." };
         }
 
-        public async Task<SenderResponse> SendSms(string phoneNumber)
+        public async Task<bool> SendSms(IdentityMessage message )
         {
-            Random rand = new Random();
             bool status = true;
-            TwilioClient.Init(_configuration.GetValue<string>("SmsSettings:AccountId"), _configuration.GetValue<string>("SmsSettings:AuthKey"));
+            //TwilioClient.Init(_configuration.GetValue<string>("SmsSettings:AccountId"), _configuration.GetValue<string>("SmsSettings:AuthKey"));
 
-            var message = MessageResource.Create(
-                body: $"Your verification code is: {rand.Next(6)}",
-                from: new Twilio.Types.PhoneNumber(_configuration.GetValue<string>("SmsSettings:FromPhoneNumber")), 
-                to: new Twilio.Types.PhoneNumber(phoneNumber)
-            );
+            //var message = MessageResource.Create(
+            //    body: $"Your verification code is: {rand.Next(6)}",
+            //    from: new Twilio.Types.PhoneNumber(_configuration.GetValue<string>("SmsSettings:FromPhoneNumber")), 
+            //    to: new Twilio.Types.PhoneNumber(phoneNumber)
+            //);
 
-            if (message.AccountSid != null)
+            //if (message.AccountSid != null)
+            //{
+            //    _logger.LogError(message.Body);
+            //    status = false;
+            //}
+            //return new SenderResponse() { Status = status, Message = message.Body};
+            
+            SmsSettings Keys = new SmsSettings();
+            var soapSms = new ASPSMSX2.ASPSMSX2SoapClient(EndpointConfiguration.ASPSMSX2Soap);
+            try
             {
-                _logger.LogError(message.Body);
+                 await soapSms.SendSimpleTextSMSAsync(
+                  _configuration.GetValue<string>("SmsSettings:SMSAccountIdentification"),
+                  _configuration.GetValue<string>("SmsSettings:SMSAccountPassword"),
+                  message.Destination,
+                  _configuration.GetValue<string>("SmsSettings:SMSAccountFrom"),
+                  message.Body);
+                  soapSms.Close();
+            }catch(Exception ex)
+            {
+                _logger.LogError("Send sms failed! "+ex.Message);
                 status = false;
             }
-            return new SenderResponse() { Status = status, Message = message.Body};
+            return status;
         }
     }
 }

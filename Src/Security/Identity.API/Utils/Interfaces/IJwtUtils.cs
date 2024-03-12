@@ -7,6 +7,7 @@ namespace Identity.API.Utils.Interfaces
     {
         LoggedUser GetLoggedUser(string token);
         Task<string> GetToken(IdentityUser user);
+        Task<string> GetNotAuthenticatedToken(IdentityUser user);
         string ValidateToken(string token);
     }
 }

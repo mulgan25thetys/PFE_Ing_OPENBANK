@@ -10,11 +10,15 @@ using Identity.API.Services;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.AspNetCore.Rewrite;
 using Identity.API.Applications.Middlewares;
+using Identity.API.Applications.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+var sectionSms = builder.Configuration.GetSection("SmsSettings");
+var optionSms = sectionSms.Get<SmsSettings>();
+sectionSms.Bind(optionSms);
+builder.Services.Configure<SmsSettings>(sectionSms);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

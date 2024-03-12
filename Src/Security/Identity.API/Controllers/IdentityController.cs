@@ -9,12 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.Data;
-using System.IdentityModel.Tokens.Jwt;
-using System.Net;
-using System.Security.Claims;
-using System.Text;
+using Twilio.Http;
 
 namespace Identity.API.Controllers
 {
@@ -32,7 +27,7 @@ namespace Identity.API.Controllers
         private readonly IJwtUtils _jwtUtils;
 
         public IdentityController(UserManager<IdentityUser> userManager,
-            ISenderService email, IJwtUtils jwtUtils,
+            ISenderService sender, IJwtUtils jwtUtils,
             IWebHostEnvironment webHostEnvironment,
             IConfiguration configuration,
             RoleManager<IdentityRole> roleManager,
@@ -44,7 +39,7 @@ namespace Identity.API.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _env = webHostEnvironment ?? throw new ArgumentException(nameof(webHostEnvironment));
-            _sender = email ?? throw new ArgumentNullException(nameof(email));
+            _sender = sender ?? throw new ArgumentNullException(nameof(sender));
             _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
             _jwtUtils = jwtUtils ?? throw new ArgumentNullException(nameof(jwtUtils));
         }
@@ -166,34 +161,62 @@ namespace Identity.API.Controllers
 
             user = user == null ? await _userManager.FindByEmailAsync(authDto.Login) : user;
 
+            //var result = await _signInManager.PasswordSignInAsync(user, authDto.Password, true, true);
+
             if (user != null || await _userManager.CheckPasswordAsync(user, authDto.Password))
             {
-                //var result = await _signInManager.PasswordSignInAsync(user, authDto.Password, true, true);
-
-                //if (result.Succeeded == false)
-                //{
-                //    return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Can not sign in!");
-                //}
                 if (!user.EmailConfirmed)
                 {
                     return await SendEmailTokenToConfirm(user);
-                    //return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Please confirm your email address: " + user.Email);
                 }
             }
             else
             {
                 return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Bad Credentials!");
             }
-            
 
             try
             {
-                return await SetTwoFactorAuthentication(user);
+                await SetTwoFactorAuthentication(user);
+                return Ok(new MessageResponse() { Message = "Please check your phone number, a code has been sent to you by sms!", Token = await _jwtUtils.GetNotAuthenticatedToken(user) });
             }catch(Exception ex)
             {
                 _logger.LogError("Two factor authentication: sending sms failed! "+ex.Message);
                 return this.Ok( await _jwtUtils.GetToken(user));
             }
+        }
+        #endregion
+
+        #region Phone Number manager
+        [HttpPost]
+        [Authorize]
+        [Route("add-phone-number")]
+        public async Task<IActionResult> AddPhoneNumber(AddPhoneNumberRequest request)
+        {
+            var user = await _userManager.FindByNameAsync(User.Identity.Name);
+            var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, request.Number);
+            IdentityMessage message = new IdentityMessage
+            {
+                Destination = request.Number,
+                Body = "Your security code is: " + code
+            };
+            // Send token
+            return Ok(await _sender.SendSms(message));
+        }
+        [HttpPut]
+        [Authorize]
+        [Route("verify-phone-number")]
+        public async Task<IActionResult> VerifyPhoneNumber(VerifyPhoneNumberRequest request)
+        {
+            var user = await _userManager.FindByNameAsync(User.Identity.Name);
+            var result = await _userManager.ChangePhoneNumberAsync(user, request.PhoneNumber, request.Code);
+
+            if (result.Succeeded)
+            {
+                return Ok(await _jwtUtils.GetToken(user));
+            }
+            _logger.LogError($"Phone verification failed Number: {request.PhoneNumber}");
+            return Problem();
         }
         #endregion
 
@@ -353,17 +376,16 @@ namespace Identity.API.Controllers
             return Ok(result.Message + "to " + user.Email);
         }
 
-        private async Task<IActionResult> SetTwoFactorAuthentication(IdentityUser user)
+        private async Task<bool> SetTwoFactorAuthentication(IdentityUser user)
         {
-            //var authenticatorKey = await _userManager.GetAuthenticatorKeyAsync(user);
-            //var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
-            //if (string.IsNullOrEmpty(authenticatorKey))
-            //{
-            //    await _userManager.ResetAuthenticatorKeyAsync(user);
-            //    authenticatorKey = await _userManager.GetAuthenticatorKeyAsync(user);
-            //}
+            var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, user.PhoneNumber);
+            IdentityMessage message = new IdentityMessage
+            {
+                Destination = user.PhoneNumber,
+                Body = "Your security code is: " + code
+            };
 
-            return Ok(await _sender.SendSms(user.PhoneNumber));
+            return await _sender.SendSms(message);
         }
 
         private string GetRandomString(int number)
