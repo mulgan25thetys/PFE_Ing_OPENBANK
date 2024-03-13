@@ -1,8 +1,8 @@
-﻿namespace Account.Access.API.Models
+﻿namespace Agreement.API.Models
 {
     public enum ACCESS_STATUS
     {
-        GRANTED,EXPIRED,REVOKE, WAITING
+        GRANTED,EXPIRED,REVOKE,WAITING
     }
     public class AccountAccess
     {

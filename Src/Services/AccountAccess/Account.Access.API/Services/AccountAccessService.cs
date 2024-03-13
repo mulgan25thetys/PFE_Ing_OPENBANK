@@ -2,6 +2,8 @@
 using Account.Access.API.Models.Responses;
 using Account.Access.API.Services.Grpc;
 using Account.Access.API.Services.Interfaces;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace Account.Access.API.Services
 {
@@ -26,15 +28,39 @@ namespace Account.Access.API.Services
 
         public async Task<bool> CheckAccessAsync(string providerId, long accountNumber)
         {
-            string filter = "{ \"providerid\": { \"$eq\": \"" + providerId + "\" }, \"accnumber\": { \"$eq\": \"" + accountNumber + "\"  }, \"status\": { \"$eq\": \"" + ACCESS_STATUS.GRANTED.ToString() +"\" } }";
+            var account = await _accountService.GetAccountDataAsync(accountNumber);
+
+            string filter = "{ \"providerid\": { \"$eq\": \"" + providerId + "\" }, \"accnumber\": { \"$eq\": \"" + account.Accnumber + "\"  } } }";
             var response = await _client.GetAsync(endPointUrl + "?q=" + filter);
             response.EnsureSuccessStatusCode();
-             AccountAccessList list = await response.Content.ReadAsAsync<AccountAccessList>();
+            AccountAccessList list = await response.Content.ReadAsAsync<AccountAccessList>();
             if (list != null && list.Items.Count > 0)
             {
-                return true;
+                AccountAccess access = list.Items.FirstOrDefault();
+                if (access.STATUS == ACCESS_STATUS.GRANTED.ToString())
+                {
+                    return true;
+                }
+                return false;
             }
-            return false;
+            else
+            {
+                AccountAccess access = new AccountAccess()
+                {
+                    ACCNUMBER = account.Accnumber,
+                    CUSTOMERID = account.Ownerid,
+                    PROVIDERID = providerId,
+                    CREATEDAT = DateTime.Now,
+                    UPDATEDAT = DateTime.Now,
+                    DURATION = 0,
+                    STATUS = ACCESS_STATUS.WAITING.ToString()
+                };
+                var accessJson = JsonConvert.SerializeObject(access);
+                var result = await _client.PutAsync(endPointUrl + access.ID, new StringContent(accessJson, Encoding.UTF8, "application/json"));
+                result.EnsureSuccessStatusCode();
+                _logger.LogInformation($"An account access has been up to date! customer : {access.CUSTOMERID}, provider : {access.PROVIDERID}");
+                return false;
+            }
         }
 
         public async Task<AccountModel> GetAccountAsync(string providerId, long accountNumber)

@@ -4,5 +4,6 @@
     {
         public const string TransactionQueue = "transaction-queue";
         public const string AccountQueue = "account-queue";
+        public const string AccountAccessQueue = "account-access-queue";
     }
 }

@@ -163,26 +163,26 @@ namespace Identity.API.Controllers
 
             //var result = await _signInManager.PasswordSignInAsync(user, authDto.Password, true, true);
 
-            if (user != null || await _userManager.CheckPasswordAsync(user, authDto.Password))
+            if (user != null && await _userManager.CheckPasswordAsync(user, authDto.Password))
             {
                 if (!user.EmailConfirmed)
                 {
                     return await SendEmailTokenToConfirm(user);
                 }
+                try
+                {
+                    await SetTwoFactorAuthentication(user);
+                    return Ok(new MessageResponse() { Message = "Please check your phone number, a code has been sent to you by sms!", Token = await _jwtUtils.GetNotAuthenticatedToken(user) });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Two factor authentication: sending sms failed! " + ex.Message);
+                    return this.Ok(await _jwtUtils.GetToken(user));
+                }
             }
             else
             {
                 return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Bad Credentials!");
-            }
-
-            try
-            {
-                await SetTwoFactorAuthentication(user);
-                return Ok(new MessageResponse() { Message = "Please check your phone number, a code has been sent to you by sms!", Token = await _jwtUtils.GetNotAuthenticatedToken(user) });
-            }catch(Exception ex)
-            {
-                _logger.LogError("Two factor authentication: sending sms failed! "+ex.Message);
-                return this.Ok( await _jwtUtils.GetToken(user));
             }
         }
         #endregion

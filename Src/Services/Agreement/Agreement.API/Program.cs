@@ -1,27 +1,17 @@
-using Account.Access.API.Services;
-using Account.Access.API.Services.Grpc;
-using Account.Access.API.Services.Interfaces;
-using Account.Grpc.Protos;
+using Agreement.API.Services;
+using Agreement.API.Services.Interfaces;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using Helper.Extensions;
 using Helper.Middlewares;
-using EventBus.Message.Common;
-//using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddScoped<AccountService>();
 
-builder.Services.AddHttpClient<IAccountAccessService, AccountAccessService>(c =>
+builder.Services.AddHttpClient<IAgreementService, AgreementService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
-
-builder.Services.AddGrpcClient<AccountProtoService.AccountProtoServiceClient>(options =>
-{
-    options.Address = new Uri(builder.Configuration["GrpcSettings:AccountUrl"]);
-});
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -46,21 +36,6 @@ builder.Host.UseSerilog((context, configuration) =>
                  .Enrich.WithProperty("Environnement", context.HostingEnvironment.EnvironmentName)
                  .ReadFrom.Configuration(context.Configuration);
 });
-
-//RabbitMQ & Masstransit configuration
-//builder.Services.AddMassTransit(config =>
-//{
-//    config.AddConsumer<AccountConsumer>();
-//    config.UsingRabbitMq((ctx, cfg) =>
-//    {
-//        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
-//        cfg.ReceiveEndpoint(EventBusConstants.AccountQueue, c =>
-//        {
-//            c.ConfigureConsumer<AccountConsumer>(ctx);
-//        });
-//    });
-//});
-//builder.Services.AddMassTransitHostedService();
 
 #region Configuration of Authorization with JWT
 builder.Services.AddJwtAuthentication(builder.Configuration);
