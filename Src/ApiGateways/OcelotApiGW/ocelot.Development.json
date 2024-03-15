@@ -213,9 +213,6 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     {
@@ -239,9 +236,6 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     //Statement API
@@ -260,9 +254,6 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     {
@@ -286,9 +277,6 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     {
@@ -312,9 +300,6 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": [ "ADMIN", "CUSTOMER" ]
       }
     },
     {
@@ -338,13 +323,189 @@
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": [ "ADMIN", "CUSTOMER" ]
+      }
+    },
+    //Account Access API
+
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "account.access.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/AccountAccess",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/VerifyAccess/{account_number}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "account.access.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/AccountAccess/VerifyAccess/{account_number}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/GetAccess/{account_number}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "account.access.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/AccountAccess/GetAccess/{account_number}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/GetAccount/{account_number}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "account.access.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/AccountAccess/GetAccount/{account_number}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    //Agreement API
+
+    {
+      "DownstreamPathTemplate": "/api/v1/Agreements",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agreement.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/Agreements",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Agreements/{accessId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agreement.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/Agreements/{accessId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Agreements/custom",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agreement.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/Agreements/custom",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Agreements/custom/by-account/{account_number}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agreement.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/Agreements/custom/by-account/{account_number}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Agreements/custom/by-provider/{providerId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agreement.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/Agreements/custom/by-provider/{providerId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Agreements",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agreement.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/Agreements",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
       }
     },
     //Identity API
-
+    {
+      "DownstreamPathTemplate": "/api/v1/Identity/add-user",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/add-user",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
     {
       "DownstreamPathTemplate": "/api/v1/Identity/register",
       "DownstreamScheme": "http",
@@ -404,6 +565,38 @@
       ],
       "UpstreamPathTemplate": "/auth/confirm-email",
       "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Identity/add-phone-number",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/add-phone-number",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Identity/verify-phone-number",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/verify-phone-number",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Identity/logout",

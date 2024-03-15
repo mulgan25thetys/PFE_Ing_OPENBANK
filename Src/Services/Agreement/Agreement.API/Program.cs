@@ -9,6 +9,24 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddScheduler(builder =>
+{
+    builder.Services.AddScoped<AgreementService>();
+    builder.AddJob<AgreementJob>();
+
+    // register a custom error processing for internal errors
+    builder.AddUnobservedTaskExceptionHandler(sp =>
+    {
+        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("CronJobs");
+
+        return
+            (sender, args) =>
+            {
+                logger?.LogError(args.Exception?.Message);
+                args.SetObserved();
+            };
+    });
+});
 
 builder.Services.AddHttpClient<IAgreementService, AgreementService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));

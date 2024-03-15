@@ -77,5 +77,14 @@ namespace Agreement.API.Services
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsAsync<AccountAccess>();
         }
+
+        public async Task<bool> UpdateAccessAsync(AccountAccess access)
+        {
+                var accessJson = JsonConvert.SerializeObject(access);
+                var response = await _client.PutAsync(endPointUrl + access.ID, new StringContent(accessJson, Encoding.UTF8, "application/json"));
+                response.EnsureSuccessStatusCode();
+                _logger.LogInformation($"An account access has been up to date! customer : {access.CUSTOMERID}, provider : {access.PROVIDERID}");
+                return true;
+        }
     }
 }

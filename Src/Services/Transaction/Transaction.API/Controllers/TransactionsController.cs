@@ -2,6 +2,7 @@
 using EventBus.Message.Events;
 using MassTransit;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Transaction.API.Features.Commands;
@@ -16,6 +17,7 @@ namespace Transaction.API.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
+    [Authorize]
     public class TransactionsController : ControllerBase
     {
         private readonly AccountService accountService;
@@ -37,6 +39,7 @@ namespace Transaction.API.Controllers
         [ProducesResponseType(typeof(bool), 200)]
         [ProducesResponseType(typeof(bool), 400)]
         [ProducesResponseType(typeof(bool), 500)]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<bool>> AddWithdrawal(WithDrawalRequest request)
         {
             Random random = new Random();
@@ -64,6 +67,7 @@ namespace Transaction.API.Controllers
         [ProducesResponseType(typeof(bool), 200)]
         [ProducesResponseType(typeof(bool), 400)]
         [ProducesResponseType(typeof(bool), 500)]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<bool>> AddDeposit(DepositRequest request)
         {
             var creditedAccount = await accountService.GetAccountDataAsync(request.Trans_Credited_Acc);
@@ -97,6 +101,7 @@ namespace Transaction.API.Controllers
         [ProducesResponseType(typeof(bool), 200)]
         [ProducesResponseType(typeof(bool), 400)]
         [ProducesResponseType(typeof(bool), 500)]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<bool>> AddTransfert(TransfertAccountsRequest request)
         {
             var creditedAccount = await accountService.GetAccountDataAsync(request.Trans_Credited_Acc);
@@ -137,6 +142,7 @@ namespace Transaction.API.Controllers
         [HttpGet("{transactionId}", Name = "GetTransactionById")]
         [ProducesResponseType(typeof(TransactionModel), 200)]
         [ProducesResponseType(typeof(TransactionModel), 404)]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
         public async Task<ActionResult<TransactionModel>> GetTransactionById(long transactionId)
         {
             return await _mediator.Send(new GetTransactionCmd() { TransactionId = transactionId });
@@ -144,6 +150,7 @@ namespace Transaction.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(TransactionList), 200)]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
         public async Task<ActionResult<TransactionList>> GetAllTransactionByAccount(long account_number)
         {
             return await _mediator.Send(new GetAccountTransactions() { Account_Number = account_number });

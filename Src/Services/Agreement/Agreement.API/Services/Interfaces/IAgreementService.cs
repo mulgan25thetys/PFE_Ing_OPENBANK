@@ -12,5 +12,6 @@ namespace Agreement.API.Services.Interfaces
         public Task<AccountAccessList> GetAccessListByProviderAsync(string userId, string providerId);
         public Task<AccountAccess> GetOneAccessAsync(int accessId);
         public Task<bool> EditAccessAsync(AccessRequest request, string userId);
+        public Task<bool> UpdateAccessAsync(AccountAccess access);
     }
 }

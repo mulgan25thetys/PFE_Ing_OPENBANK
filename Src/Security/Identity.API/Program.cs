@@ -7,10 +7,11 @@ using Serilog.Sinks.Elasticsearch;
 using Identity.API.Extensions;
 using Identity.API.Services.Interfaces;
 using Identity.API.Services;
-using Microsoft.IdentityModel.Logging;
-using Microsoft.AspNetCore.Rewrite;
+using EventBus.Message.Common;
+using MassTransit;
 using Identity.API.Applications.Middlewares;
 using Identity.API.Applications.Models;
+using Identity.API.EventBusConsumer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,6 +68,24 @@ builder.Host.UseSerilog((context, configuration) =>
                  .Enrich.WithProperty("Environnement", context.HostingEnvironment.EnvironmentName)
                  .ReadFrom.Configuration(context.Configuration);
 });
+
+//RabbitMQ & Masstransit configuration
+builder.Services.AddMassTransit(config =>
+{
+    config.AddConsumer<AccountAccessConsumer>();
+    config.UsingRabbitMq((ctx, cfg) =>
+    {
+        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
+        cfg.ReceiveEndpoint(EventBusConstants.AccountAccessQueue, c =>
+        {
+            c.ConfigureConsumer<AccountAccessConsumer>(ctx);
+        });
+    });
+});
+builder.Services.AddMassTransitHostedService();
+
+//AutoMapper Configuration
+builder.Services.AddAutoMapper(typeof(Program));
 
 //Configuration de la partie JWT Tokens
 builder.Services.AddCustomAuthentication(builder.Configuration);

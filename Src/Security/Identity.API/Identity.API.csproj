@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+	  <PackageReference Include="AutoMapper" Version="13.0.1" />
+	  <PackageReference Include="MassTransit" Version="7.1.6" />
+	  <PackageReference Include="MassTransit.AspNetCore" Version="7.1.6" />
+	  <PackageReference Include="MassTransit.RabbitMQ" Version="7.1.6" />
     <PackageReference Include="ASPSMS" Version="0.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.0" />
@@ -42,6 +46,10 @@
     <PackageReference Include="System.ServiceModel.NetTcp" Version="4.10.*" />
     <PackageReference Include="System.ServiceModel.Security" Version="4.10.*" />
     <PackageReference Include="Twilio" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlocks\EventBus.Message\EventBus.Message.csproj" />
   </ItemGroup>
 
 </Project>

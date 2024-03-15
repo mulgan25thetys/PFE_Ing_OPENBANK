@@ -10,7 +10,7 @@ namespace Account.API.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
-    [Authorize]
+    
     public class AccountsController : ControllerBase
     {
         private readonly IAccountService _service;
@@ -25,6 +25,7 @@ namespace Account.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "ADMIN")]
         [ProducesResponseType(typeof(AccountList), 200)]
         public async Task<ActionResult<AccountList>> GetAllAccounts()
         {
@@ -37,6 +38,7 @@ namespace Account.API.Controllers
 
         [HttpGet]
         [Route("Custom")]
+        [Authorize(Roles = "CUSTOMER")]
         [ProducesResponseType(typeof(AccountList), 200)]
         public async Task<ActionResult<AccountList>> GetCustomAllAccounts()
         {
@@ -48,6 +50,7 @@ namespace Account.API.Controllers
         }
 
         [HttpGet("{account_number}", Name = "GetByAccountNumber")]
+        [Authorize(Roles = "ADMIN, CUSTOMER")]
         [ProducesResponseType(typeof(AccountModel), 200)]
         [ProducesResponseType(typeof(AccountModel), 404)]
         public async Task<ActionResult<AccountModel>> GetByAccountNumber(Int64 account_number)
@@ -62,6 +65,7 @@ namespace Account.API.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(AccountModel), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(AccountModel), (int)HttpStatusCode.BadRequest)]
+        [Authorize(Roles = "ADMIN, CUSTOMER")]
         public async Task<ActionResult<AccountModel>> AddAccount([FromBody] AccountRequest account)
         {
             string ownerId = "";

@@ -1,6 +1,7 @@
 using Account.Access.API.Services;
 using Account.Access.API.Services.Grpc;
 using Account.Access.API.Services.Interfaces;
+using MassTransit;
 using Account.Grpc.Protos;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
@@ -13,6 +14,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+//AutoMapper Configuration
+builder.Services.AddAutoMapper(typeof(Program));
+
 builder.Services.AddScoped<AccountService>();
 
 builder.Services.AddHttpClient<IAccountAccessService, AccountAccessService>(c =>
@@ -22,6 +26,18 @@ builder.Services.AddGrpcClient<AccountProtoService.AccountProtoServiceClient>(op
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:AccountUrl"]);
 });
+
+//RabbitMQ & Masstransit configuration
+builder.Services.AddMassTransit(config =>
+{
+    config.UsingRabbitMq((ctx, cfg) =>
+    {
+        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
+    });
+});
+builder.Services.AddMassTransitHostedService();
+
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -47,20 +63,7 @@ builder.Host.UseSerilog((context, configuration) =>
                  .ReadFrom.Configuration(context.Configuration);
 });
 
-//RabbitMQ & Masstransit configuration
-//builder.Services.AddMassTransit(config =>
-//{
-//    config.AddConsumer<AccountConsumer>();
-//    config.UsingRabbitMq((ctx, cfg) =>
-//    {
-//        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
-//        cfg.ReceiveEndpoint(EventBusConstants.AccountQueue, c =>
-//        {
-//            c.ConfigureConsumer<AccountConsumer>(ctx);
-//        });
-//    });
-//});
-//builder.Services.AddMassTransitHostedService();
+
 
 #region Configuration of Authorization with JWT
 builder.Services.AddJwtAuthentication(builder.Configuration);

@@ -8,6 +8,8 @@ using Transaction.API.EventBusConsumer;
 using Transaction.API.Services;
 using Transaction.API.Services.Grpc;
 using Transaction.API.Services.Interfaces;
+using Helper.Extensions;
+using Helper.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +68,10 @@ builder.Host.UseSerilog((context, configuration) =>
                  .ReadFrom.Configuration(context.Configuration);
 });
 
+#region Configuration of Authorization with JWT
+builder.Services.AddJwtAuthentication(builder.Configuration);
+#endregion
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -75,8 +81,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRouting();
+
+app.UseMiddleware<JwtMiddleware>();
+
+app.UseAuthentication();
+
 app.UseAuthorization();
 
-app.MapControllers();
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
 
 app.Run();

@@ -60,8 +60,8 @@ namespace Identity.API.Controllers
                 return this.StatusCode(StatusCodes.Status409Conflict, "Email address is already in used!");
             }
 
-            int indexOfPoint = user.Email.IndexOf('.');
-            int indexString = indexOfPoint == -1 ? user.Email.IndexOf('@') : indexOfPoint;
+            int indexOfPoint = user.Email.IndexOf('@');
+            int indexString = indexOfPoint == -1 ? user.Email.IndexOf('.') : indexOfPoint;
             user.NormalizedEmail = user.Email;
             user.UserName = user.Email.Substring(0, indexString);
             user.TwoFactorEnabled = true;
@@ -200,6 +200,7 @@ namespace Identity.API.Controllers
                 Destination = request.Number,
                 Body = "Your security code is: " + code
             };
+            _logger.LogInformation("User: " + user.Id + " " + message.Body);
             // Send token
             return Ok(await _sender.SendSms(message));
         }
@@ -384,7 +385,7 @@ namespace Identity.API.Controllers
                 Destination = user.PhoneNumber,
                 Body = "Your security code is: " + code
             };
-
+            _logger.LogInformation("User: " + user.Id + " " +message.Body);
             return await _sender.SendSms(message);
         }
 

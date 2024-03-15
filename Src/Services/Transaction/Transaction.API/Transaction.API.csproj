@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\EventBus.Message\EventBus.Message.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Helper\Helper.csproj" />
   </ItemGroup>
 
   <ItemGroup>

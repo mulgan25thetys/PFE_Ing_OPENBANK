@@ -26,6 +26,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\Helper\Helper.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Protobuf Include="..\..\Account\Account.Grpc\Protos\account.proto" GrpcServices="Client">
       <Link>Protos\account.proto</Link>
     </Protobuf>

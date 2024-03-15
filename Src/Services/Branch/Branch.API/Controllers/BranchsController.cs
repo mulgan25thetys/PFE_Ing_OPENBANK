@@ -57,6 +57,7 @@ namespace Branch.API.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.BadRequest)]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<bool>> Addbranch([FromBody] BranchRequest branch)
         {
             return await _service.AddBranch(branch);
@@ -65,6 +66,7 @@ namespace Branch.API.Controllers
         [HttpPut]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.BadRequest)]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ActionResult<bool>> Editbranch([FromBody] BranchModel branch)
         {
             return await _service.UpdateBranch(branch);

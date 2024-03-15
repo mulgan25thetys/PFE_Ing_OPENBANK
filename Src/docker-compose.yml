@@ -69,6 +69,18 @@ services:
       context: .
       dockerfile: Security/Identity.API/Dockerfile
 
+  account.access.api:
+    image: ${DOCKER_REGISTRY-}accountaccessapi
+    build:
+      context: .
+      dockerfile: Services/AccountAccess/Account.Access.API/Dockerfile
+
+  agreement.api:
+    image: ${DOCKER_REGISTRY-}agreementapi
+    build:
+      context: .
+      dockerfile: Services/Agreement/Agreement.API/Dockerfile
+
 networks:
   elastic:
     driver: bridge
@@ -83,6 +95,8 @@ networks:
 volumes:
   elasticsearch-data:
   portainer_data:
+
+
 
 
 

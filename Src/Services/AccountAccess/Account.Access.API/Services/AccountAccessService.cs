@@ -2,6 +2,9 @@
 using Account.Access.API.Models.Responses;
 using Account.Access.API.Services.Grpc;
 using Account.Access.API.Services.Interfaces;
+using AutoMapper;
+using EventBus.Message.Events;
+using MassTransit;
 using Newtonsoft.Json;
 using System.Text;
 
@@ -14,14 +17,18 @@ namespace Account.Access.API.Services
         private readonly AccountService _accountService;
         private readonly IConfiguration _config;
         private string endPointUrl = "";
+        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly IMapper _mapper;
 
-        public AccountAccessService(HttpClient client, ILogger<AccountAccessService> logger,
-        AccountService accountService, IConfiguration config)
+        public AccountAccessService(HttpClient client, ILogger<AccountAccessService> logger, IMapper mapper,
+        AccountService accountService, IConfiguration config, IPublishEndpoint publishEndpoint)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
             _config = config;
+            _publishEndpoint = publishEndpoint ?? throw new ArgumentNullException(nameof(publishEndpoint));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             endPointUrl = $"/ords/{_config.GetValue<string>("OracleSettings:DatabaseUser")}" +
                 $"/{_config.GetValue<string>("OracleSettings:DatabaseTableName")}/";
         }
@@ -37,7 +44,7 @@ namespace Account.Access.API.Services
             if (list != null && list.Items.Count > 0)
             {
                 AccountAccess access = list.Items.FirstOrDefault();
-                if (access.STATUS == ACCESS_STATUS.GRANTED.ToString())
+                if (access.STATUS == Models.ACCESS_STATUS.GRANTED.ToString())
                 {
                     return true;
                 }
@@ -53,12 +60,20 @@ namespace Account.Access.API.Services
                     CREATEDAT = DateTime.Now,
                     UPDATEDAT = DateTime.Now,
                     DURATION = 0,
-                    STATUS = ACCESS_STATUS.WAITING.ToString()
+                    STATUS = Models.ACCESS_STATUS.WAITING.ToString()
                 };
                 var accessJson = JsonConvert.SerializeObject(access);
-                var result = await _client.PutAsync(endPointUrl + access.ID, new StringContent(accessJson, Encoding.UTF8, "application/json"));
+                var result = await _client.PostAsync(endPointUrl, new StringContent(accessJson, Encoding.UTF8, "application/json"));
                 result.EnsureSuccessStatusCode();
                 _logger.LogInformation($"An account access has been up to date! customer : {access.CUSTOMERID}, provider : {access.PROVIDERID}");
+
+                AccountAccessEvent eventMessage = new AccountAccessEvent()
+                {
+                    ACCNUMBER = access.ACCNUMBER,
+                    CUSTOMERID = access.CUSTOMERID,
+                    STATUS = access.STATUS
+                };
+                await _publishEndpoint.Publish(eventMessage);
                 return false;
             }
         }

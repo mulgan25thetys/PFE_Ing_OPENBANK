@@ -90,7 +90,7 @@ services:
       - elasticsearch
       - identity.api
     ports:
-      - "8002:80"
+      - "8000:80"
     networks:
       - elastic
       - ords_net
@@ -125,7 +125,7 @@ services:
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
       - "GrpcSettings:BranchUrl=http://branch.grpc"
     ports:
-      - "8003:80"
+      - "8002:80"
     depends_on:
       - oracle_rest_data_service
       - elasticsearch
@@ -146,7 +146,7 @@ services:
       - "OrdsSettings:DatabaseUser=ordsuser"
       - "OrdsSettings:DatabaseTableName=account"
     ports:
-      - "8004:80"
+      - "8003:80"
     depends_on:
       - oracle_rest_data_service
     networks:
@@ -165,7 +165,7 @@ services:
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
       - "GrpcSettings:AccountUrl=http://account.grpc"
     ports:
-      - "8015:80"
+      - "8004:80"
     depends_on:
       - oracle_rest_data_service
       - elasticsearch
@@ -189,7 +189,7 @@ services:
       - "GrpcSettings:BranchUrl=http://branch.grpc"
       - "GrpcSettings:AccountUrl=http://account.grpc"
     ports:
-      - "8006:80"
+      - "8005:80"
     depends_on:
       - oracle_rest_data_service
       - elasticsearch
@@ -206,16 +206,19 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+      - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
       - "ConnectionStrings:AuthConnectionString=Server=identityDb;Database=UserDb;User Id=sa;Password=Identity2024@Pass;"
     depends_on:
       - identityDb
       - elasticsearch
+      - rabbitmq
     ports:
-      - "8007:80"
+      - "8008:80"
     networks:
       - identity_net
       - elastic
       - gateway_net
+      - rabbitmq_go_net
 
   ocelotapigw:
     container_name: ocelotapigw
@@ -230,7 +233,51 @@ services:
       - statement.api
       - identity.api
     ports:
-      - "8020:80"
+      - "8010:80"
     networks:
+      - gateway_net
+
+
+  account.access.api:
+    container_name: account.access.api
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "OracleSettings:OrdsDatabaseUrl=http://oracle_rest_data_service:8080"
+      - "OracleSettings:DatabaseUser=ordsuser"
+      - "OracleSettings:DatabaseTableName=account_access"
+      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+      - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
+      - "GrpcSettings:AccountUrl=http://account.grpc"
+    ports:
+      - "8006:80"
+    depends_on:
+      - oracle_rest_data_service
+      - elasticsearch
+      - rabbitmq
+    networks:
+      - ords_net
+      - elastic
+      - gateway_net
+      - rabbitmq_go_net
+
+  agreement.api:
+    container_name: agreement.api
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "OracleSettings:OrdsDatabaseUrl=http://oracle_rest_data_service:8080"
+      - "OracleSettings:DatabaseUser=ordsuser"
+      - "OracleSettings:DatabaseTableName=account_access"
+      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+      - "GrpcSettings:AccountUrl=http://account.grpc"
+    ports:
+      - "8007:80"
+    depends_on:
+      - oracle_rest_data_service
+      - elasticsearch
+    networks:
+      - ords_net
+      - elastic
       - gateway_net
 
