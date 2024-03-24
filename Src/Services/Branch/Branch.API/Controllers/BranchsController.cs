@@ -26,8 +26,8 @@ namespace Branch.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(BranchList), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<BranchList>> GetAllBranchs()
+        [ProducesResponseType(typeof(BranchListResponse), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<BranchListResponse>> GetAllBranchs()
         {
             int page = 1;
             int size = 10;
@@ -46,30 +46,31 @@ namespace Branch.API.Controllers
             return await _service.GetAllBranches(page, size);
         }
 
-        [HttpGet("{code}", Name = "GetByCode")]
-        [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.NotFound)]
-        public async Task<ActionResult<BranchModel>> GetBranch(int code)
+        [HttpGet("{id}", Name = "GetById")]
+        [ProducesResponseType(typeof(BranchResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(BranchResponse), (int)HttpStatusCode.NotFound)]
+        public async Task<ActionResult<BranchResponse>> GetBranch(string id)
         {
-            return await _service.GetBranch(code);
+            return await _service.GetBranch(id);
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.Created)]
-        [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(BranchResponse), (int)HttpStatusCode.Created)]
+        [ProducesResponseType(typeof(BranchResponse), (int)HttpStatusCode.BadRequest)]
         [Authorize(Roles = "ADMIN")]
-        public async Task<ActionResult<bool>> Addbranch([FromBody] BranchRequest branch)
+        public async Task<ActionResult<BranchResponse>> Addbranch([FromBody] BranchRequest branch)
         {
             return await _service.AddBranch(branch);
         }
 
-        [HttpPut]
+        [HttpDelete("{id}", Name = "DeleteBranchById")]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.BadRequest)]
         [Authorize(Roles = "ADMIN")]
-        public async Task<ActionResult<bool>> Editbranch([FromBody] BranchModel branch)
+        public async Task<ActionResult<bool>> DeleteBranch(string id)
         {
-            return await _service.UpdateBranch(branch);
+            return await _service.DeleteBranch(id);
         }
     }
 }

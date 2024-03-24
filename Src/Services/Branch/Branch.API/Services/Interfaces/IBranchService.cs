@@ -7,10 +7,10 @@ namespace Branch.API.Services.Interfaces
 {
     public interface IBranchService
     {
-        Task<bool> AddBranch(BranchRequest branch);
-        Task<bool> UpdateBranch(BranchModel branch);
-        Task<BranchList> GetAllBranches(int? page, int? size);
-        Task<BranchList> GetBranchesByFilter(string filter, int? page, int? size);
-        Task<BranchModel> GetBranch(int id);
+        Task<BranchResponse> AddBranch(BranchRequest branch);
+        Task<bool> DeleteBranch(string branch_id);
+        Task<BranchListResponse> GetAllBranches(int? page, int? size);
+        Task<BranchListResponse> GetBranchesByFilter(string filter, int? page, int? size);
+        Task<BranchResponse> GetBranch(string id);
     }
 }

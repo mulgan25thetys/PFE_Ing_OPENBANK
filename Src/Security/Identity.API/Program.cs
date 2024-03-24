@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Identity.API.Applications.Data;
 using Identity.API.Applications.Security;
 using Serilog;
@@ -12,6 +11,7 @@ using MassTransit;
 using Identity.API.Applications.Middlewares;
 using Identity.API.Applications.Models;
 using Identity.API.EventBusConsumer;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -24,7 +24,7 @@
         }
       ],
       "UpstreamPathTemplate": "/Branchs",
-      "UpstreamHttpMethod": [ "POST", "PUT" ],
+      "UpstreamHttpMethod": [ "POST" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
@@ -35,7 +35,7 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Branchs/{code}",
+      "DownstreamPathTemplate": "/api/v1/Branchs/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -43,8 +43,24 @@
           "Port": "5000"
         }
       ],
-      "UpstreamPathTemplate": "/Branchs/{code}",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamPathTemplate": "/Branchs/{id}",
+      "UpstreamHttpMethod": [ "GET", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Branchs/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": "5000"
+        }
+      ],
+      "UpstreamPathTemplate": "/Branchs/{id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
     //Account API
     {
