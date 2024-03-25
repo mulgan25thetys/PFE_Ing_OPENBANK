@@ -44,25 +44,25 @@ namespace Account.API.Services
             #region Account Model Construction
             Random generator = new Random();
             AccountModel model = new AccountModel();
-            model.OWNERID = ownerId;
-            model.ACCNUMBER = generator.NextInt64(0, 100000000000);
-            model.BANKDETAILSKEY = int.Parse(_config.GetValue<string>("BankSetting:BankDetailsKey"));
-            model.BANKCODE = _config.GetValue<string>("BankSetting:CodeBIC");
-            model.BANKNAME = _config.GetValue<string>("BankSetting:Name");
-            model.CREATEDAT = DateTime.Now;
-            model.UPDATEDAT = DateTime.Now;
-            model.BALANCE = 0;
-            model.OWNERADDRESS = account.Acc_Owner_Address;
-            model.OWNEREMAIL = account.Acc_Owner_Email;
-            model.OWNERFIRSTNAME = account.Acc_Owner_Firstname;
-            model.OWNERLASTNAME = account.Acc_Owner_Lastname;
-            model.OWNERPHONE = account.Acc_Owner_Phone;
-            model.OWNERPOSTCODE = account.Acc_Owner_Post_Code;
-            model.STATUS = AccountStatus.ENABLED.ToString(); 
-            model.IBAN = _config.GetValue<string>("AccounSettings:CountryCode")+ generator.Next(0, 100)+ generator.NextInt64(1000000000000000000) + model.BANKDETAILSKEY;
-            //branch grpc service 
-            var branch = await _branchService.GetBranch(account.Branch_Name);
-            model.BRANCHCODE = branch.Code;
+            //model.OWNERID = ownerId;
+            //model.ACCNUMBER = generator.NextInt64(0, 100000000000);
+            //model.BANKDETAILSKEY = int.Parse(_config.GetValue<string>("BankSetting:BankDetailsKey"));
+            //model.BANKCODE = _config.GetValue<string>("BankSetting:CodeBIC");
+            //model.BANKNAME = _config.GetValue<string>("BankSetting:Name");
+            //model.CREATEDAT = DateTime.Now;
+            //model.UPDATEDAT = DateTime.Now;
+            //model.BALANCE = 0;
+            //model.OWNERADDRESS = account.Acc_Owner_Address;
+            //model.OWNEREMAIL = account.Acc_Owner_Email;
+            //model.OWNERFIRSTNAME = account.Acc_Owner_Firstname;
+            //model.OWNERLASTNAME = account.Acc_Owner_Lastname;
+            //model.OWNERPHONE = account.Acc_Owner_Phone;
+            //model.OWNERPOSTCODE = account.Acc_Owner_Post_Code;
+            //model.STATUS = AccountStatus.ENABLED.ToString(); 
+            //model.IBAN = _config.GetValue<string>("AccounSettings:CountryCode")+ generator.Next(0, 100)+ generator.NextInt64(1000000000000000000) + model.BANKDETAILSKEY;
+            ////branch grpc service 
+            //var branch = await _branchService.GetBranch(account.Branch_Name);
+            //model.BRANCHCODE = branch.Code;
             #endregion
 
            
@@ -119,12 +119,12 @@ namespace Account.API.Services
 
         public async Task<bool> UpdateAccount(AccountModel account, Int64 transactionId)
         {
-            AccountModel model = await _client.GetAsync(endPointUrl + account.ACCNUMBER).Result.Content.ReadAsAsync<AccountModel>();
-            model.BALANCE = account.BALANCE;
+            AccountModel model = await _client.GetAsync(endPointUrl + account.NUMBER).Result.Content.ReadAsAsync<AccountModel>();
+            //model.BALANCE = account.BALANCE;
             model.UPDATEDAT = DateTime.Now;
             var accountPost = JsonConvert.SerializeObject(model);
 
-            var response = await _client.PutAsync(endPointUrl + account.ACCNUMBER, new StringContent(accountPost, Encoding.UTF8, "application/json"));
+            var response = await _client.PutAsync(endPointUrl + account.NUMBER, new StringContent(accountPost, Encoding.UTF8, "application/json"));
             
             if (response.IsSuccessStatusCode)
             {

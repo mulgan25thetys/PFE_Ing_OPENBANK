@@ -64,6 +64,4 @@ app.UseEndpoints(endpoints =>
     endpoints.MapControllers();
 });
 
-app.MigrateDatabase<Program>();
-
 app.Run();

@@ -1,4 +1,5 @@
 ﻿using Identity.API.Applications.Dtos;
+using Identity.API.Applications.Models.Entities;
 using Identity.API.Utils.Interfaces;
 using Identity.API.Utils.Models;
 using Microsoft.AspNetCore.Identity;
@@ -14,15 +15,15 @@ namespace Identity.API.Utils
     public class JwtUtils : IJwtUtils
     {
         private readonly JwtOptions _options;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<UserModel> _userManager;
 
-        public JwtUtils(IOptions<JwtOptions> options, UserManager<IdentityUser> userManager)
+        public JwtUtils(IOptions<JwtOptions> options, UserManager<UserModel> userManager)
         {
             _options = options.Value ?? throw new ArgumentNullException(nameof(options));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
 
         }
-        public async Task<string> GetToken(IdentityUser user)
+        public async Task<string> GetToken(UserModel user)
         {
             var userRoles = await this._userManager.GetRolesAsync(user);
             var signingKey = new SymmetricSecurityKey
@@ -48,7 +49,7 @@ namespace Identity.API.Utils
 
             return encodedJwt;
         }
-        public async Task<string> GetNotAuthenticatedToken(IdentityUser user)
+        public async Task<string> GetNotAuthenticatedToken(UserModel user)
         {
             var signingKey = new SymmetricSecurityKey
                              (Encoding.UTF8.GetBytes(_options.Secret));

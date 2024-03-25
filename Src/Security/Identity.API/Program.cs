@@ -12,6 +12,7 @@ using Identity.API.Applications.Middlewares;
 using Identity.API.Applications.Models;
 using Identity.API.EventBusConsumer;
 using Microsoft.EntityFrameworkCore;
+using Identity.API.Applications.Models.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,23 +29,26 @@ builder.Services.AddSwaggerGen();
 
 //
 builder.Services.AddTransient<ISenderService, SenderService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IEntitlementService, EntitlementService>();
 
 //Configuration du context avec la chaine de connection
 builder.Services.AddDbContext<IdentityContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AuthConnectionString"));
+    options.UseOracle(builder.Configuration.GetConnectionString("AuthConnectionString"), b =>
+            b.UseOracleSQLCompatibility("11"));
 });
 
 //configuration de Identity User
-builder.Services.AddDefaultIdentity<IdentityUser>(config =>
+builder.Services.AddDefaultIdentity<UserModel>(config =>
 {
     config.SignIn.RequireConfirmedEmail = false;
     config.SignIn.RequireConfirmedAccount = true;
     config.Password.RequireNonAlphanumeric = false;
 
-}).AddRoles<IdentityRole>()
-  .AddRoleManager<RoleManager<IdentityRole>>()
-  .AddUserManager<UserManager<IdentityUser>>()
+}).AddRoles<Entitlement>()
+  .AddRoleManager<RoleManager<Entitlement>>()
+  .AddUserManager<UserManager<UserModel>>()
   .AddDefaultTokenProviders()
   .AddSignInManager()
   .AddEntityFrameworkStores<IdentityContext>();
@@ -70,19 +74,19 @@ builder.Host.UseSerilog((context, configuration) =>
 });
 
 //RabbitMQ & Masstransit configuration
-builder.Services.AddMassTransit(config =>
-{
-    config.AddConsumer<AccountAccessConsumer>();
-    config.UsingRabbitMq((ctx, cfg) =>
-    {
-        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
-        cfg.ReceiveEndpoint(EventBusConstants.AccountAccessQueue, c =>
-        {
-            c.ConfigureConsumer<AccountAccessConsumer>(ctx);
-        });
-    });
-});
-builder.Services.AddMassTransitHostedService();
+//builder.Services.AddMassTransit(config =>
+//{
+//    config.AddConsumer<AccountAccessConsumer>();
+//    config.UsingRabbitMq((ctx, cfg) =>
+//    {
+//        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
+//        cfg.ReceiveEndpoint(EventBusConstants.AccountAccessQueue, c =>
+//        {
+//            c.ConfigureConsumer<AccountAccessConsumer>(ctx);
+//        });
+//    });
+//});
+//builder.Services.AddMassTransitHostedService();
 
 //AutoMapper Configuration
 builder.Services.AddAutoMapper(typeof(Program));
@@ -101,10 +105,6 @@ if (app.Environment.IsDevelopment())
 }
 //migration automatique vers la base de donnees
 app.MigrateDatabase<IdentityContext>((context, services) => {});
-
-//var option = new RewriteOptions();
-//option.AddRedirect("^$", "swagger");
-//app.UseRewriter(option);
 
 app.UseRouting();
 

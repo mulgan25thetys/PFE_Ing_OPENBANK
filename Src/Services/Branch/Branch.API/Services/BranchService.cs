@@ -31,14 +31,19 @@ namespace Branch.API.Services
         {
             _logger.LogInformation("Addition of a branch in progress...");
                 BranchModel model = new BranchModel() { BRANCH_TYPE = branch.Branch_type, BANK_ID = branch.Bank_id,
-                NAME = branch.Name, LINE_1 = branch.Adresse.Line_1, LINE_2 = branch.Adresse.Line_2, LINE_3 = branch.Adresse.Line_3,
-                   CITY = branch.Adresse.City, STATE = branch.Adresse.State, COUNTRY= branch.Adresse.Country, POSTCODE = branch.Adresse.Postcode,
-                COUNTRY_CODE = branch.Adresse.Country_code, LATITUDE = branch.Location.Latitude, LONGITUDE = branch.Location.Longitude,
-                    LICENCE_ID = branch.Meta.Licence.Id, LICENCE_NAME = branch.Meta.Licence.Name, MORE_INFO = branch.More_info, CREATEDAT = DateTime.Now,
+                NAME = branch.Name, LINE_1 = branch.Adresse.Line_1, LINE_2 = branch.Adresse.Line_2, 
+                    LINE_3 = branch.Adresse.Line_3,
+                   CITY = branch.Adresse.City, STATE = branch.Adresse.State, COUNTRY= branch.Adresse.Country, 
+                    POSTCODE = branch.Adresse.Postcode,COUNTRY_CODE = branch.Adresse.Country_code,
+                    LATITUDE = branch.Location.Latitude, LONGITUDE = branch.Location.Longitude,
+                    LICENCE_ID = branch.Meta.Licence.Id, LICENCE_NAME = branch.Meta.Licence.Name, 
+                    MORE_INFO = branch.More_info, CREATEDAT = DateTime.Now,
                 UPDATEDAT = DateTime.Now, ACCESSIBLE_FEATURES = branch.AccessibleFeatures,
-                PHONE_NUMBER = branch.Phone_number, ROUTING_ADDRESS = branch.Branch_routing.Address, ROUTING_SCHEME = branch.Branch_routing.Scheme,
+                PHONE_NUMBER = branch.Phone_number, ROUTING_ADDRESS = branch.Branch_routing.Address, 
+                    ROUTING_SCHEME = branch.Branch_routing.Scheme,
                 ACCESSIBLE_VALUE = branch.Is_accessible, HAS_LOBBY = branch.Lobby, HAS_DRIVE_UP = branch.Drive_up,
-                ON_MONDAY = branch.Monday, ON_TUESDAY = branch.Tuesday, ON_THURSDAY = branch.Thursday, ON_WEDNESDAY = branch.Wednesday,
+                ON_MONDAY = branch.Monday, ON_TUESDAY = branch.Tuesday, ON_THURSDAY = branch.Thursday, 
+                    ON_WEDNESDAY = branch.Wednesday,
                 ON_FRIDAY = branch.Friday, ON_SATURDAY = branch.Saturday, ON_SUNDAY = branch.Saturday};
 
             model.CLOSING_TIME = DateTimeExtension.SetTime(DateTime.Now, branch.Closing_time.Hour, branch.Closing_time.Minute,0,0);
@@ -164,7 +169,8 @@ namespace Branch.API.Services
             response.More_info = model.MORE_INFO;
             response.Phone_Number = model.PHONE_NUMBER;
 
-            WorkingTimeModel workingTime = new WorkingTimeModel() { Opening_time = model.OPENING_TIME.TimeOfDay, Closing_time = model.CLOSING_TIME.TimeOfDay };
+            WorkingTimeModel workingTime = new WorkingTimeModel() { Opening_time = model.OPENING_TIME.TimeOfDay
+                , Closing_time = model.CLOSING_TIME.TimeOfDay };
             
             LobbyModel lobby = new LobbyModel();
             DriveUpModel driveUp = new DriveUpModel();

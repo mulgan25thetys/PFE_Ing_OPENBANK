@@ -23,7 +23,7 @@ namespace Account.API.EventBusConsumer
         {
             var account = _mapper.Map<AccountModel>(context.Message);
             await _service.UpdateAccount(account, context.Message.TRANSACTIONEVENTID);
-            _logger.LogInformation($"AccountEvent consumed successfully. Updated Account Id : {account.ACCNUMBER}", account);
+            _logger.LogInformation($"AccountEvent consumed successfully. Updated Account Id : {account.NUMBER}", account);
         }
     }
 }

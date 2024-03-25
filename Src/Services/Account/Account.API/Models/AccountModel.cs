@@ -2,28 +2,21 @@
 
 namespace Account.API.Models
 {
-    enum AccountStatus
-    {
-        ENABLED, LOCKED
-    }
     public class AccountModel
     {
-        public Int64 ACCNUMBER { get; set; }
-        public string OWNERFIRSTNAME { get; set; }
-        public string OWNERLASTNAME { get; set; }
-        public string OWNEREMAIL { get; set; }
-        public string OWNERPHONE { get; set; }
-        public string OWNERADDRESS { get; set; }
-        public int OWNERPOSTCODE { get; set; }
-        public string BANKNAME { get; set; }
-        public string BANKCODE { get; set; }
-        public int BRANCHCODE { get; set; }
-        public int BANKDETAILSKEY { get; set; }
+        public string ID { get; set; }
+        public string LABEL { get; set; }
+        public long NUMBER { get; set; }
+        public string TYPE { get; set; }
+        public string CURRENCY { get; set; }
+        public string AMOUNT { get; set; }
         public string IBAN { get; set; }
-        public double BALANCE { get; set; }
+        public double SWIFT_BIC { get; set; }
+        public string BANK_ID { get; set; }
+        public string ROUTING_SCHEME { get; set; }
+        public string ROUTING_ADDRESS { get; set; }
         public DateTime CREATEDAT { get; set; }
         public DateTime UPDATEDAT { get; set; }
-        public string STATUS { get; set; }
-        public string OWNERID { get; set; }
+        public string OWNER_ID { get; set; }
     }
 }
