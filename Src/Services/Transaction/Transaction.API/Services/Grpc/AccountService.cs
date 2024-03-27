@@ -13,8 +13,9 @@ namespace Transaction.API.Services.Grpc
 
         public async Task<AccountObject> GetAccountDataAsync(Int64 accountNumber)
         {
-            var accountRequest  = new GetAccountRequest() { AccountNumber = accountNumber };
-            return await _grpcClient.GetAccountAsync(accountRequest);
+            //var accountRequest  = new GetAccountRequest() { AccountNumber = accountNumber };
+            //return await _grpcClient.GetAccountAsync(accountRequest);
+            return new AccountObject();
         }
     }
 }

@@ -5,11 +5,10 @@ using Account.API.Services.Grpc;
 using Account.API.Services.Interfaces;
 using AutoMapper;
 using EventBus.Message.Events;
+using Helper.Models;
 using MassTransit;
 using Newtonsoft.Json;
-using System.Net.Http;
 using System.Text;
-using System.Transactions;
 
 namespace Account.API.Services
 {
@@ -20,111 +19,137 @@ namespace Account.API.Services
         private readonly IMapper _mapper;
         private readonly HttpClient _client;
         private string endPointUrl = "";
-        private readonly BranchService _branchService;
         private readonly IPublishEndpoint _publishEndpoint;
+        private readonly UserService _userService;
 
         public AccountService(ILogger<AccountService> logger, IMapper mapper,
-            BranchService branchService, IPublishEndpoint publishEndpoint,
+            IPublishEndpoint publishEndpoint,UserService userService,
             IConfiguration configuration, HttpClient httpClient)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _client = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            _branchService = branchService ?? throw new ArgumentNullException(nameof(branchService));
+           
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _publishEndpoint = publishEndpoint ?? throw new ArgumentNullException(nameof(publishEndpoint));
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
 
             //Setting endPoint
             endPointUrl = $"/ords/{_config.GetValue<string>("OracleSettings:DatabaseUser")}" +
                 $"/{_config.GetValue<string>("OracleSettings:DatabaseTableName")}/";
         }
 
-        public async Task<AccountModel> AddAccount(AccountRequest account, string? ownerId = "")
+        public async Task<AccountCreated> AddAccount(string ACCOUNT_ID, string BANK_ID,AccountRequest account, string? ownerId = "")
         {
+            
             #region Account Model Construction
             Random generator = new Random();
             AccountModel model = new AccountModel();
-            //model.OWNERID = ownerId;
-            //model.ACCNUMBER = generator.NextInt64(0, 100000000000);
-            //model.BANKDETAILSKEY = int.Parse(_config.GetValue<string>("BankSetting:BankDetailsKey"));
-            //model.BANKCODE = _config.GetValue<string>("BankSetting:CodeBIC");
-            //model.BANKNAME = _config.GetValue<string>("BankSetting:Name");
-            //model.CREATEDAT = DateTime.Now;
-            //model.UPDATEDAT = DateTime.Now;
-            //model.BALANCE = 0;
-            //model.OWNERADDRESS = account.Acc_Owner_Address;
-            //model.OWNEREMAIL = account.Acc_Owner_Email;
-            //model.OWNERFIRSTNAME = account.Acc_Owner_Firstname;
-            //model.OWNERLASTNAME = account.Acc_Owner_Lastname;
-            //model.OWNERPHONE = account.Acc_Owner_Phone;
-            //model.OWNERPOSTCODE = account.Acc_Owner_Post_Code;
-            //model.STATUS = AccountStatus.ENABLED.ToString(); 
-            //model.IBAN = _config.GetValue<string>("AccounSettings:CountryCode")+ generator.Next(0, 100)+ generator.NextInt64(1000000000000000000) + model.BANKDETAILSKEY;
-            ////branch grpc service 
-            //var branch = await _branchService.GetBranch(account.Branch_Name);
-            //model.BRANCHCODE = branch.Code;
+            model.Id = ACCOUNT_ID;
+            model.Bank_id = BANK_ID;
+            model.Label = account.Label;
+            model.Type = account.Type;
+            model.AccNumber = generator.NextInt64(100000000000);
+            model.Amount = account.Balance.Amount;
+            model.Currency = account.Balance.Currency.Trim().ToUpper(); 
+            
+            model.Iban = "TN" + generator.NextInt64(1000000000000000000);
+
+            model.Owner_id = ownerId;
+            model.Updated_at = DateTime.Now;
+            model.Created_at = DateTime.Now;
             #endregion
 
-           
-                var accountPost = JsonConvert.SerializeObject(model);
+            var accountPost = JsonConvert.SerializeObject(model);
 
-                var response = await _client.PostAsync(endPointUrl, new StringContent(accountPost, Encoding.UTF8, "application/json"));
-                response.EnsureSuccessStatusCode();
-                _logger.LogInformation("Adding account success!");
-                return await response.Content.ReadAsAsync<AccountModel>();
-
+            var response = await _client.PostAsync(endPointUrl, new StringContent(accountPost, Encoding.UTF8, "application/json"));
+            
+            _logger.LogInformation("Adding account success!");
+            model = await response.Content.ReadAsAsync<AccountModel>();
+            return new AccountCreated() { Bank_id = model.Bank_id, Id = model.Id, Label = model.Label };
         }
 
-        public async Task<AccountModel> GetAccount(Int64 accountNumber, string? ownerId = "")
+        public async Task<AccountResponse> GetAccount(Int64 accountNumber, string? ownerId = "")
         {
             string filter = ownerId != "" ? "?q= { \"accnumber\":{ \"$eq\":\""+ accountNumber + "\" }, \"ownerid\" : { \"$eq\":\"" + ownerId + "\" }  }" : accountNumber.ToString();
             var response = await _client.GetAsync(endPointUrl + filter);
-            response.EnsureSuccessStatusCode();
-            AccountList list = await response.Content.ReadAsAsync<AccountList>();
-            return list.Items.FirstOrDefault();
+
+            try
+            {
+                AccountList list = await response.Content.ReadAsAsync<AccountList>();
+                return await GetAccountResponseFromModel(list.Items.FirstOrDefault());
+            }
+            catch(Exception ex)
+            {
+                return new AccountResponse() { Id = null };
+            }
         }
 
-        public async Task<AccountList> GetAllAccounts(string? ownerId = "")
+        public async Task<AccountResponse> GetAccountById(string id, string? ownerId = "")
         {
-            if (ownerId == "")
+            var response = await _client.GetAsync(endPointUrl + id);
+            try
             {
-                var response = await _client.GetAsync(endPointUrl);
-
-                return await response.Content.ReadAsAsync<AccountList>();
+                AccountModel model = await response.Content.ReadAsAsync<AccountModel>();
+                return await GetAccountResponseFromModel(model);
             }
-            else
+            catch(Exception ex)
             {
-                string filter = "?q= {\"ownerid\" : { \"$eq\":\"" + ownerId + "\" } }";
-                var response = await _client.GetAsync(endPointUrl + filter);
-
-                return await response.Content.ReadAsAsync<AccountList>();
-            }
+                return new AccountResponse() { Id = null};
+            } 
         }
 
-        public async Task<AccountList> GetAllFilteringAccounts(string filter, string? ownerId = "")
+        public async Task<AccountListResponse> GetAllAccounts(string bank_Id)
+        {
+            string filter = "?q= {\"bank_id\" : { \"$eq\":\"" + bank_Id + "\" } }";
+            var response = await _client.GetAsync(endPointUrl + filter);
+
+            AccountList list = await response.Content.ReadAsAsync<AccountList>();
+            AccountListResponse respList = new AccountListResponse() { Offset = list.Offset, Limit = list.Limit,
+                HasMore = list.HasMore, Count = list.Count};
+            foreach (var item in list.Items)
+            {
+                respList.Items.Add(await GetAccountResponseFromModel(item));
+            }
+            return respList;
+        }
+
+        public async Task<AccountListResponse> GetAllFilteringAccounts(string filter, string? ownerId = "")
         {
             try
             {
                 var filterJson = JsonConvert.DeserializeObject(filter);
                 var result = await _client.GetAsync($"{endPointUrl}?q={filter}");
 
-                return await result.Content.ReadAsAsync<AccountList>();
+                AccountList list = await result.Content.ReadAsAsync<AccountList>();
+                AccountListResponse respList = new AccountListResponse()
+                {
+                    Offset = list.Offset,
+                    Limit = list.Limit,
+                    HasMore = list.HasMore,
+                    Count = list.Count
+                };
+                foreach (var item in list.Items)
+                {
+                    respList.Items.Add(await GetAccountResponseFromModel(item));
+                }
+                return respList;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return new AccountList();
+                return new AccountListResponse();
             }
         }
 
         public async Task<bool> UpdateAccount(AccountModel account, Int64 transactionId)
         {
-            AccountModel model = await _client.GetAsync(endPointUrl + account.NUMBER).Result.Content.ReadAsAsync<AccountModel>();
+            AccountModel model = await _client.GetAsync(endPointUrl + account.AccNumber).Result.Content.ReadAsAsync<AccountModel>();
             //model.BALANCE = account.BALANCE;
-            model.UPDATEDAT = DateTime.Now;
+            model.Updated_at = DateTime.Now;
             var accountPost = JsonConvert.SerializeObject(model);
 
-            var response = await _client.PutAsync(endPointUrl + account.NUMBER, new StringContent(accountPost, Encoding.UTF8, "application/json"));
+            var response = await _client.PutAsync(endPointUrl + account.AccNumber, new StringContent(accountPost, Encoding.UTF8, "application/json"));
             
             if (response.IsSuccessStatusCode)
             {
@@ -139,6 +164,45 @@ namespace Account.API.Services
                 await _publishEndpoint.Publish(new TransactionEvent() { TRANSID = transactionId, STATUS = TRANS_STATUS.FAILED.ToString() });
             }
             return await Task.FromResult(true);
+        }
+
+        private async Task<AccountResponse> GetAccountResponseFromModel(AccountModel model)
+        {
+            AccountResponse resp = new AccountResponse()
+            {
+                Type = model.Type,
+                Balance = new BalanceModel() { Amount = model.Amount, Currency = model.Currency },
+                IBAN = model.Iban,
+                Id = model.Id,
+                Label = model.Label,
+                Number = model.AccNumber,
+                Swift_bic = model.Swift_bic
+            };
+            var user = await _userService.GetUserAsync(model.Owner_id);
+            AccountOwnerModel ownerModel = new AccountOwnerModel() { Display_name = "", Id = user.UserId, Provider = user.Provider};
+            resp.Owners.Add(ownerModel);
+            return resp;
+        }
+
+        public async Task<MessageSuccess> UpdateAccount(UpdateLabelRequest request)
+        {
+            AccountModel model = await _client.GetAsync(endPointUrl + request.Id).Result.Content.ReadAsAsync<AccountModel>();
+            model.Label = request.Label;
+            model.Updated_at = DateTime.Now;
+            var accountPut = JsonConvert.SerializeObject(model);
+
+            var response = await _client.PutAsync(endPointUrl + model.Id, new StringContent(accountPut, Encoding.UTF8, "application/json"));
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Updating account label success!");
+                return new MessageSuccess() { Success = "Success" };
+            }
+            else
+            {
+                _logger.LogInformation("Updating account label failed!");
+                return new MessageSuccess() { Success = "Failed" };
+            }
         }
     }
 }

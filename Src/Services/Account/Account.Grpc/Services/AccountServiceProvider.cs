@@ -20,14 +20,18 @@ namespace Account.Grpc.Services
 
         public override async Task<AccountObject> GetAccount(GetAccountRequest request, ServerCallContext context)
         {
-            var account = await _service.GetAccount(request.AccountNumber);
-            if (account == null)
+            var account = await _service.GetAccount(request.Id);
+            if (account.Id == null)
             {
-                throw new RpcException(new Status(StatusCode.NotFound, $"Account with number={request.AccountNumber} is not found!"));
+                _logger.LogInformation($"Failed to retrieve Account by id {request.Id}");
+                return new AccountObject();
             }
-            var accountResponse = _mapper.Map<AccountObject>(account);
-            _logger.LogInformation($"Account is retrieved by Code {request.AccountNumber}");
-            return accountResponse;
+            else
+            {
+                _logger.LogInformation($"Account is retrieved by id {request.Id}");
+                return _mapper.Map<AccountObject>(account);
+            }
+            
         }
     }
 }

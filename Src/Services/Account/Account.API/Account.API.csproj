@@ -12,6 +12,8 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
+    <PackageReference Include="IbanNet" Version="5.14.0" />
+    <PackageReference Include="ISO.4217.CurrencyCodes" Version="1.0.10" />
     <PackageReference Include="MassTransit" Version="7.1.6" />
     <PackageReference Include="MassTransit.AspNetCore" Version="7.1.6" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="7.1.6" />
@@ -40,6 +42,9 @@
   <ItemGroup>
     <Protobuf Include="..\..\Branch\Branch.GRPC\Protos\branch.proto" GrpcServices="Client">
       <Link>Protos\branch.proto</Link>
+    </Protobuf>
+    <Protobuf Include="..\..\User\User.grpc\Protos\User.proto" GrpcServices="Client">
+      <Link>Protos\User.proto</Link>
     </Protobuf>
   </ItemGroup>
 

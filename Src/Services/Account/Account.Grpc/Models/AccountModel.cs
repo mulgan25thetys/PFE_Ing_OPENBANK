@@ -1,29 +1,37 @@
 ﻿using Account.Grpc.Models.Responses;
+using Newtonsoft.Json;
 
 namespace Account.Grpc.Models
 {
-    enum AccountStatus
-    {
-        ENABLED, LOCKED
-    }
     public class AccountModel
     {
-        public Int64 ACCNUMBER { get; set; }
-        public string OWNERFIRSTNAME { get; set; }
-        public string OWNERLASTNAME { get; set; }
-        public string OWNEREMAIL { get; set; }
-        public string OWNERPHONE { get; set; }
-        public string OWNERADDRESS { get; set; }
-        public int OWNERPOSTCODE { get; set; }
-        public string BANKNAME { get; set; }
-        public string BANKCODE { get; set; }
-        public int BRANCHCODE { get; set; }
-        public int BANKDETAILSKEY { get; set; }
-        public string IBAN { get; set; }
-        public double BALANCE { get; set; }
-        public DateTime CREATEDAT { get; set; }
-        public DateTime UPDATEDAT { get; set; }
-        public string STATUS { get; set; }
-        public string OWNERID { get; set; }
+        [JsonProperty(PropertyName = "ID")]
+        public string Id { get; set; }
+        [JsonProperty(PropertyName = "LABEL")]
+        public string Label { get; set; }
+        [JsonProperty(PropertyName = "ACCNUMBER")]
+        public long AccNumber { get; set; }
+        [JsonProperty(PropertyName = "TYPE")]
+        public string Type { get; set; }
+        [JsonProperty(PropertyName = "CURRENCY")]
+        public string Currency { get; set; }
+        [JsonProperty(PropertyName = "AMOUNT")]
+        public double Amount { get; set; }
+        [JsonProperty(PropertyName = "IBAN")]
+        public string Iban { get; set; }
+        [JsonProperty(PropertyName = "SWIFT_BIC")]
+        public string Swift_bic { get; set; }
+        [JsonProperty(PropertyName = "BANK_ID")]
+        public string Bankid { get; set; }
+        [JsonProperty(PropertyName = "ROUTING_SCHEME")]
+        public string Routing_scheme { get; set; }
+        [JsonProperty(PropertyName = "ROUTING_ADDRESS")]
+        public string Routing_address { get; set; }
+        [JsonProperty(PropertyName = "CREATED_AT")]
+        public DateTime Created_at { get; set; }
+        [JsonProperty(PropertyName = "UPDATED_AT")]
+        public DateTime Updated_at { get; set; }
+        [JsonProperty(PropertyName = "OWNER_ID")]
+        public string Ownerid { get; set; }
     }
 }

@@ -69,7 +69,11 @@ namespace Helper.Utils
                 return null;
             }
             var userId = userIdClaim.Value;
-            return new LoggedUser() { userId = userId, userRole = userRoleClaim.Value};
+            if (userRoleClaim != null)
+            {
+                return new LoggedUser() { userId = userId, userRole = userRoleClaim.Value };
+            }
+            return new LoggedUser() { userId = userId };
         }
 
         private ClaimsPrincipal GetPrincipal(string token)

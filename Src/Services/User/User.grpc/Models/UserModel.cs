@@ -1,13 +1,27 @@
-﻿namespace User.grpc.Models
+﻿using System.Data;
+
+namespace User.grpc.Models
 {
-    public class UserModel
+    public class UserModel 
     {
-        public string Id { get; set; }
-        public string First_name { get; set; }
-        public string Last_name { get; set; }
+        public string ID { get; set; }
+        public string FIRST_NAME { get; set; }
+        public string LAST_NAME { get; set; }
         public string Provider_id { get; set; }
         public string Provider { get; set; }
         public string UserName { get; set; }
+        public string NormalizedUserName { get; set; }
         public string Email { get; set; }
+        public string NormalizedEmail { get; set; }
+        public int EmailConfirmed { get; set; }
+        public string PasswordHash { get; set; }
+        public string SecurityStamp { get; set; }
+        public string ConcurrencyStamp { get; set; }
+        public string PhoneNumber { get; set; }
+        public int PhoneNumberConfirmed { get; set; }
+        public int TwoFactorEnabled { get; set; }
+        //public TimeZone LockoutEnd { get; set; }
+        public int LockoutEnabled { get; set; }
+        public int AccessFailedCount { get; set; }
     }
 }

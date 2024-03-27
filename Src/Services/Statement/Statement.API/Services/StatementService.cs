@@ -32,28 +32,29 @@ namespace Statement.API.Services
 
         public async Task<StatementModel> GetStatementAsync(long account_number, string? date_filter)
         {
-            var accountModel = await _accountService.GetAccountAsync(account_number);
-            var brancModel = await _branchService.GetBranchAsync(accountModel.Branchcode);
+            //var accountModel = await _accountService.GetAccountAsync(account_number);
+            //var brancModel = await _branchService.GetBranchAsync(accountModel.Branchcode);
 
-            var response = await _client.GetAsync(endPointUrl + date_filter);
+            //var response = await _client.GetAsync(endPointUrl + date_filter);
 
-            try
-            {
-                response.EnsureSuccessStatusCode();
-            }catch(Exception ex)
-            {
-                _logger.LogError(ex.Message);
-                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
-                {
-                    response = await _client.GetAsync(endPointUrl);
-                }
-            }
-            TransactionList transactionList = await response.Content.ReadAsAsync<TransactionList>();
+            //try
+            //{
+            //    response.EnsureSuccessStatusCode();
+            //}catch(Exception ex)
+            //{
+            //    _logger.LogError(ex.Message);
+            //    if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            //    {
+            //        response = await _client.GetAsync(endPointUrl);
+            //    }
+            //}
+            //TransactionList transactionList = await response.Content.ReadAsAsync<TransactionList>();
 
-            return new StatementModel() {Account_Number = accountModel.Accnumber, Bank_Name = accountModel.Bankname,
-            Branch_Address = brancModel.Address, Statement_Name = accountModel.Bankname + " " + brancModel.Address, 
-            Statement_Owner_Address = accountModel.Owneraddress, Statement_Owner_Name = accountModel.Ownerlastname + " "+accountModel.Ownerfirstname,
-            Transactions = transactionList};
+            return new StatementModel();
+            //{Account_Number = accountModel.Accnumber, Bank_Name = accountModel.Bankname,
+            //Branch_Address = brancModel.Address, Statement_Name = accountModel.Bankname + " " + brancModel.Address, 
+            //Statement_Owner_Address = accountModel.Owneraddress, Statement_Owner_Name = accountModel.Ownerlastname + " "+accountModel.Ownerfirstname,
+            //Transactions = transactionList};
         }
     }
 }

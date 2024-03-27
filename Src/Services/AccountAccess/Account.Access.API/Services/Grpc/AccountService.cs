@@ -11,9 +11,9 @@ namespace Account.Access.API.Services.Grpc
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
         }
 
-        public async Task<AccountObject> GetAccountDataAsync(Int64 accountNumber)
+        public async Task<AccountObject> GetAccountDataAsync(string id)
         {
-            var accountRequest  = new GetAccountRequest() { AccountNumber = accountNumber };
+            var accountRequest = new GetAccountRequest() { Id = id};
             return await _grpcClient.GetAccountAsync(accountRequest);
         }
     }

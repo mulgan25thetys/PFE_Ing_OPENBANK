@@ -23,11 +23,21 @@ namespace Account.Grpc.Services
             endPointUrl = _config.GetValue<string>("OrdsSettings:Uri");
         }
 
-        public async Task<AccountModel> GetAccount(long accountNumber)
+        public async Task<AccountModel> GetAccount(string id)
         {
-            var response = await _client.GetAsync(endPointUrl + accountNumber);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsAsync<AccountModel>();
+            var response = await _client.GetAsync(endPointUrl + id);
+
+            try
+            {
+                AccountModel mode = await response.Content.ReadAsAsync<AccountModel>();
+            return mode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return new AccountModel { Id = null };
+            }
+
         }
 
         private async Task<AccountList> GetAllFilteringAccounts(string filter)

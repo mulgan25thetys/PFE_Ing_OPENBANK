@@ -4,6 +4,6 @@ namespace Account.Grpc.Services.Interfaces
 {
     public interface IAccountService
     {
-        public Task<AccountModel> GetAccount(Int64 accountNumber);
+        public Task<AccountModel> GetAccount(string id);
     }
 }

@@ -9,11 +9,13 @@ using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using Helper.Extensions;
 using Helper.Middlewares;
+using User.grpc.Protos;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddScoped<BranchService>();
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddHttpClient<IAccountService, AccountService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
@@ -21,6 +23,10 @@ builder.Services.AddHttpClient<IAccountService, AccountService>(c =>
 builder.Services.AddGrpcClient<BranchProtoService.BranchProtoServiceClient>(options =>
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:BranchUrl"]);
+});
+builder.Services.AddGrpcClient<UserProtoService.UserProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:UserUrl"]);
 });
 
 builder.Services.AddAutoMapper(typeof(Program));

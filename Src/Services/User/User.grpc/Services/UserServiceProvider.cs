@@ -24,20 +24,24 @@ namespace User.grpc.Services
             _logger.LogInformation($"Retrieving a user with USER_ID : {request.UserId}");
             UserModel model = await _userService.GetUserModelByIdAsync(request.UserId);
 
-            if (model == null)
+            if (model.ID == null)
             {
                 _logger.LogError("OBP-20005: User not found. Please specify a valid value for USER_ID.");
-                return null;
+                return new UserResponse();
             }
-            UserData data = new UserData()
+            else
             {
-                email = model.Email,
-                provider = model.Provider,
-                providerId = model.Provider_id,
-                userId = model.Id,
-                userName = model.UserName
-            };
-            return _mapper.Map<UserResponse>(data);
+                UserData data = new UserData()
+                {
+                    userId = model.ID,
+                    userName = model.UserName,
+                    provider = model.Provider,
+                    providerId = model.Provider_id,
+                    email = model.Email
+                };
+                var response = _mapper.Map<UserResponse>(data);
+                return response;
+            }
         }
     }
 }

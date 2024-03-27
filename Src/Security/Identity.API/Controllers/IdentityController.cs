@@ -24,7 +24,7 @@ namespace Identity.API.Controllers
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _env;
         private readonly ISenderService _sender;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly SignInManager<UserModel> _signInManager;
         private readonly IJwtUtils _jwtUtils;
 
         public IdentityController(UserManager<UserModel> userManager,
@@ -33,7 +33,7 @@ namespace Identity.API.Controllers
             IConfiguration configuration,
             RoleManager<Entitlement> roleManager,
             ILogger<IdentityController> logger,
-            SignInManager<IdentityUser> signInManager)
+            SignInManager<UserModel> signInManager)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
@@ -99,6 +99,7 @@ namespace Identity.API.Controllers
             user.First_name = authDto.Frist_name;
             user.Last_name = authDto.Last_name;
             user.Provider = new Uri(Request.Host.ToString()).ToString();
+            user.Provider_id = user.UserName;
             user.TwoFactorEnabled = true;
 
             var success = await this._userManager.CreateAsync(user, authDto.Password);

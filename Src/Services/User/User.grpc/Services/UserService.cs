@@ -8,13 +8,14 @@ namespace User.grpc.Services
         private readonly IConfiguration _config;
         private readonly HttpClient _client;
         private string endPointUrl = "";
+        private readonly ILogger<UserService> _logger;
 
-        public UserService(IConfiguration configuration, HttpClient httpClient)
+        public UserService(IConfiguration configuration, HttpClient httpClient, ILogger<UserService> logger)
         {
 
             _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
             this._client = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             //Setting endPoint
             endPointUrl = _config.GetValue<string>("OrdsSettings:Uri");
         }
@@ -22,15 +23,30 @@ namespace User.grpc.Services
         {
             string filter = "?q={ \"email\": { \"$eq\":\" "+email+" \" } }";
             var response = await _client.GetAsync(endPointUrl + filter);
-            //response.EnsureSuccessStatusCode();
-            UserList list = await response.Content.ReadAsAsync<UserList>();
-            return list.Items.FirstOrDefault();
+            try
+            {
+                UserList list = await response.Content.ReadAsAsync<UserList>();
+                return list.Items.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return new UserModel();
+            }
         }
 
         public async Task<UserModel> GetUserModelByIdAsync(string userId)
         {
-            var response = await _client.GetAsync(endPointUrl + userId);    
-            return await response.Content.ReadAsAsync<UserModel>();
+            var response = await _client.GetAsync(endPointUrl + "/" + userId);
+            try
+            {
+                return await response.Content.ReadAsAsync<UserModel>();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return new UserModel();
+            }
         }
     }
 }

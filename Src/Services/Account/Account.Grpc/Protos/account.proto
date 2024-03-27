@@ -8,25 +8,15 @@ service AccountProtoService {
 }
 
 message GetAccountRequest {
-	int64 account_number = 1;
+	string id = 1;
 }
 
 message AccountObject {
-	int64 accnumber = 1;
-	string ownerfirstname =2;
-	string ownerlastname = 3;
-	string owneremail =4;
-	string ownerphone=5;
-	string owneraddress=6;
-	int32 ownerpostcode=7;
-	string bankname=8;
-	string bankcode=9;
-	int32 branchcode=10;
-	int32 bankdetailskey=11;
-	string iban=12;
-	double balance=13;
-	string createdat=14;
-	string updatedat=15;
-	string status=16;
-	string ownerid=17;
+	string id=1;
+	int64 accNumber=2;
+	string currency=3;
+	double amount=4;
+	string iban=5;
+	string bankid=6;
+	string ownerid=7;
 }
