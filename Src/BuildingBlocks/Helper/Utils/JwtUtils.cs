@@ -20,6 +20,42 @@ namespace Helper.Utils
             _options = options.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
+        public LoggedUser GetLoggedUser(string token)
+        {
+            var principal = GetPrincipal(token);
+            if (principal == null)
+            {
+                return null;
+            }
+
+            ClaimsIdentity identity;
+            try
+            {
+                identity = (ClaimsIdentity)principal.Identity;
+            }
+            catch (NullReferenceException)
+            {
+                return null;
+            }
+            var userIdClaim = identity?.FindFirst("userId");
+            var userRoleClaim = identity?.FindAll("Roles");
+            if (userIdClaim == null)
+            {
+                return null;
+            }
+            var userId = userIdClaim.Value;
+            if (userRoleClaim == null)
+            {
+                return new LoggedUser() { userId = userId };
+            }
+            IList<string> allRoles = new List<string>();
+            foreach (var item in userRoleClaim)
+            {
+                allRoles.Add(item.Value);
+            }
+
+            return new LoggedUser() { userId = userId, userRoles = String.Join(",", allRoles) };
+        }
         public string ValidateToken(string token)
         {
             var principal = GetPrincipal(token);
@@ -44,36 +80,6 @@ namespace Helper.Utils
             }
             var userId = userIdClaim.Value;
             return userId;
-        }
-        public LoggedUser GetLoggedUser(string token)
-        {
-            var principal = GetPrincipal(token);
-            if (principal == null)
-            {
-                return null;
-            }
-
-            ClaimsIdentity identity;
-            try
-            {
-                identity = (ClaimsIdentity)principal.Identity;
-            }
-            catch (NullReferenceException)
-            {
-                return null;
-            }
-            var userIdClaim = identity?.FindFirst("userId");
-            var userRoleClaim = identity?.FindFirst("Role");
-            if (userIdClaim == null)
-            {
-                return null;
-            }
-            var userId = userIdClaim.Value;
-            if (userRoleClaim != null)
-            {
-                return new LoggedUser() { userId = userId, userRole = userRoleClaim.Value };
-            }
-            return new LoggedUser() { userId = userId };
         }
 
         private ClaimsPrincipal GetPrincipal(string token)

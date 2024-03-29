@@ -13,6 +13,7 @@ using Identity.API.Applications.Models;
 using Identity.API.EventBusConsumer;
 using Microsoft.EntityFrameworkCore;
 using Identity.API.Applications.Models.Entities;
+using Identity.API.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -105,6 +106,8 @@ if (app.Environment.IsDevelopment())
 }
 //migration automatique vers la base de donnees
 app.MigrateDatabase<IdentityContext>((context, services) => {});
+//Creation super admin
+await app.CreateSuperAdmin<IdentityContext>((context, services) => { });
 
 app.UseRouting();
 

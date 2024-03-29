@@ -49,7 +49,7 @@ namespace Account.Access.API.Controllers
             IList<string> alias = new List<string>() { "public", "private", ""};
             if (!alias.Contains(request.Alias.ToLower()))
             {
-                return this.StatusCode(400, new MessageResponse() { Code = 400, Message = "The Alias value must be in '" + alias.ToString() + "'" });
+                return this.StatusCode(400, new MessageResponse() { Code = 400, Message = "The Alias value must be in '" + String.Join(",", alias) + "'" });
             }
 
             string ownerId = HttpContext.Items["userId"].ToString();
@@ -88,9 +88,9 @@ namespace Account.Access.API.Controllers
             IList<string> alias = new List<string>() { "public", "private", "" };
             if (!alias.Contains(request.Alias.ToLower()))
             {
-                return this.StatusCode(400, new MessageResponse() { Code = 400, Message = "The Alias value must be in '" + alias.ToString() + "'" });
+                return this.StatusCode(400, new MessageResponse() { Code = 400, Message = "The Alias value must be in '" + String.Join(",", alias) + "'" });
             }
-            string ownerId = HttpContext.Items["userId"].ToString();
+            string ownerId = HttpContext.Items["userId"].ToString() ?? "";
             if (account.Ownerid != ownerId)
             {
                 return this.StatusCode(403, new MessageResponse() { Message = "User does not have owner access", Code = 403 });
@@ -143,10 +143,13 @@ namespace Account.Access.API.Controllers
                 return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
             }
 
-            //if (HttpContext.Items["userRole"] != null && HttpContext.Items["userRole"].ToString() != "CanGrantAccessToViews")
-            //{
-            //    return this.StatusCode(403, new MessageResponse() { Code = 403, Message = "OBP-20047: The current user does not have access to a view which lists the target account in CanGrantAccessToViews permissions" });
-            //}
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanGrantAccessToViews" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+            }
             var account = await _accountService.GetAccountDataAsync(account_id);
             if (account.Id.Length == 0)
             {
@@ -168,8 +171,13 @@ namespace Account.Access.API.Controllers
             {
                 return this.StatusCode(403, new MessageResponse() { Message = "User does not have access to owner view on account", Code = 403 });
             }
-            
-            return Ok(await _service.GrantUserAccessToView(provider,provider_id, view_id));
+
+            AccountAccessResponse response = await _service.GrantUserAccessToView(provider, provider_id, view_id);
+            if (response.Code > 0)
+            {
+                return this.StatusCode(response.Code, new MessageResponse() { Code = response.Code, Message = response.ErrorMessage });
+            }
+            return Ok(response);
         }
 
         [HttpDelete("[action]/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}")]
@@ -182,10 +190,13 @@ namespace Account.Access.API.Controllers
                 return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
             }
 
-            //if (HttpContext.Items["userRole"] != null && HttpContext.Items["userRole"].ToString() != "CanGrantAccessToViews")
-            //{
-            //    return this.StatusCode(403, new MessageResponse() { Code = 403, Message = "OBP-20047: The current user does not have access to a view which lists the target account in CanGrantAccessToViews permissions" });
-            //}
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanGrantAccessToViews" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+            }
             var account = await _accountService.GetAccountDataAsync(account_id);
             if (account.Id.Length == 0)
             {

@@ -37,79 +37,81 @@ namespace Account.API.Controllers
         }
 
         [HttpGet("{bank_id}", Name = "GetAllAccounts")]
-        [Authorize]
         [ProducesResponseType(typeof(AccountListResponse), 200)]
-        public async Task<ActionResult<AccountListResponse>> GetAllAccounts(string bank_id)
+        public async Task<IActionResult> GetAllAccounts(string bank_id)
         {
+            if (HttpContext.Items["userId"] == null)
+            {
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+            }
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+            }
             if (HttpContext.Request.Query.Count > 0 && HttpContext.Request.Query["q"].ToString() != null)
             {
-                return await _service.GetAllFilteringAccounts(HttpContext.Request.Query["q"].ToString());
+                return Ok(await _service.GetAllFilteringAccounts(HttpContext.Request.Query["q"].ToString()));
             }
-            return await _service.GetAllAccounts(bank_id);
+            return Ok(await _service.GetAllAccounts(bank_id));
         }
 
-        [HttpGet]
-        [Route("Custom")]
-        [Authorize(Roles = "CUSTOMER")]
-        [ProducesResponseType(typeof(AccountListResponse), 200)]
-        public async Task<ActionResult<AccountListResponse>> GetCustomAllAccounts()
-        {
-            if (HttpContext.Request.Query.Count > 0 && HttpContext.Request.Query["q"].ToString() != null)
-            {
-                return await _service.GetAllFilteringAccounts(HttpContext.Request.Query["q"].ToString(), HttpContext.Items["userId"].ToString());
-            }
-            return await _service.GetAllAccounts(HttpContext.Items["userId"].ToString());
-        }
 
-        [HttpGet("[action]/{id}", Name = "GetByAccountById")]
-        [Authorize]
+        [HttpGet("[action]/{id}", Name = "GetAccountById")]
         [ProducesResponseType(typeof(AccountResponse), 200)]
         [ProducesResponseType(typeof(AccountResponse), 404)]
-        public async Task<ActionResult<AccountResponse>> GetByAccountById(string id)
+        public async Task<IActionResult> GetAccountById(string id)
         {
-            if (HttpContext.Items["userRole"] != null && HttpContext.Items["userRole"].ToString() == _cfg.GetValue<string>("AppRoles:CustomerRole"))
+            if (HttpContext.Items["userId"] == null)
             {
-                return await _service.GetAccountById(id, HttpContext.Items["userId"].ToString());
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
             }
-            return await _service.GetAccountById(id);
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+            }
+
+            IList<string> noAdminRoles = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+            if (!noAdminRoles.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return Ok(await _service.GetAccountById(id, HttpContext.Items["userId"].ToString()));
+            }
+            return Ok(await _service.GetAccountById(id, null));
         }
 
-        [Route("{ACCOUNT_ID}/{BANK_ID}")]
+        [Route("{account_id}/{bank_id}")]
         [HttpPost]
-        [ProducesResponseType(typeof(AccountModel), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(AccountModel), (int)HttpStatusCode.BadRequest)]
-        [Authorize]
-        public async Task<IActionResult> AddAccount(string ACCOUNT_ID, string BANK_ID, [FromBody] AccountRequest account)
+        [ProducesResponseType(typeof(AccountCreated), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(AccountCreated), (int)HttpStatusCode.BadRequest)]
+        
+        public async Task<IActionResult> AddAccount(string account_id, string bank_id, [FromBody] AccountRequest account)
         {
-            string ownerId = null;
-            if (HttpContext.Items["userId"] != null)
+            if (HttpContext.Items["userId"] == null)
             {
-                ownerId = HttpContext.Items["userId"].ToString();
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
             }
+            string ownerId = account.User_id == null ? HttpContext.Items["userId"].ToString() ?? "" : account.User_id;
 
-            MessageResponse res = await ValidateData(account, ownerId, ACCOUNT_ID, BANK_ID);
+            AccountResponse model = await _service.GetAccountById(account_id, null);
+            if (model.Id != null)
+            {
+                return this.StatusCode(409, new MessageResponse() { Code = 409, Message = "OBP-30208: Account_ID already exists at the Bank." });
+            }
+            MessageResponse res = await ValidateData(account, ownerId, account_id, bank_id);
             if (res.Code == 200)
             {
                 AccountRequest request = new AccountRequest() { Balance = account.Balance, Label = account.Label, Type = account.Type };
-                return Ok(await _service.AddAccount(ACCOUNT_ID, BANK_ID, request, ownerId));
-            }
-            else
-            {
-                return this.StatusCode(res.Code, res);
-            }
-        }
-        [Route("ForOther/{ACCOUNT_ID}/{BANK_ID}")]
-        [HttpPost]
-        [ProducesResponseType(typeof(AccountModel), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(AccountModel), (int)HttpStatusCode.BadRequest)]
-        [Authorize]
-        public async Task<IActionResult> AddAccountForOther(string ACCOUNT_ID, string BANK_ID, [FromBody] OtherAccountRequest account)
-        {
-            AccountRequest request = _mapper.Map<AccountRequest>(account);
-            MessageResponse res = await ValidateData(request, account.User_id, ACCOUNT_ID, BANK_ID);
-            if (res.Code == 200)
-            {
-                return Ok(await _service.AddAccount(ACCOUNT_ID, BANK_ID, request, account.User_id));
+                AccountCreated response = await _service.AddAccount(account_id, bank_id, request, ownerId);
+                if (response.Code > 0)
+                {
+                    return this.StatusCode(response.Code, new MessageResponse () { Code = response.Code, Message = response.ErrorMessage});
+                }
+                return this.StatusCode(201, response);
             }
             else
             {
@@ -117,13 +119,34 @@ namespace Account.API.Controllers
             }
         }
 
-        [HttpPut("{ACCOUNT_ID}/{BANK_ID}")]
-        public async Task<IActionResult> UpdateAccountLabel(string ACCOUNT_ID, string BANK_ID, UpdateLabelRequest request)
+        [HttpPut("{account_id}/{bank_id}")]
+        public async Task<IActionResult> UpdateAccountLabel(string account_id, string bank_id, UpdateLabelRequest request)
         {
-            var account = await _service.GetAccountById(ACCOUNT_ID);
+            if (HttpContext.Items["userId"] == null)
+            {
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+            }
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+            }
+            AccountResponse account = new AccountResponse();
+            IList<string> noAdminRoles = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+            if (!noAdminRoles.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                account = await _service.GetAccountById(account_id, HttpContext.Items["userId"].ToString());
+            }
+            else
+            {
+                account = await _service.GetAccountById(account_id, null);
+            }
+
             if (account.Id != null)
             {
-                request.Id = ACCOUNT_ID;
+                request.Id = account_id;
                 return Ok(await _service.UpdateAccount(request));
             }
             else
@@ -132,10 +155,10 @@ namespace Account.API.Controllers
             }
         }
 
-        private async Task<MessageResponse> ValidateData(AccountRequest account, string userId, string ACCOUNT_ID,string BANK_ID)
+        private async Task<MessageResponse> ValidateData(AccountRequest account, string userId, string account_id, string BANK_ID)
         {
-            int statusCode = 201;
-            string message = "Created";
+            int statusCode = 200;
+            string message = "Ok";
 
             var bankIdMatch = Regex.Match(BANK_ID, @"^[0-9/a-z/A-Z/'-'/'.'/'_']{5,255}$");
             if (!bankIdMatch.Success || BANK_ID.Length > 255)
@@ -144,7 +167,7 @@ namespace Account.API.Controllers
                 return new MessageResponse() { Code = 400, Message = message };
             }
 
-            var isValidAccount = Guid.TryParse(ACCOUNT_ID, out _);
+            var isValidAccount = Guid.TryParse(account_id, out _);
             
             if (!isValidAccount)
             {

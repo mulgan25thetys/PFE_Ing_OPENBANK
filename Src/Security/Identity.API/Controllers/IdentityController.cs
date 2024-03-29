@@ -1,9 +1,11 @@
-﻿using Identity.API.Applications.Dtos;
+﻿using Identity.API.Applications.Data;
+using Identity.API.Applications.Dtos;
 using Identity.API.Applications.Models;
 using Identity.API.Applications.Models.Entities;
 using Identity.API.Applications.Networks;
 using Identity.API.Models;
 using Identity.API.Services.Interfaces;
+using Identity.API.Utils;
 using Identity.API.Utils.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Twilio.Http;
+using Twilio.TwiML.Voice;
 
 namespace Identity.API.Controllers
 {
@@ -32,8 +35,7 @@ namespace Identity.API.Controllers
             IWebHostEnvironment webHostEnvironment,
             IConfiguration configuration,
             RoleManager<Entitlement> roleManager,
-            ILogger<IdentityController> logger,
-            SignInManager<UserModel> signInManager)
+            ILogger<IdentityController> logger, SignInManager<UserModel> signInManager)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
@@ -46,17 +48,28 @@ namespace Identity.API.Controllers
         }
 
         #region ADD USer
-        [Authorize(Roles = "ADMIN" )]
         [Route("add-user")]
         [HttpPost]
         public async Task<IActionResult> AddUser([FromBody] AddUserRequest authDto)
         {
+            if (HttpContext.Items["userId"] == null)
+            {
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+            }
+
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+            }
             UserModel user = new UserModel();
             user.Email = authDto.Email;
             user.Last_name = authDto.Last_name;
             user.First_name = authDto.Frist_name;
             user.UserName = authDto.Username;
-            user.Provider = new Uri(Request.Host.ToString()).ToString();
+            user = UserProviderDetails.GetUriProviderDetails(Request, user);
 
             IdentityUser existedUser = await _userManager.FindByEmailAsync(user.Email);
             if (existedUser != null)
@@ -98,9 +111,8 @@ namespace Identity.API.Controllers
             user.UserName = authDto.UserName;
             user.First_name = authDto.Frist_name;
             user.Last_name = authDto.Last_name;
-            user.Provider = new Uri(Request.Host.ToString()).ToString();
-            user.Provider_id = user.UserName;
             user.TwoFactorEnabled = true;
+            user = UserProviderDetails.GetUriProviderDetails(Request, user);
 
             var success = await this._userManager.CreateAsync(user, authDto.Password);
 
@@ -133,7 +145,7 @@ namespace Identity.API.Controllers
                 try
                 {
                     await SetTwoFactorAuthentication(user);
-                    return Ok(new MessageResponse() { Message = "Please check your phone number, a code has been sent to you by sms!", Token = await _jwtUtils.GetNotAuthenticatedToken(user) });
+                    return Ok(new AuthResponse() { Message = "Please check your phone number, a code has been sent to you by sms!", Token = await _jwtUtils.GetNotAuthenticatedToken(user) });
                 }
                 catch (Exception ex)
                 {
@@ -363,6 +375,7 @@ namespace Identity.API.Controllers
 
             return new String(stringChars);
         }
+        
         #endregion
     }
 }

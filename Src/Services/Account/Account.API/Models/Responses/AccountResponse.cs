@@ -1,4 +1,6 @@
-﻿namespace Account.API.Models.Responses
+﻿using System.Text.Json.Serialization;
+
+namespace Account.API.Models.Responses
 {
     public class AccountResponse
     {
@@ -11,5 +13,9 @@
         public string IBAN { get; set; }
         public string Swift_bic { get; set; }
         public IList<ViewsAvailableModel> Views_available { get; set; } = new List<ViewsAvailableModel>();
+        [JsonIgnore]
+        public int Code { get; set; }
+        [JsonIgnore]
+        public string ErrorMessage { get; set; }
     }
 }

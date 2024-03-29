@@ -10,7 +10,6 @@ namespace Account.API.Mapper
         public AccountProfile()
         {
             CreateMap<AccountModel, AccountEvent>().ReverseMap();
-            CreateMap<AccountRequest, OtherAccountRequest>().ReverseMap();
         }
     }
 }

@@ -160,26 +160,26 @@ namespace Account.Access.API.Services
         {
             foreach (var item in actions)
             {
-                switch (item)
+                switch (item.ToLower())
                 {
-                    case "Can_add_more_info": model.Can_add_more_info = true;  break;
-                    case "Can_see_bank_account_balance": model.Can_see_bank_account_balance = true; break;
-                    case "Can_see_bank_account_bank_name": model.Can_see_bank_account_bank_name = true; break;
-                    case "Can_see_bank_account_currency": model.Can_see_bank_account_currency = true; break;
-                    case "Can_see_bank_account_iban": model.Can_see_bank_account_iban = true; break;
-                    case "Can_see_bank_account_label": model.Can_see_bank_account_label = true; break;
-                    case "Can_see_bank_account_number": model.Can_see_bank_account_number = true; break;
-                    case "Can_see_bank_account_owners": model.Can_see_bank_account_owners = true; break;
-                    case "Can_see_bank_account_swift_bic": model.Can_see_bank_account_swift_bic = true; break;
-                    case "Can_see_other_account_bank_name": model.Can_see_other_account_bank_name = true; break;
-                    case "Can_see_other_account_iban": model.Can_see_other_account_iban = true; break;
-                    case "Can_see_other_account_number": model.Can_see_other_account_number = true; break;
-                    case "Can_see_transaction_amount": model.Can_see_transaction_amount = true; break;
-                    case "Can_see_transaction_balance": model.Can_see_transaction_balance = true; break;
-                    case "Can_see_transaction_currency": model.Can_see_transaction_currency = true; break;
-                    case "Can_see_transaction_finish_date": model.Can_see_transaction_finish_date = true; break;
-                    case "Can_see_transaction_other_bank_account": model.Can_see_transaction_other_bank_account = true; break;
-                    case "Can_see_transaction_this_bank_account": model.Can_see_transaction_this_bank_account = true; break;
+                    case "can_add_more_info": model.Can_add_more_info = true;  break;
+                    case "can_see_bank_account_balance": model.Can_see_bank_account_balance = true; break;
+                    case "can_see_bank_account_bank_name": model.Can_see_bank_account_bank_name = true; break;
+                    case "can_see_bank_account_currency": model.Can_see_bank_account_currency = true; break;
+                    case "can_see_bank_account_iban": model.Can_see_bank_account_iban = true; break;
+                    case "can_see_bank_account_label": model.Can_see_bank_account_label = true; break;
+                    case "can_see_bank_account_number": model.Can_see_bank_account_number = true; break;
+                    case "can_see_bank_account_owners": model.Can_see_bank_account_owners = true; break;
+                    case "can_see_bank_account_swift_bic": model.Can_see_bank_account_swift_bic = true; break;
+                    case "can_see_other_account_bank_name": model.Can_see_other_account_bank_name = true; break;
+                    case "can_see_other_account_iban": model.Can_see_other_account_iban = true; break;
+                    case "can_see_other_account_number": model.Can_see_other_account_number = true; break;
+                    case "can_see_transaction_amount": model.Can_see_transaction_amount = true; break;
+                    case "can_see_transaction_balance": model.Can_see_transaction_balance = true; break;
+                    case "can_see_transaction_currency": model.Can_see_transaction_currency = true; break;
+                    case "can_see_transaction_finish_date": model.Can_see_transaction_finish_date = true; break;
+                    case "can_see_transaction_other_bank_account": model.Can_see_transaction_other_bank_account = true; break;
+                    case "can_see_transaction_this_bank_account": model.Can_see_transaction_this_bank_account = true; break;
                 }
             }
             return model;
@@ -187,24 +187,23 @@ namespace Account.Access.API.Services
 
         public async Task<AccountAccessResponse> GrantUserAccessToView(string provider, string provider_id, int view_id)
         {
-           AccountUserAccess userAccess = new AccountUserAccess() { Provider = provider, Provider_Id = provider_id, View_id = view_id };
-            var accessJson = JsonConvert.SerializeObject(userAccess);
-            await _client.PostAsync(endPointUrlUserAccess , new StringContent(accessJson, Encoding.UTF8, "application/json"));
-
+           AccountUserAccess userAccess = new AccountUserAccess() { Provider = provider.Replace("%", "").Trim(), Provider_Id = provider_id, View_id = view_id };
             try
             {
+                var accessJson = JsonConvert.SerializeObject(userAccess);
+                await _client.PostAsync(endPointUrlUserAccess, new StringContent(accessJson, Encoding.UTF8, "application/json"));
                 return await this.GetOneAccessAsync(view_id);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message, ex);
-                return new AccountAccessResponse();
+                return new AccountAccessResponse() { Code = 500, ErrorMessage = "Could not save the privilege" };
             }
         }
 
         public async Task<AccountAccessResponse> RevokeAccessToOneView(string provider, string provider_id, int view_id)
         {
-            string filter = "?q={ \"view_id\": { \"$eq\":\""+view_id+ "\" }, \"provider\": { \"$eq\":\""+provider+ "\" }, \"provider_id\": { \"$eq\":\""+provider_id+"\" } }";
+            string filter = "?q={ \"view_id\": { \"$eq\":\""+view_id+ "\" }, \"provider\": { \"$eq\":\""+ provider.Replace("%", "").Trim()+ "\" }, \"provider_id\": { \"$eq\":\""+provider_id+"\" } }";
             try
             {
                 await _client.DeleteAsync(endPointUrlUserAccess + filter);

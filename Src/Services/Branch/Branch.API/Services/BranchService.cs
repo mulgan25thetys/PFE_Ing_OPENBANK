@@ -53,17 +53,32 @@ namespace Branch.API.Services
             model.ID = Guid.NewGuid().ToString();
 
             var branchPost = JsonConvert.SerializeObject(model);
-
             var response = await _client.PostAsync(endPointUrl, new StringContent(branchPost, Encoding.UTF8, "application/json"));
-            response.EnsureSuccessStatusCode();
-            model = await response.Content.ReadAsAsync<BranchModel>();
-            return GetBranchResponseFromModel(model);
+            try
+            {
+                response.EnsureSuccessStatusCode();
+                model = await response.Content.ReadAsAsync<BranchModel>();
+                return GetBranchResponseFromModel(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return new BranchResponse() { Code = 500, ErrorMessage = "OBP-50000: Unknown Error." };
+            }
+            
         }
 
         public async Task<bool> DeleteBranch(string branch_id)
         {
             var response = await _client.DeleteAsync(endPointUrl + branch_id);
-            response.EnsureSuccessStatusCode();
+            try
+            {
+                response.EnsureSuccessStatusCode();
+            }catch(Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return false;
+            }
             return true;
         }
 
@@ -95,11 +110,16 @@ namespace Branch.API.Services
         public async Task<BranchResponse> GetBranch(string id)
         {
             var result = await _client.GetAsync(endPointUrl + id);
-            
-            result.EnsureSuccessStatusCode();
-            BranchModel model = await result.Content.ReadAsAsync<BranchModel>();
-            return GetBranchResponseFromModel(model);
-           
+
+            try
+            {
+                BranchModel model = await result.Content.ReadAsAsync<BranchModel>();
+                return GetBranchResponseFromModel(model);
+            }
+            catch (Exception ex)
+            {
+                return new BranchResponse() { Code = 500, ErrorMessage = "OBP-50000: Unknown Error." };
+            }
         }
 
         public async Task<BranchListResponse> GetBranchesByFilter(string filter, int? page, int? size)
@@ -232,6 +252,7 @@ namespace Branch.API.Services
                 }
             }
             response.Lobby = lobby;
+            response.Drive_up = driveUp;
             return response;
         }
     }

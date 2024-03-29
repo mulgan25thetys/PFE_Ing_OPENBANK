@@ -12,8 +12,8 @@ using Oracle.EntityFrameworkCore.Metadata;
 namespace Identity.API.Migrations
 {
     [DbContext(typeof(IdentityContext))]
-    [Migration("20240325162719_Initialize-tables")]
-    partial class Initializetables
+    [Migration("20240328054359_initializeIdentityTables")]
+    partial class initializeIdentityTables
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -42,11 +42,9 @@ namespace Identity.API.Migrations
                         .HasColumnType("NUMBER(1)");
 
                     b.Property<string>("First_name")
-                        .IsRequired()
                         .HasColumnType("NVARCHAR2(2000)");
 
                     b.Property<string>("Last_name")
-                        .IsRequired()
                         .HasColumnType("NVARCHAR2(2000)");
 
                     b.Property<bool>("LockoutEnabled")
@@ -71,11 +69,9 @@ namespace Identity.API.Migrations
                         .HasColumnType("NUMBER(1)");
 
                     b.Property<string>("Provider")
-                        .IsRequired()
                         .HasColumnType("NVARCHAR2(2000)");
 
                     b.Property<string>("Provider_id")
-                        .IsRequired()
                         .HasColumnType("NVARCHAR2(2000)");
 
                     b.Property<string>("SecurityStamp")

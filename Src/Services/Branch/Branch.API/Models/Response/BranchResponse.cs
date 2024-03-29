@@ -1,4 +1,6 @@
-﻿namespace Branch.API.Models.Response
+﻿using System.Text.Json.Serialization;
+
+namespace Branch.API.Models.Response
 {
     public class BranchResponse
     {
@@ -16,5 +18,9 @@
         public string Branch_type { get; set; }
         public string More_info { get; set; }
         public string Phone_Number { get; set; }
+        [JsonIgnore]
+        public int Code { get; set; }
+        [JsonIgnore]
+        public string ErrorMessage { get; set; } = string.Empty;
     }
 }

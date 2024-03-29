@@ -2,6 +2,7 @@
 using Branch.API.Models.Requests;
 using Branch.API.Models.Response;
 using Branch.API.Services.Interfaces;
+using Helper.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,7 @@ namespace Branch.API.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class BranchsController : ControllerBase
     {
         private IBranchService _service;
@@ -51,26 +52,56 @@ namespace Branch.API.Controllers
         [ProducesResponseType(typeof(BranchResponse), (int)HttpStatusCode.NotFound)]
         public async Task<ActionResult<BranchResponse>> GetBranch(string id)
         {
-            return await _service.GetBranch(id);
+            BranchResponse response = await _service.GetBranch(id);
+            if (response.Code > 0)
+            {
+                return this.StatusCode(response.Code, new MessageResponse() { Code = response.Code, Message = response.ErrorMessage });
+            }
+            return Ok(response);
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(BranchResponse), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(BranchResponse), (int)HttpStatusCode.BadRequest)]
-        [Authorize(Roles = "ADMIN")]
-        public async Task<ActionResult<BranchResponse>> Addbranch([FromBody] BranchRequest branch)
+        public async Task<IActionResult> Addbranch([FromBody] BranchRequest branch)
         {
-            return await _service.AddBranch(branch);
+            if (HttpContext.Items["userId"] == null)
+            {
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+            }
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanCreateBranch" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-30209: Insufficient authorisation to Create Branch. You do not have the role CanCreateBranch.", Code = 403 });
+            }
+            BranchResponse response = await _service.AddBranch(branch);
+            if (response.Code > 0)
+            {
+                return this.StatusCode(response.Code, new MessageResponse() { Code = response.Code, Message = response.ErrorMessage });
+            }
+            return this.StatusCode(201, response);
         }
 
         [HttpDelete("{id}", Name = "DeleteBranchById")]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.BadRequest)]
-        [Authorize(Roles = "ADMIN")]
-        public async Task<ActionResult<bool>> DeleteBranch(string id)
+        public async Task<IActionResult> DeleteBranch(string id)
         {
-            return await _service.DeleteBranch(id);
+            if (HttpContext.Items["userId"] == null)
+            {
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+            }
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanCreateBranch" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-30209: Insufficient authorisation to Create Branch. You do not have the role CanCreateBranch.", Code = 403 });
+            }
+            return Ok(await _service.DeleteBranch(id));
         }
     }
 }

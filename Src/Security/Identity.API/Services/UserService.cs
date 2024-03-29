@@ -1,9 +1,12 @@
-﻿using Identity.API.Applications.Models.Entities;
+﻿using Identity.API.Applications.Data;
+using Identity.API.Applications.Models.Entities;
 using Identity.API.Applications.Models.Responses;
 using Identity.API.Services.Interfaces;
+using Identity.API.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Linq;
 
 namespace Identity.API.Services
 {
@@ -11,11 +14,16 @@ namespace Identity.API.Services
     {
         private readonly UserManager<UserModel> _userManager;
         private readonly RoleManager<Entitlement> _roleManager;
+        private readonly IConfiguration _config;
+        private readonly ILogger<UserService> _logger;
 
-        public UserService(UserManager<UserModel> userManager, RoleManager<Entitlement> roleManager)
+        public UserService(UserManager<UserModel> userManager, 
+            RoleManager<Entitlement> roleManager,IConfiguration config, ILogger<UserService> logger, IEntitlementService entitlementService)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
+            _config = config ?? throw new ArgumentNullException(nameof(_config));
+            _logger = logger ?? throw new ArgumentNullException(nameof(_logger));
         }
 
         public async Task<UserResponse> GetUserAsync(string username)
@@ -54,11 +62,10 @@ namespace Identity.API.Services
             
             IList<EntitlementResponse> list = new List<EntitlementResponse>();
             var roles = await _userManager.GetRolesAsync(model);
-            foreach (var role in roles)
+            foreach (var role in roles.Where( r => !SystemRoles.Roles.Contains(r)))
             {
-                foreach (var item in role)
-                {
-                    var itemRole = await _roleManager.FindByNameAsync(item.ToString());
+                
+                    var itemRole = await _roleManager.FindByNameAsync(role.ToString());
                     EntitlementResponse entitlement = new EntitlementResponse()
                     {
                         Bank_id = itemRole.Bank_id,
@@ -66,7 +73,7 @@ namespace Identity.API.Services
                         Role_name = itemRole.Name
                     };
                     list.Add(entitlement);
-                }
+                
             }
             response.Entitlements = new Entitlements() { list = list };
             return response;

@@ -63,10 +63,18 @@ namespace Account.API.Services
             var accountPost = JsonConvert.SerializeObject(model);
 
             var response = await _client.PostAsync(endPointUrl, new StringContent(accountPost, Encoding.UTF8, "application/json"));
+
+            try
+            {
+                _logger.LogInformation("Adding account success!");
+                model = await response.Content.ReadAsAsync<AccountModel>();
+                return new AccountCreated() { Bank_id = model.Bank_id, Id = model.Id, Label = model.Label };
+            }
+            catch (Exception ex)
+            {
+                return new AccountCreated() { Code = 500, ErrorMessage = "OBP-50000: Unknown Error." };
+            }
             
-            _logger.LogInformation("Adding account success!");
-            model = await response.Content.ReadAsAsync<AccountModel>();
-            return new AccountCreated() { Bank_id = model.Bank_id, Id = model.Id, Label = model.Label };
         }
 
         public async Task<AccountResponse> GetAccount(Int64 accountNumber, string? ownerId = "")
@@ -85,17 +93,21 @@ namespace Account.API.Services
             }
         }
 
-        public async Task<AccountResponse> GetAccountById(string id, string? ownerId = "")
+        public async Task<AccountResponse> GetAccountById(string id, string? ownerId)
         {
             var response = await _client.GetAsync(endPointUrl + id);
             try
             {
                 AccountModel model = await response.Content.ReadAsAsync<AccountModel>();
+                if(ownerId != null && model.Owner_id != ownerId)
+                {
+                    return new AccountResponse() { Code = 403, ErrorMessage = "OBP-50000: Unknown Error." };
+                }
                 return await GetAccountResponseFromModel(model);
             }
             catch(Exception ex)
             {
-                return new AccountResponse() { Id = null};
+                return new AccountResponse() { Code = 500, ErrorMessage = "OBP-50000: Unknown Error." };
             } 
         }
 

@@ -8,5 +8,6 @@ namespace Identity.API.Services.Interfaces
         public Task<EntitlementResponse> AddEntitlementForUserAsync(string userId, EntitlementRequest request);
         public Task<bool> DeleteEntitlementAsync(string entitlement_id);
         public Entitlements GetAllEntitlements();
+        public Task<Entitlements> GetEntitlementForUserAsync(string userId);
     }
 }

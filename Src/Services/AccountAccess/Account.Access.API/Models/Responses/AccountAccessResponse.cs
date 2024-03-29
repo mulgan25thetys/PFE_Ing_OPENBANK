@@ -23,6 +23,7 @@ namespace Account.Access.API.Models.Responses
             set { V_is_public = value == true ? 1 : 0; }
         }
         [JsonProperty(PropertyName = "ALIAS")]
+        [System.Text.Json.Serialization.JsonIgnore]
         public string Alias { get; set; }
         [JsonProperty(PropertyName = "V_HIDE_METADATA_IF_ALIAS_USED")]
         [System.Text.Json.Serialization.JsonIgnore]
@@ -180,5 +181,9 @@ namespace Account.Access.API.Models.Responses
         [JsonProperty(PropertyName = "OWNER_ID")]
         [System.Text.Json.Serialization.JsonIgnore]
         public string Owner_id { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
+        public int Code { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string ErrorMessage { get; set; }
     }
 }

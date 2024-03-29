@@ -53,8 +53,4 @@
     <ProjectReference Include="..\..\BuildingBlocks\EventBus.Message\EventBus.Message.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Extensions\" />
-  </ItemGroup>
-
 </Project>

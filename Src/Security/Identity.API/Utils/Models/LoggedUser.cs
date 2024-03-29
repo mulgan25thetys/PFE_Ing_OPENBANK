@@ -9,6 +9,6 @@ namespace Identity.API.Utils.Models
     public class LoggedUser
     {
         public string userId { get; set; }
-        public string userRole { get; set; }
+        public string userRoles { get; set; }   
     }
 }

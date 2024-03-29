@@ -6,6 +6,8 @@ namespace Account.API.Models.Requests
 {
     public class AccountRequest
     {
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string? User_id { get; set; }
         [Required(AllowEmptyStrings = false)]
         public string Label { get; set; }
         [Required(AllowEmptyStrings = false)]

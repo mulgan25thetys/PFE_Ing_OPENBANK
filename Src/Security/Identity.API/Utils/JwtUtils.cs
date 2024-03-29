@@ -39,7 +39,7 @@ namespace Identity.API.Utils
             };
             foreach (var userRole in userRoles)
             {
-                claims.Add(new Claim("Role", userRole));
+                claims.Add(new Claim("Roles", userRole));
                 claims.Add(new Claim(ClaimTypes.Role, userRole));
             }
             var expirationDate = DateTime.Now.AddMinutes(_options.ExpiryMinutes);
@@ -85,13 +85,23 @@ namespace Identity.API.Utils
                 return null;
             }
             var userIdClaim = identity?.FindFirst("userId");
-            var userRoleClaim = identity?.FindFirst("Role");
+            var userRoleClaim = identity?.FindAll("Roles");
             if (userIdClaim == null)
             {
                 return null;
             }
             var userId = userIdClaim.Value;
-            return new LoggedUser() { userId = userId, userRole = userRoleClaim.Value };
+            if (userRoleClaim == null)
+            {
+                return new LoggedUser() { userId = userId };
+            }
+            IList<string> allRoles = new List<string>();
+            foreach (var item in userRoleClaim)
+            {
+                allRoles.Add(item.Value);
+            }
+
+            return new LoggedUser() { userId = userId, userRoles = String.Join(",", allRoles) };
         }
         public string ValidateToken(string token)
         {

@@ -28,7 +28,7 @@ namespace Helper.Middlewares
                 {
                     // Store the userId in the HttpContext items for later use
                     context.Items["userId"] = loggedUser.userId;
-                    context.Items["userRole"] = loggedUser.userRole;
+                    context.Items["userRoles"] = loggedUser.userRoles;
                 }
                 else
                 {
