@@ -150,6 +150,7 @@ namespace Branch.API.Models
         public string PHONE_NUMBER { get; set; }
         public DateTime CREATEDAT { get; set; }
         public DateTime UPDATEDAT { get; set; }
+        public Int64 BRANCH_NUM { get; set; }
         #endregion
     }
 }

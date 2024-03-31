@@ -1,13 +1,15 @@
 ﻿using Transaction.API.Models;
+using Transaction.API.Models.Requests;
 using Transaction.API.Models.Responses;
 
 namespace Transaction.API.Services.Interfaces
 {
     public interface ITransactionService
     {
-        public Task<TransactionModel> AddTransactionAsync(TransactionModel transaction);
-        public Task<bool> UpdateTransactionAsync(TransactionModel transaction);
-        public Task<TransactionList> GetAllTransactionsAsync(Int64 account_number);
-        public Task<TransactionModel> GetTransactionAsync(Int64 transactionId);
+        public Task<TransactionResponse> CreateTransactionRequest(string account_id, string bank_id, TransactionRequestReq req);
+        public Task<TransactionResponse> AnswerTransactionRequest(AnswerTransactionReq answer);
+        public Task<TransactionRequestList> GetTransactionsRequest(string account_id);
+        public Task<TransactionResponseList> GetTransactionsForAccount(string account_id);
+        public Task<TransactionResponse> GetTransactionAsync(string transactionId, string view_id);
     }
 }

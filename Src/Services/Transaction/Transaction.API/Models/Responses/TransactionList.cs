@@ -7,6 +7,5 @@
         public int Limit { get; set; }
         public int Offset { get; set; }
         public int Count { get; set; }
-        //public IList<TransactionLinks> Links { get; set; } = new List<TransactionLinks>();
     }
 }

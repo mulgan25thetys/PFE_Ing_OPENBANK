@@ -85,6 +85,7 @@ services:
       - "OracleSettings:DatabaseTableName=branch"
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
       - "IdentityUrl=http://identity.api"
+      - "GrpcSettings:BankUrl=http://bank.grpc"
     depends_on:
       - oracle_rest_data_service
       - elasticsearch
@@ -124,6 +125,8 @@ services:
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
       - "GrpcSettings:BranchUrl=http://branch.grpc"
+      - "GrpcSettings:BankUrl=http://bank.grpc"
+      - "GrpcSettings:UserUrl=http://user.grpc"
     ports:
       - "8002:80"
     depends_on:
@@ -232,6 +235,9 @@ services:
       - transaction.api
       - statement.api
       - identity.api
+      - bank.api
+      - account.access.api
+      - agreement.api
     ports:
       - "8010:80"
     networks:
@@ -249,6 +255,7 @@ services:
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
       - "GrpcSettings:AccountUrl=http://account.grpc"
+      - "GrpcSettings:BankUrl=http://bank.grpc"
     ports:
       - "8006:80"
     depends_on:
@@ -280,4 +287,58 @@ services:
       - ords_net
       - elastic
       - gateway_net
+
+
+  user.grpc:
+    container_name: user.grpc
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "OrdsSettings:Uri=http://oracle_rest_data_service:8080/ords/ordsuser/users/"
+      - "OrdsSettings:DatabaseUrl=http://oracle_rest_data_service:8080"
+      - "OrdsSettings:DatabaseUser=ordsuser"
+      - "OrdsSettings:DatabaseTableName=users"
+    depends_on:
+      - oracle_rest_data_service
+    ports:
+      - "8009:80"
+    networks:
+      - ords_net
+      - gateway_net 
+
+
+  bank.api:
+    container_name: bank.api
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "OrdsSettings:Uri=http://oracle_rest_data_service:8080/ords/ordsuser/bank/"
+      - "OrdsSettings:DatabaseUrl=http://oracle_rest_data_service:8080"
+      - "OrdsSettings:DatabaseUser=ordsuser"
+      - "OrdsSettings:DatabaseTableName=bank"
+    depends_on:
+      - oracle_rest_data_service
+    ports:
+      - "8011:80"
+    networks:
+      - ords_net
+      - gateway_net 
+
+
+  bank.grpc:
+    container_name: bank.grpc
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "OrdsSettings:Uri=http://oracle_rest_data_service:8080/ords/ordsuser/bank/"
+      - "OrdsSettings:DatabaseUrl=http://oracle_rest_data_service:8080"
+      - "OrdsSettings:DatabaseUser=ordsuser"
+      - "OrdsSettings:DatabaseTableName=bank"
+    depends_on:
+      - oracle_rest_data_service
+    ports:
+      - "8012:80"
+    networks:
+      - ords_net
+      - gateway_net 
 

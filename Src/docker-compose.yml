@@ -81,6 +81,24 @@ services:
       context: .
       dockerfile: Services/Agreement/Agreement.API/Dockerfile
 
+  user.grpc:
+    image: ${DOCKER_REGISTRY-}usergrpc
+    build:
+      context: .
+      dockerfile: Services/User/User.grpc/Dockerfile
+
+  bank.api:
+    image: ${DOCKER_REGISTRY-}bankapi
+    build:
+      context: .
+      dockerfile: Services/Bank/Bank.api/Dockerfile
+
+  bank.grpc:
+    image: ${DOCKER_REGISTRY-}bankgrpc
+    build:
+      context: .
+      dockerfile: Services/Bank/Bank.grpc/Dockerfile
+
 networks:
   elastic:
     driver: bridge
@@ -95,6 +113,9 @@ networks:
 volumes:
   elasticsearch-data:
   portainer_data:
+
+
+
 
 
 

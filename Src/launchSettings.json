@@ -14,7 +14,10 @@
         "statement.api": "StartDebugging",
         "identity.api": "StartDebugging",
         "account.access.api": "StartDebugging",
-        "agreement.api": "StartDebugging"
+        "agreement.api": "StartDebugging",
+        "user.grpc": "StartDebugging",
+        "bank.api": "StartDebugging",
+        "bank.grpc": "StartDebugging"
       }
     }
   }

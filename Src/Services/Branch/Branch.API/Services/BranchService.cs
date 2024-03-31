@@ -29,6 +29,7 @@ namespace Branch.API.Services
 
         public async Task<BranchResponse> AddBranch(BranchRequest branch)
         {
+            Random rand = new Random();
             _logger.LogInformation("Addition of a branch in progress...");
                 BranchModel model = new BranchModel() { BRANCH_TYPE = branch.Branch_type, BANK_ID = branch.Bank_id,
                 NAME = branch.Name, LINE_1 = branch.Adresse.Line_1, LINE_2 = branch.Adresse.Line_2, 
@@ -51,6 +52,7 @@ namespace Branch.API.Services
             model.OPENING_TIME = DateTimeExtension.SetTime(DateTime.Now, branch.Opening_time.Hour, branch.Opening_time.Minute,0,0);
 
             model.ID = Guid.NewGuid().ToString();
+            model.BRANCH_NUM = rand.NextInt64();
 
             var branchPost = JsonConvert.SerializeObject(model);
             var response = await _client.PostAsync(endPointUrl, new StringContent(branchPost, Encoding.UTF8, "application/json"));

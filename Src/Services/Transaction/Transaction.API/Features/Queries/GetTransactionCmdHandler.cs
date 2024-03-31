@@ -18,10 +18,10 @@ namespace Transaction.API.Features.Queries
         public async Task<TransactionModel> Handle(GetTransactionCmd request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Retrieving of transaction ...");
-            var transaction = await _service.GetTransactionAsync(request.TransactionId);
+            //var transaction = await _service.GetTransactionAsync(request.TransactionId);
 
             _logger.LogInformation($"Transaction with id: {request.TransactionId} is retrieved");
-            return transaction;
+            return null;
         }
     }
 }

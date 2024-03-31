@@ -1,5 +1,45 @@
 {
   "Routes": [
+    //Bank API
+    {
+      "DownstreamPathTemplate": "/api/v1/Banks",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "bank.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/banks",
+      "UpstreamHttpMethod": [ "GET" ],
+      "FileCacheOptions": { "TtlSeconds": 30 }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Banks/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "bank.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/banks/{id}",
+      "UpstreamHttpMethod": [ "GET", "DELETE" ],
+      "FileCacheOptions": { "TtlSeconds": 30 }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Banks",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "bank.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/banks/",
+      "UpstreamHttpMethod": [ "POST" ],
+      "FileCacheOptions": { "TtlSeconds": 30 }
+    },
     //Branch API
     {
       "DownstreamPathTemplate": "/api/v1/Branchs",
@@ -10,7 +50,7 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Branchs",
+      "UpstreamPathTemplate": "/branchs",
       "UpstreamHttpMethod": [ "GET" ],
       "FileCacheOptions": { "TtlSeconds": 30 }
     },
@@ -23,15 +63,12 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Branchs",
+      "UpstreamPathTemplate": "/branchs",
       "UpstreamHttpMethod": [ "POST" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": "ADMIN"
       }
     },
     {
@@ -43,7 +80,7 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Branchs/{id}",
+      "UpstreamPathTemplate": "/branchs/{id}",
       "UpstreamHttpMethod": [ "GET" ]
     },
     {
@@ -55,7 +92,7 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Branchs/{id}",
+      "UpstreamPathTemplate": "/branchs/{id}",
       "UpstreamHttpMethod": [ "DELETE" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
@@ -64,7 +101,7 @@
     },
     //Account API
     {
-      "DownstreamPathTemplate": "/api/v1/Accounts",
+      "DownstreamPathTemplate": "/api/v1/Accounts/{bank_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -72,19 +109,16 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Accounts",
+      "UpstreamPathTemplate": "/accounts/{bank_id}",
       "UpstreamHttpMethod": [ "GET" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": "ADMIN"
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Accounts/Custom",
+      "DownstreamPathTemplate": "/api/v1/Accounts/GetAccountById/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -92,19 +126,16 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Accounts/Custom",
+      "UpstreamPathTemplate": "/accounts/get-account-by-id/{id}",
       "UpstreamHttpMethod": [ "GET" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": "CUSTOMER"
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Accounts",
+      "DownstreamPathTemplate": "/api/v1/Accounts/{account_id}/{bank_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -112,15 +143,12 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Accounts",
-      "UpstreamHttpMethod": [ "POST" ],
+      "UpstreamPathTemplate": "/accounts/{account_id}/{bank_id}",
+      "UpstreamHttpMethod": [ "POST", "PUT" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": "CUSTOMER"
       }
     },
     {
@@ -132,39 +160,17 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Accounts/Custom/{account_number}",
+      "UpstreamPathTemplate": "/accounts/custom/{account_number}",
       "UpstreamHttpMethod": [ "GET" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": "CUSTOMER"
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Accounts/{account_number}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "account.api",
-          "Port": "80"
-        }
-      ],
-      "UpstreamPathTemplate": "/Accounts/{account_number}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "RouteClaimsRequirement": {
-        "Role": "ADMIN"
       }
     },
 
     //Transaction API
     {
-      "DownstreamPathTemplate": "/api/v1/Transactions/add-withdrawal",
+      "DownstreamPathTemplate": "/api/v1/Transactions/{account_id}/{bank_id}/{transaction_id}/{view_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -172,58 +178,7 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Transactions/add-withdrawal",
-      "UpstreamHttpMethod": [ "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 },
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Transactions/add-deposit",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "transaction.api",
-          "Port": "80"
-        }
-      ],
-      "UpstreamPathTemplate": "/Transactions/add-deposit",
-      "UpstreamHttpMethod": [ "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 },
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Transactions/transfert-account",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "transaction.api",
-          "Port": "80"
-        }
-      ],
-      "UpstreamPathTemplate": "/Transactions/transfert-account",
-      "UpstreamHttpMethod": [ "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 },
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Transactions",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "transaction.api",
-          "Port": "80"
-        }
-      ],
-      "UpstreamPathTemplate": "/Transactions",
+      "UpstreamPathTemplate": "/transactions/{account_id}/{bank_id}/{transaction_id}/{view_id}",
       "UpstreamHttpMethod": [ "GET" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
@@ -232,7 +187,7 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Transactions/{transactionId}",
+      "DownstreamPathTemplate": "/api/v1/Transactions/GetTransactionForAccount/{account_id}/{bank_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -240,7 +195,58 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Transactions/{transactionId}",
+      "UpstreamPathTemplate": "/transactions/get-transaction-for-account/{account_id}/{bank_id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Transactions/CreateTransactionRequest/{account_id}/{bank_id}/{counterparty}/{view_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "transaction.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/transactions/create-transaction-request/{account_id}/{bank_id}/{counterparty}/{view_id}",
+      "UpstreamHttpMethod": [ "POST" ],
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Transactions/AnswerTransactionRequest/{account_id}/{bank_id}/{transaction_request_id}/{transaction_request_type}/{view_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "transaction.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/transactions/answer-transaction-request/{account_id}/{bank_id}/{transaction_request_id}/{transaction_request_type}/{view_id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Transactions/GetTransactionRequests/{account_id}/{bank_id}/{view_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "transaction.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/Transactions/get-transaction-requests/{account_id}/{bank_id}/{view_id}",
       "UpstreamHttpMethod": [ "GET" ],
       "RateLimitOptions": {
         "ClientWhitelist": [],
@@ -265,7 +271,7 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Statements/{account_number}",
+      "UpstreamPathTemplate": "/statements/{account_number}",
       "UpstreamHttpMethod": [ "GET" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
@@ -281,7 +287,7 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Statements/ByStartDate/{account_number}/{start_date}",
+      "UpstreamPathTemplate": "/statements/by-start-date/{account_number}/{start_date}",
       "UpstreamHttpMethod": [ "GET" ],
       "RateLimitOptions": {
         "ClientWhitelist": [],
@@ -304,7 +310,7 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Statements/ByEndDate/{account_number}/{end_date}",
+      "UpstreamPathTemplate": "/statements/by-end-date/{account_number}/{end_date}",
       "UpstreamHttpMethod": [ "GET" ],
       "RateLimitOptions": {
         "ClientWhitelist": [],
@@ -327,7 +333,7 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Statements/BetweenDates/{account_number}/{start_date}/{end_date}",
+      "UpstreamPathTemplate": "/statements/between-dates/{account_number}/{start_date}/{end_date}",
       "UpstreamHttpMethod": [ "GET" ],
       "RateLimitOptions": {
         "ClientWhitelist": [],
@@ -344,7 +350,7 @@
     //Account Access API
 
     {
-      "DownstreamPathTemplate": "/api/v1/AccountAccess",
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/GetAccountAccessForUser/{account_id}/{bank_id}/{provider}/{provider_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -352,7 +358,7 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/AccountAccess",
+      "UpstreamPathTemplate": "/account-access/get-account-access-for-user/{account_id}/{bank_id}/{provider}/{provider_id}",
       "UpstreamHttpMethod": [ "GET" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
@@ -360,7 +366,7 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/AccountAccess/VerifyAccess/{account_number}",
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/RevokeAccessToOneView/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -368,15 +374,15 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/AccountAccess/VerifyAccess/{account_number}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamPathTemplate": "/account-access/revoke-access-to-one-view/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/AccountAccess/GetAccess/{account_number}",
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/GrantUserAccessToView/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -384,15 +390,15 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/AccountAccess/GetAccess/{account_number}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamPathTemplate": "/account-access/grant-user-access-to-view/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
+      "UpstreamHttpMethod": [ "POST" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/AccountAccess/GetAccount/{account_number}",
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/DeleteView/{account_id}/{bank_id}/{view_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -400,8 +406,40 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/AccountAccess/GetAccount/{account_number}",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamPathTemplate": "/account-access/delete-view/{account_id}/{bank_id}/{view_id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/{account_id}/{bank_id}/{view_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "account.access.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/account-access/{account_id}/{bank_id}/{view_id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/{account_id}/{bank_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "account.access.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/account-access/{account_id}/{bank_id}",
+      "UpstreamHttpMethod": [ "POST" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
@@ -410,7 +448,7 @@
     //Agreement API
 
     {
-      "DownstreamPathTemplate": "/api/v1/Agreements",
+      "DownstreamPathTemplate": "/api/v1/Agreements/{bank_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -418,15 +456,39 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Agreements",
-      "UpstreamHttpMethod": [ "GET" ],
+      "UpstreamPathTemplate": "/consents/{bank_id}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Agreements/GetConsentRequest/{consent_request_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agreement.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/consents/get-consent-request/{consent_request_id}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Agreements/RevokeConsent/{bank_id}/{consent_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agreement.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/consents/revoke-consent/{bank_id}/{consent_id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Agreements/{accessId}",
+      "DownstreamPathTemplate": "/api/v1/Agreements/{bank_id}/{consent_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -434,72 +496,40 @@
           "Port": "80"
         }
       ],
-      "UpstreamPathTemplate": "/Agreements/{accessId}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Agreements/custom",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "agreement.api",
-          "Port": "80"
-        }
-      ],
-      "UpstreamPathTemplate": "/Agreements/custom",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Agreements/custom/by-account/{account_number}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "agreement.api",
-          "Port": "80"
-        }
-      ],
-      "UpstreamPathTemplate": "/Agreements/custom/by-account/{account_number}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Agreements/custom/by-provider/{providerId}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "agreement.api",
-          "Port": "80"
-        }
-      ],
-      "UpstreamPathTemplate": "/Agreements/custom/by-provider/{providerId}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Agreements",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "agreement.api",
-          "Port": "80"
-        }
-      ],
-      "UpstreamPathTemplate": "/Agreements",
+      "UpstreamPathTemplate": "/consents/{bank_id}/{consent_id}",
       "UpstreamHttpMethod": [ "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Agreements/CreateConsent/{bank_id}/{email}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agreement.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/consents/create-consent/{bank_id}/{email}",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Agreements/AddUserToConsent/{bank_id}/{consent_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "agreement.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/consents/add-user-to-consent/{bank_id}/{consent_id}",
+      "UpstreamHttpMethod": [ "POST" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
@@ -625,6 +655,90 @@
       ],
       "UpstreamPathTemplate": "/auth/logout",
       "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Users/GetCurrentUser",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/users/get-current-user",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Users/GetUserByEmail/{email}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/users/get-user-by-email/{email}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Entitlements",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/entitlements",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Entitlements/GetEntitlementsForUser/{user_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/entitlements/get-entitlements-for-user/{user_id}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Entitlements/GetEntitlementsForUser/{user_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/entitlements/get-entitlements-for-user/{user_id}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Entitlements/AddEntitlement/{user_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/entitlements/add-entitlement/{user_id}",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Entitlements/DeleteEntitlement/{entitlement_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "identity.api",
+          "Port": "80"
+        }
+      ],
+      "UpstreamPathTemplate": "/entitlements/delete-entitlement/{entitlement_id}",
+      "UpstreamHttpMethod": [ "DELETE" ]
     }
   ],
   "GlobalConfiguration": {

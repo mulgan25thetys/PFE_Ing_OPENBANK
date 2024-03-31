@@ -46,11 +46,11 @@ namespace Identity.API.Controllers
             return Ok(_service.GetAllEntitlements());
         }
 
-        [Route("[action]/{user_id}", Name = "GetEntitlementForUser")]
+        [Route("[action]/{user_id}", Name = "GetEntitlementsForUser")]
         [HttpGet]
         [ProducesResponseType(typeof(string), 200)]
         [ProducesResponseType(typeof(string), 404)]
-        public async Task<IActionResult> GetEntitlementForUser(string user_id)
+        public async Task<IActionResult> GetEntitlementsForUser(string user_id)
         {
             if (HttpContext.Items["userId"] == null)
             {

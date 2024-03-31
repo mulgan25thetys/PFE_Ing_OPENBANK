@@ -20,12 +20,12 @@ namespace Transaction.API.Features.Commands
 
         async Task<TransactionModel> IRequestHandler<TransactionCmd, TransactionModel>.Handle(TransactionCmd request, CancellationToken cancellationToken)
         {
-            var transactionModel = _mapper.Map<TransactionModel>(request);
+            //var transactionModel = _mapper.Map<TransactionModel>(request);
 
-            var transaction = await _service.AddTransactionAsync(transactionModel);
+            //var transaction = await _service.AddTransactionAsync(transactionModel);
 
-            _logger.LogInformation($"One Transaction has been created");
-            return transaction;
+            //_logger.LogInformation($"One Transaction has been created");
+            return null;
         }
     }
 }

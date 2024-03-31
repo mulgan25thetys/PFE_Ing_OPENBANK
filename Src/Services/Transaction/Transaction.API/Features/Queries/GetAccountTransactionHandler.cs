@@ -18,9 +18,9 @@ namespace Transaction.API.Features.Queries
         public async Task<TransactionList> Handle(GetAccountTransactions request, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Retrieving Transactions by Account :{request.Account_Number}");
-            var transactions = await _service.GetAllTransactionsAsync(request.Account_Number);
+            //var transactions = await _service.GetAllTransactionsAsync(request.Account_Number);
 
-            return transactions;
+            return null;
         }
     }
 }
