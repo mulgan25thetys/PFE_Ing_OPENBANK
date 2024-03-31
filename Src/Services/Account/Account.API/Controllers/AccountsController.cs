@@ -25,15 +25,17 @@ namespace Account.API.Controllers
         private readonly IConfiguration _cfg;
         private readonly UserService _userService;
         private readonly IMapper _mapper;
+        private readonly BankService _bankService;
 
         public AccountsController(IAccountService service, UserService userService, ILogger<AccountsController> logger,
-            IConfiguration cfg, IMapper mapper)
+            IConfiguration cfg, IMapper mapper, BankService bankService)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cfg = cfg ?? throw new ArgumentNullException(nameof(cfg));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
         }
 
         [HttpGet("{bank_id}", Name = "GetAllAccounts")]
@@ -155,18 +157,24 @@ namespace Account.API.Controllers
             }
         }
 
-        private async Task<MessageResponse> ValidateData(AccountRequest account, string userId, string account_id, string BANK_ID)
+        private async Task<MessageResponse> ValidateData(AccountRequest account, string userId, string account_id, string bank_id)
         {
             int statusCode = 200;
             string message = "Ok";
 
-            var bankIdMatch = Regex.Match(BANK_ID, @"^[0-9/a-z/A-Z/'-'/'.'/'_']{5,255}$");
-            if (!bankIdMatch.Success || BANK_ID.Length > 255)
+            var bankIdMatch = Regex.Match(bank_id, @"^[0-9/a-z/A-Z/'-'/'.'/'_']{5,255}$");
+            if (!bankIdMatch.Success || bank_id.Length > 255)
             {
                 message = "OBP-30111: Invalid Bank Id. The BANK_ID should only contain 0-9/a-z/A-Z/'-'/'.'/'_', the length should be smaller than 255.";
                 return new MessageResponse() { Code = 400, Message = message };
             }
+            var bank = await _bankService.GetBankObjectAsync(bank_id);
 
+            if (bank.Id.Length == 0)
+            {
+                message = "OBP-30001: Bank not found. Please specify a valid value for BANK_ID.";
+                return new MessageResponse() { Code = 404, Message = message };
+            }
             var isValidAccount = Guid.TryParse(account_id, out _);
             
             if (!isValidAccount)

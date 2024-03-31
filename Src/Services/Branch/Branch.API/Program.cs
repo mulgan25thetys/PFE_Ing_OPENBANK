@@ -5,13 +5,21 @@ using Branch.API.Services.Interfaces;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using Helper.Extensions;
+using Branch.API.Services.Grpc;
+using Bank.grpc.Protos;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<BankService>();
 
 builder.Services.AddHttpClient<IBranchService, BranchService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
+
+builder.Services.AddGrpcClient<BankProtoService.BankProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:BankUrl"]);
+});
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

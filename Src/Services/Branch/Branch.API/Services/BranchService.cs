@@ -6,6 +6,7 @@ using Branch.API.Models.Response;
 using Branch.API.Models.Requests;
 using Branch.API.Extensions;
 using System.Linq.Expressions;
+using System.Reflection.Emit;
 
 namespace Branch.API.Services
 {
@@ -52,7 +53,7 @@ namespace Branch.API.Services
             model.OPENING_TIME = DateTimeExtension.SetTime(DateTime.Now, branch.Opening_time.Hour, branch.Opening_time.Minute,0,0);
 
             model.ID = Guid.NewGuid().ToString();
-            model.BRANCH_NUM = rand.NextInt64();
+            model.BRANCH_NUM = rand.NextInt64(100000000000);
 
             var branchPost = JsonConvert.SerializeObject(model);
             var response = await _client.PostAsync(endPointUrl, new StringContent(branchPost, Encoding.UTF8, "application/json"));

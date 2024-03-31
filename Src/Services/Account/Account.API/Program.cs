@@ -10,11 +10,13 @@ using Serilog.Sinks.Elasticsearch;
 using Helper.Extensions;
 using Helper.Middlewares;
 using User.grpc.Protos;
+using Bank.grpc.Protos;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddScoped<BranchService>();
+builder.Services.AddScoped<BankService>();
 builder.Services.AddScoped<UserService>();
 
 builder.Services.AddHttpClient<IAccountService, AccountService>(c =>
@@ -27,6 +29,10 @@ builder.Services.AddGrpcClient<BranchProtoService.BranchProtoServiceClient>(opti
 builder.Services.AddGrpcClient<UserProtoService.UserProtoServiceClient>(options =>
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:UserUrl"]);
+});
+builder.Services.AddGrpcClient<BankProtoService.BankProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:BankUrl"]);
 });
 
 builder.Services.AddAutoMapper(typeof(Program));

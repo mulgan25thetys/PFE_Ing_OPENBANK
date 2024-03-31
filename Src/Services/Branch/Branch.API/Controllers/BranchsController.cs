@@ -1,6 +1,7 @@
 ﻿using Branch.API.Models;
 using Branch.API.Models.Requests;
 using Branch.API.Models.Response;
+using Branch.API.Services.Grpc;
 using Branch.API.Services.Interfaces;
 using Helper.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -19,11 +20,13 @@ namespace Branch.API.Controllers
     {
         private IBranchService _service;
         private ILogger<BranchsController> _logger;
+        private readonly BankService _bankService;
 
-        public BranchsController(IBranchService service, ILogger<BranchsController> logger)
+        public BranchsController(IBranchService service, ILogger<BranchsController> logger, BankService bankService)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
         }
 
         [HttpGet]
@@ -60,10 +63,10 @@ namespace Branch.API.Controllers
             return Ok(response);
         }
 
-        [HttpPost]
+        [HttpPost("{bank_id}")]
         [ProducesResponseType(typeof(BranchResponse), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(BranchResponse), (int)HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> Addbranch([FromBody] BranchRequest branch)
+        public async Task<IActionResult> Addbranch( string bank_id,[FromBody] BranchRequest branch)
         {
             if (HttpContext.Items["userId"] == null)
             {
@@ -76,6 +79,14 @@ namespace Branch.API.Controllers
             {
                 return this.StatusCode(403, new MessageResponse() { Message = "OBP-30209: Insufficient authorisation to Create Branch. You do not have the role CanCreateBranch.", Code = 403 });
             }
+            var bank = await _bankService.GetBank(bank_id);
+
+            if (bank.Id.Length == 0)
+            {
+                string message = "OBP-30001: Bank not found. Please specify a valid value for BANK_ID.";
+                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = message });
+            }
+            branch.Bank_id = bank.Id;
             BranchResponse response = await _service.AddBranch(branch);
             if (response.Code > 0)
             {

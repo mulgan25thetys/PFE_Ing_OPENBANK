@@ -8,6 +8,7 @@ using Serilog.Sinks.Elasticsearch;
 using Helper.Extensions;
 using Helper.Middlewares;
 using EventBus.Message.Common;
+using Bank.grpc.Protos;
 //using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<BankService>();
 
 builder.Services.AddHttpClient<IAccountAccessService, AccountAccessService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
@@ -25,6 +27,10 @@ builder.Services.AddHttpClient<IAccountAccessService, AccountAccessService>(c =>
 builder.Services.AddGrpcClient<AccountProtoService.AccountProtoServiceClient>(options =>
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:AccountUrl"]);
+});
+builder.Services.AddGrpcClient<BankProtoService.BankProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:BankUrl"]);
 });
 
 //RabbitMQ & Masstransit configuration

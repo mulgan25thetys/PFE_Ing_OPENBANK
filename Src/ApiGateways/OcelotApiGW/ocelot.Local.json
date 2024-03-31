@@ -55,7 +55,7 @@
       "FileCacheOptions": { "TtlSeconds": 30 }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Branchs",
+      "DownstreamPathTemplate": "/api/v1/Branchs/{bank_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -63,7 +63,7 @@
           "Port": "5000"
         }
       ],
-      "UpstreamPathTemplate": "/branchs",
+      "UpstreamPathTemplate": "/branchs/{bank_id}",
       "UpstreamHttpMethod": [ "POST" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
