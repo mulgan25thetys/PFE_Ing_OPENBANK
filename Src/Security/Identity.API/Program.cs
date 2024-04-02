@@ -36,8 +36,7 @@ builder.Services.AddScoped<IEntitlementService, EntitlementService>();
 //Configuration du context avec la chaine de connection
 builder.Services.AddDbContext<IdentityContext>(options =>
 {
-    options.UseOracle(builder.Configuration.GetConnectionString("AuthConnectionString"), b =>
-            b.UseOracleSQLCompatibility("11"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AuthConnectionString"));
 });
 
 //configuration de Identity User

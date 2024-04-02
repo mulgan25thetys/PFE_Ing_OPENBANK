@@ -22,12 +22,12 @@ namespace User.grpc.Services
         public override async Task<UserResponse> GetUser(GetUserRequest request, ServerCallContext context)
         {
             _logger.LogInformation($"Retrieving a user with USER_ID : {request.UserId}");
-            UserModel model = await _userService.GetUserModelByIdAsync(request.UserId);
+            UserModel? model =  _userService.GetUserModelByIdAsync(request.UserId);
 
-            if (model.ID == null)
+            if (model == null)
             {
                 _logger.LogError("OBP-20005: User not found. Please specify a valid value for USER_ID.");
-                return new UserResponse();
+                return await Task.FromResult(new UserResponse());
             }
             else
             {
@@ -40,7 +40,7 @@ namespace User.grpc.Services
                     email = model.Email
                 };
                 var response = _mapper.Map<UserResponse>(data);
-                return response;
+                return await Task.FromResult(response);
             }
         }
     }

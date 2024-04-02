@@ -1,4 +1,5 @@
-﻿using User.grpc.Models;
+﻿using Microsoft.Data.SqlClient;
+using User.grpc.Models;
 using User.grpc.Services.Interfaces;
 
 namespace User.grpc.Services
@@ -6,46 +7,86 @@ namespace User.grpc.Services
     public class UserService : IUserService
     {
         private readonly IConfiguration _config;
-        private readonly HttpClient _client;
-        private string endPointUrl = "";
         private readonly ILogger<UserService> _logger;
 
-        public UserService(IConfiguration configuration, HttpClient httpClient, ILogger<UserService> logger)
+        public UserService(IConfiguration configuration, ILogger<UserService> logger)
         {
 
             _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            this._client = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            //Setting endPoint
-            endPointUrl = _config.GetValue<string>("OrdsSettings:Uri");
         }
-        public async Task<UserModel> GetUserModelByEmailAsync(string email)
+        public UserModel? GetUserModelByEmailAsync(string email)
         {
-            string filter = "?q={ \"email\": { \"$eq\":\" "+email+" \" } }";
-            var response = await _client.GetAsync(endPointUrl + filter);
+            UserModel user = new UserModel();
             try
             {
-                UserList list = await response.Content.ReadAsAsync<UserList>();
-                return list.Items.FirstOrDefault();
+                SqlConnection connection = new SqlConnection(_config.GetConnectionString("AuthConnectionString"));
+
+                _logger.LogInformation("\nQuery data example:");
+                _logger.LogInformation("=========================================\n");
+
+                connection.Open();
+
+                String sql = $"SELECT * FROM Users WHERE Email = {email} LIMIT 1";
+
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            user.ID = reader.GetString(0);
+                            user.Provider = reader.GetString(3) ?? "";
+                            user.Provider_id = reader.GetString(4) ?? "";
+                            user.UserName = reader.GetString(5);
+                            user.Email = reader.GetString(7);
+                        }
+                    }
+                }
+                return user;
             }
-            catch (Exception ex)
+            catch (SqlException e)
             {
-                _logger.LogError(ex.Message, ex);
-                return new UserModel();
+                _logger.LogError(e.ToString());
+                return user;
             }
         }
 
-        public async Task<UserModel> GetUserModelByIdAsync(string userId)
+        public UserModel? GetUserModelByIdAsync(string userId)
         {
-            var response = await _client.GetAsync(endPointUrl + "/" + userId);
+            //var response = await _client.GetAsync(endPointUrl + "/" + userId);
+            UserModel user = new UserModel();
             try
             {
-                return await response.Content.ReadAsAsync<UserModel>();
+                SqlConnection connection = new SqlConnection(_config.GetConnectionString("AuthConnectionString"));
+                
+                    _logger.LogInformation("\nQuery data example:");
+                    _logger.LogInformation("=========================================\n");
+
+                    connection.Open();
+
+                    String sql = "SELECT * FROM Users";
+
+                    using (SqlCommand command = new SqlCommand(sql, connection))
+                    {
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                user.ID = reader.GetString(0);
+                                user.Provider = reader.GetString(3) ?? "";
+                                user.Provider_id = reader.GetString(4) ?? "";
+                                user.UserName = reader.GetString(5);
+                                user.Email = reader.GetString(7);
+                            }
+                        }
+                    }
+                return user;
             }
-            catch(Exception ex)
+            catch (SqlException e)
             {
-                _logger.LogError(ex.Message, ex);
-                return new UserModel();
+                _logger.LogError(e.ToString());
+                return user;
             }
         }
     }

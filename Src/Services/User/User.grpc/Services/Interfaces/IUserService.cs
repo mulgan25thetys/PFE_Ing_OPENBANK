@@ -4,7 +4,7 @@ namespace User.grpc.Services.Interfaces
 {
     public interface IUserService
     {
-        public Task<UserModel> GetUserModelByIdAsync(string userId);
-        public Task<UserModel> GetUserModelByEmailAsync(string email);
+        public UserModel? GetUserModelByIdAsync(string userId);
+        public UserModel? GetUserModelByEmailAsync(string email);
     }
 }

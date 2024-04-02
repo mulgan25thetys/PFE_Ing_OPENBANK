@@ -1,7 +1,9 @@
-﻿using System.Data;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 
 namespace User.grpc.Models
 {
+    [Table("Users")]
     public class UserModel 
     {
         public string ID { get; set; }
@@ -13,15 +15,15 @@ namespace User.grpc.Models
         public string NormalizedUserName { get; set; }
         public string Email { get; set; }
         public string NormalizedEmail { get; set; }
-        public int EmailConfirmed { get; set; }
+        public bool EmailConfirmed { get; set; }
         public string PasswordHash { get; set; }
         public string SecurityStamp { get; set; }
         public string ConcurrencyStamp { get; set; }
         public string PhoneNumber { get; set; }
-        public int PhoneNumberConfirmed { get; set; }
-        public int TwoFactorEnabled { get; set; }
+        public bool PhoneNumberConfirmed { get; set; }
+        public bool TwoFactorEnabled { get; set; }
         //public TimeZone LockoutEnd { get; set; }
-        public int LockoutEnabled { get; set; }
+        public bool LockoutEnabled { get; set; }
         public int AccessFailedCount { get; set; }
     }
 }

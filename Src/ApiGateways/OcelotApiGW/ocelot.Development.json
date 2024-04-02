@@ -705,18 +705,6 @@
       "UpstreamHttpMethod": [ "GET" ]
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Entitlements/GetEntitlementsForUser/{user_id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "identity.api",
-          "Port": "80"
-        }
-      ],
-      "UpstreamPathTemplate": "/entitlements/get-entitlements-for-user/{user_id}",
-      "UpstreamHttpMethod": [ "GET" ]
-    },
-    {
       "DownstreamPathTemplate": "/api/v1/Entitlements/AddEntitlement/{user_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

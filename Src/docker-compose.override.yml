@@ -294,16 +294,13 @@ services:
     restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "OrdsSettings:Uri=http://oracle_rest_data_service:8080/ords/ordsuser/users/"
-      - "OrdsSettings:DatabaseUrl=http://oracle_rest_data_service:8080"
-      - "OrdsSettings:DatabaseUser=ordsuser"
-      - "OrdsSettings:DatabaseTableName=users"
+      - "ConnectionStrings:AuthConnectionString=Server=identityDb;Database=UserDb;User Id=sa;Password=Identity2024@Pass;"
     depends_on:
-      - oracle_rest_data_service
+      - identityDb 
     ports:
       - "8009:80"
     networks:
-      - ords_net
+      - identity_net
       - gateway_net 
 
 
