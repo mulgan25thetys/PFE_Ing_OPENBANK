@@ -50,7 +50,7 @@ namespace Account.API.Services
             model.Label = account.Label;
             model.Type = account.Type;
             model.AccNumber = generator.NextInt64(100000000000);
-            model.Amount = account.Balance.Amount;
+            model.Amount = 0;
             model.Currency = account.Balance.Currency.Trim().ToUpper(); 
             
             model.Iban = "TN" + generator.NextInt64(1000000000000000000);

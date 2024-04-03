@@ -74,19 +74,19 @@ builder.Host.UseSerilog((context, configuration) =>
 });
 
 //RabbitMQ & Masstransit configuration
-//builder.Services.AddMassTransit(config =>
-//{
-//    config.AddConsumer<AccountAccessConsumer>();
-//    config.UsingRabbitMq((ctx, cfg) =>
-//    {
-//        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
-//        cfg.ReceiveEndpoint(EventBusConstants.AccountAccessQueue, c =>
-//        {
-//            c.ConfigureConsumer<AccountAccessConsumer>(ctx);
-//        });
-//    });
-//});
-//builder.Services.AddMassTransitHostedService();
+builder.Services.AddMassTransit(config =>
+{
+    config.AddConsumer<CreationAccountConsumer>();
+    config.UsingRabbitMq((ctx, cfg) =>
+    {
+        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
+        cfg.ReceiveEndpoint(EventBusConstants.CreationAccountQueue, c =>
+        {
+            c.ConfigureConsumer<CreationAccountConsumer>(ctx);
+        });
+    });
+});
+builder.Services.AddMassTransitHostedService();
 
 //AutoMapper Configuration
 builder.Services.AddAutoMapper(typeof(Program));

@@ -266,7 +266,7 @@ namespace Identity.API.Controllers
         #endregion
 
         #region Email Confirmation
-        [HttpGet]
+        [HttpPut]
         [Route("Confirm-Email")]
         [AllowAnonymous]
         public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequest request)

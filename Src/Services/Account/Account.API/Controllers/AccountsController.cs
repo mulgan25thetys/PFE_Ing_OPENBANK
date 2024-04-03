@@ -4,9 +4,11 @@ using Account.API.Models.Responses;
 using Account.API.Services.Grpc;
 using Account.API.Services.Interfaces;
 using AutoMapper;
+using EventBus.Message.Events;
 using Grpc.Core;
 using Helper.Models;
 using Helper.Utils;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -26,9 +28,10 @@ namespace Account.API.Controllers
         private readonly UserService _userService;
         private readonly IMapper _mapper;
         private readonly BankService _bankService;
+        private readonly IPublishEndpoint _publish;
 
         public AccountsController(IAccountService service, UserService userService, ILogger<AccountsController> logger,
-            IConfiguration cfg, IMapper mapper, BankService bankService)
+            IConfiguration cfg, IMapper mapper, BankService bankService, IPublishEndpoint publish)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -36,6 +39,7 @@ namespace Account.API.Controllers
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
+            _publish = publish ?? throw new ArgumentNullException(nameof(publish));
         }
 
         [HttpGet("{bank_id}", Name = "GetAllAccounts")]
@@ -113,6 +117,9 @@ namespace Account.API.Controllers
                 {
                     return this.StatusCode(response.Code, new MessageResponse () { Code = response.Code, Message = response.ErrorMessage});
                 }
+                //Notify Client after account creation through RabbitMQ
+                await _publish.Publish(new CreationAccountEvent() { AccountId = account_id, BankId = bank_id,
+                    OwnerId = ownerId});
                 return this.StatusCode(201, response);
             }
             else

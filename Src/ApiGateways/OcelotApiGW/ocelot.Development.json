@@ -610,7 +610,7 @@
         }
       ],
       "UpstreamPathTemplate": "/auth/confirm-email",
-      "UpstreamHttpMethod": [ "GET" ]
+      "UpstreamHttpMethod": [ "PUT" ]
     },
     {
       "DownstreamPathTemplate": "/api/v1/Identity/add-phone-number",

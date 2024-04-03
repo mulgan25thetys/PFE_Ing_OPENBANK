@@ -23,7 +23,7 @@ namespace Bank.api.Controllers
         {
             return Ok(await _service.GetAllBankAsync());
         }
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetBankById")]
         public async Task<IActionResult> GetBankById(string id)
         {
             if (HttpContext.Items["userId"] == null)
@@ -89,7 +89,12 @@ namespace Bank.api.Controllers
             {
                 return this.StatusCode(409, new MessageResponse() { Code = 409, Message = "OBP-50000: Unknown Error." });
             }
-            return this.StatusCode(201, await _service.CreateBankAsync(request));
+            bank = await _service.CreateBankAsync(request);
+            if (bank.Code > 0)
+            {
+                return this.StatusCode(bank.Code, new MessageResponse() { Code = bank.Code, Message = bank.ErrorMessage });
+            }
+            return this.StatusCode(201, bank);
         }
     }
 }
