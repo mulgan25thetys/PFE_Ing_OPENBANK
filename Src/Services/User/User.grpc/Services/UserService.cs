@@ -36,8 +36,8 @@ namespace User.grpc.Services
                         while (reader.Read())
                         {
                             user.ID = reader.GetString(0);
-                            user.Provider = reader.GetString(3) ?? "";
-                            user.Provider_id = reader.GetString(4) ?? "";
+                            user.Provider_id = reader.GetString(3) ?? "";
+                            user.Provider = reader.GetString(4) ?? "";
                             user.UserName = reader.GetString(5);
                             user.Email = reader.GetString(7);
                         }
@@ -74,8 +74,8 @@ namespace User.grpc.Services
                             while (reader.Read())
                             {
                                 user.ID = reader.GetString(0);
-                                user.Provider = reader.GetString(3) ?? "";
-                                user.Provider_id = reader.GetString(4) ?? "";
+                                user.Provider_id = reader.GetString(3) ?? "";
+                                user.Provider = reader.GetString(4) ?? "";
                                 user.UserName = reader.GetString(5);
                                 user.Email = reader.GetString(7);
                             }

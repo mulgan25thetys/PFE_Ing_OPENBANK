@@ -20,5 +20,6 @@
         public bool Can_see_transaction_finish_date { get; set; }
         public bool Can_see_transaction_other_bank_account { get; set; }
         public bool Can_see_transaction_this_bank_account { get; set; }
+        public bool Can_add_transaction_request_to_any_account { get; set; }
     }
 }

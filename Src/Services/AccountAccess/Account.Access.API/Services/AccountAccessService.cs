@@ -84,7 +84,7 @@ namespace Account.Access.API.Services
             model.Alias = request.Alias.Length == 0 ? "NONE" : request.Alias.ToUpper();
             model.Which_alias_to_use = request.Which_alias_to_use;
             model.Description = request.Description;
-            model.Is_Public = request.Is_public;
+            model.Is_Public = model.Alias == "PUBLIC"? request.Is_public : false;
             model.Hide_metadata_if_alias_used = request.Hide_metadata_if_alias_used;
             model.Owner_id = ownerId;
 
@@ -100,7 +100,7 @@ namespace Account.Access.API.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message, ex);
-                return new AccountAccessResponse();
+                return new AccountAccessResponse() { Code = (int)result.StatusCode, ErrorMessage = "OBP-50000: Unknown Error." };
             }
         }
         public async Task<AccountAccessResponse> UpdateView(string Account_id, string bank_id, int view_id, UpdateViewRequest request)
@@ -180,6 +180,7 @@ namespace Account.Access.API.Services
                     case "can_see_transaction_finish_date": model.Can_see_transaction_finish_date = true; break;
                     case "can_see_transaction_other_bank_account": model.Can_see_transaction_other_bank_account = true; break;
                     case "can_see_transaction_this_bank_account": model.Can_see_transaction_this_bank_account = true; break;
+                    case "can_add_transaction_request_to_any_account": model.Can_add_trans_req_to_any_account = true ; break;
                 }
             }
             return model;

@@ -13,7 +13,7 @@ message GetUserRequest {
 message UserResponse {
 	string userId = 1;
 	string userName = 2;
-	string provider = 3;
-	string providerId = 4;
+	string providerId = 3;
+	string provider = 4;
 	string email = 5;
 }

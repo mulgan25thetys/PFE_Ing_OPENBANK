@@ -58,7 +58,16 @@ namespace Account.Access.API.Controllers
             {
                 return this.StatusCode(403, new MessageResponse () { Message = "User does not have owner access" , Code = 403});
             }
-            return this.StatusCode(201, await _service.CreateView(account.Id, account.Bankid, request, ownerId));
+
+            var view = await _service.CreateView(account.Id, account.Bankid, request, ownerId);
+            if (view.Code > 0)
+            {
+                return this.StatusCode(view.Code, new MessageResponse() { Code = view.Code, Message = view.ErrorMessage });
+            }
+            else
+            {
+                return this.StatusCode(201, view);
+            }
         }
 
         [HttpPut("{account_id}/{bank_id}/{view_id}")]

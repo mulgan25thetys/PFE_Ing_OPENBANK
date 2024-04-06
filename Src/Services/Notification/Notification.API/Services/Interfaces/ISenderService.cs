@@ -1,7 +1,6 @@
-﻿using Identity.API.Applications.Models;
-using Identity.API.Models;
+﻿using Notification.API.Models;
 
-namespace Identity.API.Services.Interfaces
+namespace Notification.API.Services.Interfaces
 {
     public interface ISenderService
     {

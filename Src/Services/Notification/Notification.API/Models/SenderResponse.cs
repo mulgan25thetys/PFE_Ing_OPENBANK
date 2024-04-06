@@ -1,4 +1,4 @@
-﻿namespace Identity.API.Applications.Models
+﻿namespace Notification.API.Models
 {
     public class SenderResponse
     {

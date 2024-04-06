@@ -178,6 +178,14 @@ namespace Account.Access.API.Models.Responses
             get { return V_Can_see_trans_t_bk_account == 1 ? true : false; }
             set { V_Can_see_trans_t_bk_account = value == true ? 1 : 0; }
         }
+        [JsonProperty(PropertyName = "V_CAN_ADD_TRANS_REQ_TO_A_ACC")]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public int V_Can_add_trans_req_to_a_account { get; set; }
+        public bool Can_add_trans_req_to_any_account
+        {
+            get { return V_Can_add_trans_req_to_a_account == 1 ? true : false; }
+            set { V_Can_add_trans_req_to_a_account = value == true ? 1 : 0; }
+        }
         [JsonProperty(PropertyName = "OWNER_ID")]
         [System.Text.Json.Serialization.JsonIgnore]
         public string Owner_id { get; set; }

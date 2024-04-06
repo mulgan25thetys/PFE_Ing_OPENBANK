@@ -17,7 +17,8 @@
         "agreement.api": "StartDebugging",
         "user.grpc": "StartDebugging",
         "bank.api": "StartDebugging",
-        "bank.grpc": "StartDebugging"
+        "bank.grpc": "StartDebugging",
+        "view.grpc": "StartDebugging"
       }
     }
   }

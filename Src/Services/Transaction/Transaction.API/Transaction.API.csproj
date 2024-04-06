@@ -36,8 +36,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Protobuf Include="..\..\AccountAccess\View.grpc\Protos\View.proto" GrpcServices="Client">
+      <Link>Protos\View.proto</Link>
+    </Protobuf>
     <Protobuf Include="..\..\Account\Account.Grpc\Protos\account.proto" GrpcServices="Client">
       <Link>Protos\account.proto</Link>
+    </Protobuf>
+    <Protobuf Include="..\..\Bank\Bank.grpc\Protos\Bank.proto" GrpcServices="Client">
+      <Link>Protos\Bank.proto</Link>
+    </Protobuf>
+    <Protobuf Include="..\..\User\User.grpc\Protos\User.proto" GrpcServices="Client">
+      <Link>Protos\User.proto</Link>
     </Protobuf>
   </ItemGroup>
 

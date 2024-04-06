@@ -29,9 +29,9 @@ namespace Branch.API.Controllers
             _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
         }
 
-        [HttpGet]
+        [HttpGet("{bank_id}", Name = "GetAllBranchs")]
         [ProducesResponseType(typeof(BranchListResponse), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<BranchListResponse>> GetAllBranchs()
+        public async Task<ActionResult<BranchListResponse>> GetAllBranchs(string bank_id)
         {
             int page = 1;
             int size = 10;
@@ -45,12 +45,12 @@ namespace Branch.API.Controllers
 
             if (filter !=null && filter.Length > 0 )
             {
-                return await _service.GetBranchesByFilter(filter, page, size);
+                return await _service.GetBranchesByFilter(filter, bank_id, page, size);
             }
-            return await _service.GetAllBranches(page, size);
+            return await _service.GetAllBranches(bank_id,page, size);
         }
 
-        [HttpGet("{id}", Name = "GetById")]
+        [HttpGet("[action]/{id}", Name = "GetById")]
         [ProducesResponseType(typeof(BranchResponse), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(BranchResponse), (int)HttpStatusCode.NotFound)]
         public async Task<ActionResult<BranchResponse>> GetBranch(string id)

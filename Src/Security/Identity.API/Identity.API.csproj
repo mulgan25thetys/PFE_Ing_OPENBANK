@@ -11,6 +11,7 @@
 
   <ItemGroup>
 	  <PackageReference Include="AutoMapper" Version="13.0.1" />
+	  <PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
 	  <PackageReference Include="MassTransit" Version="7.1.6" />
 	  <PackageReference Include="MassTransit.AspNetCore" Version="7.1.6" />
 	  <PackageReference Include="MassTransit.RabbitMQ" Version="7.1.6" />
@@ -54,7 +55,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="NewFolder\" />
+    <Protobuf Include="..\..\Services\Bank\Bank.grpc\Protos\Bank.proto" GrpcServices="Client">
+      <Link>Protos\Bank.proto</Link>
+    </Protobuf>
   </ItemGroup>
 
 </Project>

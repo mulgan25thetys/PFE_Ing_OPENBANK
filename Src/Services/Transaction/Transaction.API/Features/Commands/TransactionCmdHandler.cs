@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
 using MediatR;
 using Transaction.API.Models;
+using Transaction.API.Models.Responses;
 using Transaction.API.Services.Interfaces;
 
 namespace Transaction.API.Features.Commands
 {
-    public class TransactionCmdHandler : IRequestHandler<TransactionCmd, TransactionModel>
+    public class TransactionCmdHandler : IRequestHandler<TransactionCmd, TransactionResponse>
     {
         private readonly ILogger<TransactionCmdHandler> _logger;
         private readonly IMapper _mapper;
@@ -18,14 +19,12 @@ namespace Transaction.API.Features.Commands
             _service = service ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        async Task<TransactionModel> IRequestHandler<TransactionCmd, TransactionModel>.Handle(TransactionCmd request, CancellationToken cancellationToken)
+        public async Task<TransactionResponse> Handle(TransactionCmd request, CancellationToken cancellationToken)
         {
-            //var transactionModel = _mapper.Map<TransactionModel>(request);
+            var transaction = await _service.CreateTransactionRequest(request.AccountId, request.BankId,
+                request.Type, request.Request);
 
-            //var transaction = await _service.AddTransactionAsync(transactionModel);
-
-            //_logger.LogInformation($"One Transaction has been created");
-            return null;
+            return transaction;
         }
     }
 }

@@ -1,19 +1,14 @@
 ﻿using MediatR;
-using Transaction.API.Models;
+using Transaction.API.Models.Requests;
+using Transaction.API.Models.Responses;
 
 namespace Transaction.API.Features.Commands
 {
-    public class TransactionCmd : IRequest<TransactionModel>
+    public class TransactionCmd : IRequest<TransactionResponse>
     {
-        public Int64 TransId { get; set; }
-        public string Author { get; set; }
-        public string Description { get; set; }
-        public double Amount { get; set; }
-        public string Status { get; set; }
-        public string Type { get; set; }
-        public Int64 CreditedAcc { get; set; }
-        public Int64 DebitedAcc { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public string AccountId { get; set; }
+        public string BankId { get; set; }
+        public string Type { get; set; } 
+        public TransactionRequestReq Request { get; set; }
     }
 }

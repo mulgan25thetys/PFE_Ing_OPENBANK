@@ -12,9 +12,9 @@ namespace Transaction.API.Models
         public string From_bank_id { get; set; }
         [JsonProperty(PropertyName = "FROM_ACCOUNT_ID")]
         public string From_account_id { get; set; }
-        [JsonProperty(PropertyName = "To_BANK_ID")]
+        [JsonProperty(PropertyName = "TO_BANK_ID")]
         public string To_bank_id { get; set; }
-        [JsonProperty(PropertyName = "To_ACCOUNT_ID")]
+        [JsonProperty(PropertyName = "TO_ACCOUNT_ID")]
         public string To_account_id { get; set; }
         [JsonProperty(PropertyName = "CURRENCY")]
         public string Currency { get; set; }
@@ -29,12 +29,12 @@ namespace Transaction.API.Models
         [JsonProperty(PropertyName = "START_DATE")]
         public DateTime Start_date { get; set; }
         [JsonProperty(PropertyName = "END_DATE")]
-        public DateTime End_Date { get; set; }
+        public DateTime? End_Date { get; set; }
         [JsonProperty(PropertyName = "SUMMARY")]
-        public string Summary { get; set; }
+        public string? Summary { get; set; }
         [JsonProperty(PropertyName = "TRANSFERT_TYPE")]
-        public string Transfert_type { get; set; }
+        public string? Transfert_type { get; set; }
         [JsonProperty(PropertyName = "FUTURE_DATE")]
-        public DateTime Furture_Date { get; set; }
+        public DateTime? Furture_Date { get; set; }
     }
 }

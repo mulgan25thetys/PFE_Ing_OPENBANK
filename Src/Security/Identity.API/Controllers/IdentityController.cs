@@ -1,4 +1,5 @@
-﻿using Identity.API.Applications.Data;
+﻿using EventBus.Message.Events;
+using Identity.API.Applications.Data;
 using Identity.API.Applications.Dtos;
 using Identity.API.Applications.Models;
 using Identity.API.Applications.Models.Entities;
@@ -7,6 +8,7 @@ using Identity.API.Models;
 using Identity.API.Services.Interfaces;
 using Identity.API.Utils;
 using Identity.API.Utils.Interfaces;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -26,25 +28,25 @@ namespace Identity.API.Controllers
         private readonly ILogger<IdentityController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _env;
-        private readonly ISenderService _sender;
         private readonly SignInManager<UserModel> _signInManager;
         private readonly IJwtUtils _jwtUtils;
+        private readonly IPublishEndpoint _publish;
 
-        public IdentityController(UserManager<UserModel> userManager,
-            ISenderService sender, IJwtUtils jwtUtils,
+        public IdentityController(UserManager<UserModel> userManager, IJwtUtils jwtUtils,
             IWebHostEnvironment webHostEnvironment,
             IConfiguration configuration,
             RoleManager<Entitlement> roleManager,
-            ILogger<IdentityController> logger, SignInManager<UserModel> signInManager)
+            ILogger<IdentityController> logger, SignInManager<UserModel> signInManager,
+            IPublishEndpoint publish)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _env = webHostEnvironment ?? throw new ArgumentException(nameof(webHostEnvironment));
-            _sender = sender ?? throw new ArgumentNullException(nameof(sender));
             _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
             _jwtUtils = jwtUtils ?? throw new ArgumentNullException(nameof(jwtUtils));
+            _publish = publish ?? throw new ArgumentNullException(nameof(publish));
         }
 
         #region ADD USer
@@ -168,14 +170,15 @@ namespace Identity.API.Controllers
         {
             var user = await _userManager.FindByNameAsync(User.Identity.Name);
             var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, request.Number);
-            IdentityMessage message = new IdentityMessage
+            SendSmsEvent message = new SendSmsEvent
             {
                 Destination = request.Number,
                 Body = "Your security code is: " + code
             };
             _logger.LogInformation("User: " + user.Id + " " + message.Body);
             // Send token
-            return Ok(await _sender.SendSms(message));
+            await _publish.Publish(message);
+            return Ok();
         }
         [HttpPut]
         [Authorize]
@@ -215,14 +218,8 @@ namespace Identity.API.Controllers
                           "</br>" +
                           "<p>Thanks,</p>";
 
-                    Email email = new Email() { Body = body, Subject = "Please verify your Email", To = user.Email };
-                    SenderResponse result = await _sender.SendEmail(email);
-
-                    if (result.Status == false)
-                    {
-                        return Accepted(result.Message);
-                    }
-                    return Ok(result.Message + "to " + user.Email);
+                    SendEmailEvent email = new SendEmailEvent() { Body = body, Subject = "Please verify your Email", To = user.Email };
+                    await _publish.Publish(email);
                 }
                 return this.StatusCode(StatusCodes.Status404NotFound, user);
             }
@@ -339,27 +336,22 @@ namespace Identity.API.Controllers
                      "</br>" +
                    "<p>Thanks,</p>";
 
-            Email email = new Email() { Body = body, Subject = "Please verify your Email", To = user.Email };
-            SenderResponse result = await _sender.SendEmail(email);
-
-            if (result.Status == false)
-            {
-                _logger.LogError("Failed to send email to address: "+email.To.ToString());
-                return Accepted(result.Message);
-            }
-            return Ok(result.Message + "to " + user.Email);
+            SendEmailEvent email = new SendEmailEvent() { Body = body, Subject = "Please verify your Email", To = user.Email };
+            await _publish.Publish(email);
+            return Ok();
         }
 
         private async Task<bool> SetTwoFactorAuthentication(UserModel user)
         {
             var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, user.PhoneNumber);
-            IdentityMessage message = new IdentityMessage
+            SendSmsEvent message = new SendSmsEvent
             {
                 Destination = user.PhoneNumber,
                 Body = "Your security code is: " + code
             };
             _logger.LogInformation("User: " + user.Id + " " +message.Body);
-            return await _sender.SendSms(message);
+            await _publish.Publish(message);
+            return true;
         }
 
         private string GetRandomString(int number)

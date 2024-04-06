@@ -3,16 +3,15 @@ using SendGrid;
 using SendGrid.Helpers.Mail;
 using System.Net.Mail;
 using System.Net;
-using Identity.API.Applications.Models;
-using Identity.API.Models;
-using Identity.API.Services.Interfaces;
+using Notification.API.Models;
+using Notification.API.Services.Interfaces;
 using Twilio.Clients;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.TwiML.Messaging;
 using static ASPSMSX2.ASPSMSX2SoapClient;
 
-namespace Identity.API.Services
+namespace Notification.API.Services
 {
     public class SenderService : ISenderService
     {

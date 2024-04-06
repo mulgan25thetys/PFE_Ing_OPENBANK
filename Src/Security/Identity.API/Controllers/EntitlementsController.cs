@@ -1,5 +1,6 @@
 ﻿using Identity.API.Applications.Dtos;
 using Identity.API.Applications.Models.Entities;
+using Identity.API.Services.Grpc;
 using Identity.API.Services.Interfaces;
 using Identity.API.Utils;
 using Microsoft.AspNetCore.Identity;
@@ -13,19 +14,21 @@ namespace Identity.API.Controllers
     public class EntitlementsController : ControllerBase
     {
         private readonly IEntitlementService _service;
+        private readonly BankService _bankService;
         private readonly UserManager<UserModel> _userService;
         private readonly RoleManager<Entitlement> _roleManager;
         private readonly UserManager<UserModel> _userManager;
         private readonly IConfiguration _config;
 
         public EntitlementsController(IEntitlementService service, UserManager<UserModel> userService, IConfiguration config, RoleManager<Entitlement> roleManager,
-            UserManager<UserModel> userManager)
+            UserManager<UserModel> userManager, BankService bankService)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
         }
 
         [HttpGet]
@@ -83,7 +86,15 @@ namespace Identity.API.Controllers
             {
                 return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
             }
-            
+
+            var bank = await _bankService.GetBankObjectAsync(request.Bank_Id);
+
+            if (bank.Id.Length == 0)
+            {
+                string message = "OBP-30001: Bank not found. Please specify a valid value for BANK_ID.";
+                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = message });
+            }
+
             if (!BankInfos.Roles.Contains(request.Role_name))
             {
                 return this.StatusCode(400, new MessageResponse() { Message = "OOBP-30205: This entitlement is not a Bank Role", Code = 400 });

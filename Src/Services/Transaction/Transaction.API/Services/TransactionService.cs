@@ -1,14 +1,14 @@
-﻿using Account.Grpc.Protos;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System.Text;
-using System.Transactions;
-using Transaction.API.Features.Commands;
 using Transaction.API.Models;
 using Transaction.API.Models.Requests;
 using Transaction.API.Models.Responses;
 using Transaction.API.Models.Responses.Accounts;
 using Transaction.API.Services.Grpc;
 using Transaction.API.Services.Interfaces;
+using Account.Grpc.Protos;
+using MassTransit;
+using Transaction.API.Utils.Models;
 
 namespace Transaction.API.Services
 {
@@ -22,6 +22,9 @@ namespace Transaction.API.Services
         private string endPointUrl = "";
         private string endPointChallengeUrl = "";
         private string endPoinRequesttUrl = "";
+        private IList<string> transactionAllowedTypes = new List<string>();
+
+        HttpResponseMessage response = new HttpResponseMessage();
 
         public TransactionService(ILogger<TransactionService> logger, AccountService accountService,
             IConfiguration configuration, HttpClient httpClient)
@@ -40,6 +43,8 @@ namespace Transaction.API.Services
 
             endPoinRequesttUrl = $"/ords/{_config.GetValue<string>("OracleSettings:DatabaseUser")}" +
                 $"/{_config.GetValue<string>("OracleSettings:DatabaseRequestTableName")}/";
+
+            transactionAllowedTypes = _config.GetValue<List<string>>("Transaction:AllowedTypes") ?? new List<string>();
         }
         public async Task<TransactionModel> AddTransactionAsync(TransactionModel transaction)
         {
@@ -51,9 +56,65 @@ namespace Transaction.API.Services
             return await response.Content.ReadAsAsync<TransactionModel>();
         }
 
-        Task<TransactionResponse> ITransactionService.CreateTransactionRequest(string account_id, string bank_id, TransactionRequestReq req)
+        async Task<TransactionResponse> ITransactionService.CreateTransactionRequest(string account_id, string bank_id, string type, TransactionRequestReq req)
         {
-            throw new NotImplementedException();
+
+            string transactionIds = Guid.NewGuid().ToString();
+
+            TransactionRequest request = new TransactionRequest()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Amount = req.Value.Amount,
+                Currency = req.Value.Currency,
+                Description = req.Description,
+                Start_date = DateTime.Now,
+                From_account_id = account_id,
+                From_bank_id = bank_id,
+                To_account_id = req.To.Account_id,
+                To_bank_id = req.To.Bank_id,
+                Transaction_ids = transactionIds
+            };
+            request.Type = TransactionRequestType.Types.Where(t => t == type).FirstOrDefault() ?? "SANDBOX_TAN";
+
+            double meanAmount = _config.GetValue<double>("Transaction:MeanAmount");
+            request.Status = request.Amount <= meanAmount ? "COMPLETED" : "INITIATED";
+
+            if(request.Status == "INITIATED")
+            {
+                await CreateTransactionChallenge(request, transactionIds);
+            }
+
+            var requestPost = JsonConvert.SerializeObject(request);
+            try
+            {
+                response = await _client.PostAsync(endPoinRequesttUrl, new StringContent(requestPost, Encoding.UTF8, "application/json"));
+                return new TransactionResponse() { Code = 201 };
+            }catch(Exception ex)
+            {
+                return new TransactionResponse() { Code = (int)response.StatusCode, ErrorMessage = response.ReasonPhrase.ToString() };
+            }
+            
+        }
+
+        private async Task<TransactionResponse> CreateTransactionChallenge(TransactionRequest request, string transactionIds)
+        {
+            TransactionChallenge challenge = new TransactionChallenge()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Challenge_type = request.Type,
+                Transaction_ids = transactionIds,
+                Allowed_attemps = _config.GetValue<int>("Transaction: ChallengeAllowedAttemps")
+            };
+            var challengePost = JsonConvert.SerializeObject(challenge);
+            try
+            {
+                response = await _client.PostAsync(endPointChallengeUrl, new StringContent(challengePost, Encoding.UTF8, "application/json"));
+                return new TransactionResponse() { Code = 201 };
+            }
+            catch (Exception ex)
+            {
+                return new TransactionResponse() { Code = (int)response.StatusCode, ErrorMessage = response.ReasonPhrase.ToString() };
+            }
         }
 
         Task<TransactionResponse> ITransactionService.AnswerTransactionRequest(AnswerTransactionReq answer)
@@ -61,9 +122,29 @@ namespace Transaction.API.Services
             throw new NotImplementedException();
         }
 
-        Task<TransactionRequestList> ITransactionService.GetTransactionsRequest(string account_id)
+        async Task<TransactionRequestResponseList> ITransactionService.GetTransactionsRequest(string account_id, string bank_id)
         {
-            throw new NotImplementedException();
+            string filter = "?q={ \"$or\" : [  {\"$and\" : [  {\"from_bank_id\": { \"$eq\" : \""+bank_id+"\" } }, { \"from_account_id\": { \"$eq\" : \""+account_id+"\" } } ] }, { \"$and\" : [ {\"to_bank_id\": { \"$eq\" : \""+bank_id+"\" } },  {\"to_account_id\": { \"$eq\" : \""+account_id+"\" } } ] } ] }";
+            var response = await _client.GetAsync(endPoinRequesttUrl + filter);
+            try
+            {
+                var list = await response.Content.ReadAsAsync<TransactionRequestList>();
+                var responseList = new TransactionRequestResponseList() { Count = list.Count, HasMore = list.HasMore,
+                Limit = list.Limit, Offset = list.Offset};
+                if (list.Items.Count > 0)
+                {
+                    foreach (var item in list.Items)
+                    {
+                        responseList.Transaction_requests_with_charges.Add(await GetTransactionRequestFromModemAsync(item));
+                    }
+                }
+                return responseList;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return new TransactionRequestResponseList();
+            }
         }
 
         async Task<TransactionResponseList> ITransactionService.GetTransactionsForAccount(string account_id)
@@ -106,6 +187,28 @@ namespace Transaction.API.Services
             }
         }
         #region Private methods
+        private async Task<TransactionRequestResponse> GetTransactionRequestFromModemAsync(TransactionRequest model)
+        {
+            TransactionRequestResponse response = new TransactionRequestResponse();
+            response.Id = model.Id;
+            response.Type = model.Type;
+            response.From = new TransactionRequestFromAccount() { Account_id = model.From_account_id, Bank_id = model.From_bank_id };
+
+            TransactionRequestToAccount to_Transfert_To = new TransactionRequestToAccount()
+            {
+                Description = model.Description,
+                Future_date = model.Furture_Date,
+                Transfert_type = model.Transfert_type,
+                Value = new TransactionValue() {Amount = model.Amount, Currency = model.Currency },
+                
+            };
+            response.Details = new TransactionRequestDetails() { To_transfert_to_account = to_Transfert_To };
+            response.Transaction_ids.Add(model.Transaction_ids);
+            response.Status = model.Status;
+            response.Start_date = model.Start_date;
+            response.End_date = model.End_Date;
+            return response;
+        }
         //Get transaction response from Model
         private async Task<TransactionResponse> GetTransactionResponseFromModel(TransactionModel model, string? view_id = null)
         {
@@ -143,7 +246,7 @@ namespace Transaction.API.Services
             try
             {
                 var transactionReqList = await result.Content.ReadAsAsync<TransactionRequestList>();
-                return transactionReqList.Transaction_requests_with_charges.FirstOrDefault();
+                return transactionReqList.Items.FirstOrDefault();
             }
             catch (Exception ex)
             {

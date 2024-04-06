@@ -9,13 +9,13 @@ namespace Identity.API.EventBusConsumer
 {
     public class CreationAccountConsumer : IConsumer<CreationAccountEvent>
     {
-        private readonly ISenderService _sender;
+        private readonly IPublishEndpoint _publish;
         private readonly UserManager<UserModel> _userManager;
         private readonly ILogger<AccountAccessConsumer> _logger;
 
-        public CreationAccountConsumer(ISenderService sender, UserManager<UserModel> userManager, ILogger<AccountAccessConsumer> logger)
+        public CreationAccountConsumer(IPublishEndpoint publish, UserManager<UserModel> userManager, ILogger<AccountAccessConsumer> logger)
         {
-            _sender = sender ?? throw new ArgumentNullException(nameof(sender));
+            _publish = publish ?? throw new ArgumentNullException(nameof(publish));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -25,7 +25,7 @@ namespace Identity.API.EventBusConsumer
             var customer = await _userManager.FindByIdAsync(context.Message.OwnerId);
             if (customer != null)
             {
-                Email email = new Email()
+                SendEmailEvent email = new SendEmailEvent()
                 {
                     To = customer.Email,
                     Body = "<p>You have just created a bank account. </p>" +
@@ -35,7 +35,7 @@ namespace Identity.API.EventBusConsumer
                            $"<p>Created On: {DateTime.Now.ToLongDateString()} </p>",
                     Subject = "Confirmation of bank account creation"
                 };
-                await _sender.SendEmail(email);
+                await _publish.Publish(email);
                 _logger.LogInformation($"Creation Account event consumed successfully.");
             }
         }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Identity.API.Models
+namespace Notification.API.Models
 {
     public class EmailSettings
     {

@@ -9,8 +9,8 @@ namespace Branch.API.Services.Interfaces
     {
         Task<BranchResponse> AddBranch(BranchRequest branch);
         Task<bool> DeleteBranch(string branch_id);
-        Task<BranchListResponse> GetAllBranches(int? page, int? size);
-        Task<BranchListResponse> GetBranchesByFilter(string filter, int? page, int? size);
+        Task<BranchListResponse> GetAllBranches(string bank_id,int? page, int? size);
+        Task<BranchListResponse> GetBranchesByFilter(string filter,string bank_id, int? page, int? size);
         Task<BranchResponse> GetBranch(string id);
     }
 }

@@ -339,3 +339,10 @@ services:
       - ords_net
       - gateway_net 
 
+
+  view.grpc:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "80"
+

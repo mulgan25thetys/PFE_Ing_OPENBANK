@@ -194,6 +194,15 @@ namespace Account.Access.API.Models
             get { return V_Can_see_trans_t_bk_account == 1 ? true : false; }
             set { V_Can_see_trans_t_bk_account = value == true ? 1 : 0; }
         }
+        [JsonProperty(PropertyName = "V_CAN_ADD_TRANS_REQ_TO_A_ACC")]
+        public int V_Can_add_trans_req_to_a_account { get; set; }
+
+        [Newtonsoft.Json.JsonIgnore]
+        public bool Can_add_trans_req_to_any_account
+        {
+            get { return V_Can_add_trans_req_to_a_account == 1 ? true : false; }
+            set { V_Can_add_trans_req_to_a_account = value == true ? 1 : 0; }
+        }
         [JsonProperty(PropertyName = "ACCOUNT_ID")]
         public string Account_id { get; set; }
         [JsonProperty(PropertyName = "BANK_ID")]

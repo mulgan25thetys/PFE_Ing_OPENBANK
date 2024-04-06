@@ -9,19 +9,15 @@ using Identity.API.Services;
 using EventBus.Message.Common;
 using MassTransit;
 using Identity.API.Applications.Middlewares;
-using Identity.API.Applications.Models;
 using Identity.API.EventBusConsumer;
 using Microsoft.EntityFrameworkCore;
 using Identity.API.Applications.Models.Entities;
-using Identity.API.Utils;
+using Identity.API.Services.Grpc;
+using Bank.grpc.Protos;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-var sectionSms = builder.Configuration.GetSection("SmsSettings");
-var optionSms = sectionSms.Get<SmsSettings>();
-sectionSms.Bind(optionSms);
-builder.Services.Configure<SmsSettings>(sectionSms);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -29,9 +25,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 //
-builder.Services.AddTransient<ISenderService, SenderService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEntitlementService, EntitlementService>();
+builder.Services.AddScoped<BankService>();
+
+builder.Services.AddGrpcClient<BankProtoService.BankProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:BankUrl"]);
+});
 
 //Configuration du context avec la chaine de connection
 builder.Services.AddDbContext<IdentityContext>(options =>

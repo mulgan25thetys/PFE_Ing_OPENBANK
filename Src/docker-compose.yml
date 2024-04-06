@@ -99,6 +99,12 @@ services:
       context: .
       dockerfile: Services/Bank/Bank.grpc/Dockerfile
 
+  view.grpc:
+    image: ${DOCKER_REGISTRY-}viewgrpc
+    build:
+      context: .
+      dockerfile: Services/AccountAccess/View.grpc/Dockerfile
+
 networks:
   elastic:
     driver: bridge
@@ -113,6 +119,7 @@ networks:
 volumes:
   elasticsearch-data:
   portainer_data:
+
 
 
 

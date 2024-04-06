@@ -85,11 +85,13 @@ namespace Branch.API.Services
             return true;
         }
 
-        public async Task<BranchListResponse> GetAllBranches(int? page, int? size)
+        public async Task<BranchListResponse> GetAllBranches(string bank_id,int? page, int? size)
         {
             try
             {
-                var result = await _client.GetAsync($"{endPointUrl}?offet={page}&limit={size}");
+                string filter = "{ \"bank_id\": { \"$eq\" :\"" + bank_id + "\" } }";
+                    ;
+                var result = await _client.GetAsync($"{endPointUrl}?q={filter}&offet={page}&limit={size}");
 
                 BranchList listModel = await result.Content.ReadAsAsync<BranchList>();
                 BranchListResponse list = new BranchListResponse();
@@ -99,7 +101,7 @@ namespace Branch.API.Services
                 list.HasMore = list.HasMore;
                 foreach( var item in listModel.Items )
                 {
-                    list.Items.Add( GetBranchResponseFromModel(item) );
+                    list.Branches.Add( GetBranchResponseFromModel(item) );
                 }
                 return list;
             }
@@ -125,7 +127,7 @@ namespace Branch.API.Services
             }
         }
 
-        public async Task<BranchListResponse> GetBranchesByFilter(string filter, int? page, int? size)
+        public async Task<BranchListResponse> GetBranchesByFilter(string filter, string bank_id,int? page, int? size)
         {
             try
             {
@@ -140,14 +142,14 @@ namespace Branch.API.Services
                 list.HasMore = list.HasMore;
                 foreach (var item in listModel.Items)
                 {
-                    list.Items.Add(GetBranchResponseFromModel(item));
+                    list.Branches.Add(GetBranchResponseFromModel(item));
                 }
                 return list;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return await GetAllBranches(1,10);
+                return await GetAllBranches(bank_id,1,10);
             }
         }
 

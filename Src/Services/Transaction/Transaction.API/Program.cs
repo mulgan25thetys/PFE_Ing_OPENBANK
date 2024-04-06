@@ -10,11 +10,21 @@ using Transaction.API.Services.Grpc;
 using Transaction.API.Services.Interfaces;
 using Helper.Extensions;
 using Helper.Middlewares;
+using Bank.grpc.Protos;
+using View.grpc.Protos;
+using User.grpc.Protos;
+using Transaction.API.Utils.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+// bindings
+
+//TransactionRequestType.Types = builder.Configuration.GetValue<List<string>>("Transaction:AllowedTypes") ?? new List<string>();
 
 // Add services to the container.
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<BankService>();
+builder.Services.AddScoped<ViewService>();
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddHttpClient<ITransactionService, TransactionService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
@@ -22,6 +32,21 @@ builder.Services.AddHttpClient<ITransactionService, TransactionService>(c =>
 builder.Services.AddGrpcClient<AccountProtoService.AccountProtoServiceClient>(options =>
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:AccountUrl"]);
+});
+
+builder.Services.AddGrpcClient<BankProtoService.BankProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:BankUrl"]);
+});
+
+builder.Services.AddGrpcClient<ViewProtoService.ViewProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:AccountAccessUrl"]);
+});
+
+builder.Services.AddGrpcClient<UserProtoService.UserProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:UserUrl"]);
 });
 
 //RabbitMQ & Masstransit configuration
