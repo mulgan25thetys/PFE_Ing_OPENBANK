@@ -45,5 +45,23 @@ namespace Identity.API.Controllers
             }
             return Ok(await _userService.GetUserByEmailAsync(email));
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            if (HttpContext.Items["userId"] == null)
+            {
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+            }
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+            }
+            return Ok(await _userService.GetAllUsers());
+        }
     }
 }

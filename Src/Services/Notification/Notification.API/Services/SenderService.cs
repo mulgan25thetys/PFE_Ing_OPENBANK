@@ -54,22 +54,26 @@ namespace Notification.API.Services
             string fromMail = _configuration.GetValue<string>("EmailSettings:Smtp:FromEmail");
             string fromPassword = _configuration.GetValue<string>("EmailSettings:Smtp:Pwd");
 
-            MailMessage message = new MailMessage();
-            message.From = new MailAddress(fromMail);
-            message.Subject = email.Subject;
-            message.To.Add(new MailAddress(email.To));
-            message.Body = "<html><body> " + email.Body + " </body></html>";
-            message.IsBodyHtml = true;
-
-            var smtpClient = new SmtpClient("smtp.gmail.com")
+            if (email != null)
             {
-                Port = 587,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(fromMail, fromPassword),
-                EnableSsl = true,
-            };
-            smtpClient.Send(message);
-            return new SenderResponse() { Status = true, Message = "Email sent." };
+                MailMessage message = new MailMessage();
+                message.From = new MailAddress(fromMail);
+                message.Subject = email.Subject;
+                message.To.Add(new MailAddress(email.To));
+                message.Body = "<html><body> " + email.Body + " </body></html>";
+                message.IsBodyHtml = true;
+
+                var smtpClient = new SmtpClient("smtp.gmail.com")
+                {
+                    Port = 587,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(fromMail, fromPassword),
+                    EnableSsl = true,
+                };
+                smtpClient.Send(message);
+                return new SenderResponse() { Status = true, Message = "Email sent." };
+            }
+            return new SenderResponse() { Status = false, Message = "Email not sent." };
         }
 
         public async Task<bool> SendSms(IdentityMessage message )
@@ -94,14 +98,28 @@ namespace Notification.API.Services
             var soapSms = new ASPSMSX2.ASPSMSX2SoapClient(EndpointConfiguration.ASPSMSX2Soap);
             try
             {
-                 await soapSms.SendSimpleTextSMSAsync(
+                if (message != null)
+                {
+                   var result = await soapSms.SendSimpleTextSMSAsync(
                   _configuration.GetValue<string>("SmsSettings:SMSAccountIdentification"),
                   _configuration.GetValue<string>("SmsSettings:SMSAccountPassword"),
                   message.Destination,
                   _configuration.GetValue<string>("SmsSettings:SMSAccountFrom"),
                   message.Body);
-                  soapSms.Close();
-            }catch(Exception ex)
+
+                    if (result == "StatusCode:3")
+                    {
+                        soapSms.Close();
+                        await SendEmail(new Email() { Body = message.Body, Subject = message.Subject, To = message.ToEmail });
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch(Exception ex)
             {
                 _logger.LogError("Send sms failed! "+ex.Message);
                 status = false;

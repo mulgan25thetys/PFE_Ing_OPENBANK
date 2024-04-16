@@ -43,9 +43,6 @@
     <Protobuf Include="..\..\Bank\Bank.grpc\Protos\Bank.proto" GrpcServices="Client">
       <Link>Protos\Bank.proto</Link>
     </Protobuf>
-    <Protobuf Include="..\..\Branch\Branch.GRPC\Protos\branch.proto" GrpcServices="Client">
-      <Link>Protos\branch.proto</Link>
-    </Protobuf>
     <Protobuf Include="..\..\User\User.grpc\Protos\User.proto" GrpcServices="Client">
       <Link>Protos\User.proto</Link>
     </Protobuf>

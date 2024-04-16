@@ -17,6 +17,16 @@ using Bank.grpc.Protos;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    // This lambda determines whether user consent for non-essential 
+    // cookies is needed for a given request.
+    options.CheckConsentNeeded = context => true;
+
+    options.MinimumSameSitePolicy = SameSiteMode.None;
+    //options.ConsentCookieValue = "true";
+});
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -112,6 +122,8 @@ await app.CreateSuperAdmin<IdentityContext>((context, services) => { });
 app.UseRouting();
 
 app.UseMiddleware<JwtMiddleware>();
+
+app.UseCookiePolicy();
 
 app.UseAuthentication();
 

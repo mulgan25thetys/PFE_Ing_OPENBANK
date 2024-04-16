@@ -7,8 +7,11 @@ using Notification.API.Services;
 using Notification.API.Services.Interfaces;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
+using Helper.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.ApplyGdpr();
 
 // Add services to the container.
 var sectionSms = builder.Configuration.GetSection("SmsSettings");
@@ -45,8 +48,6 @@ builder.Host.UseSerilog((context, configuration) =>
                  .ReadFrom.Configuration(context.Configuration);
 });
 
-var app = builder.Build();
-
 //RabbitMQ & Masstransit configuration
 builder.Services.AddMassTransit(config =>
 {
@@ -55,14 +56,19 @@ builder.Services.AddMassTransit(config =>
     config.UsingRabbitMq((ctx, cfg) =>
     {
         cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
-        cfg.ReceiveEndpoint(EventBusConstants.NotificationQueue, c =>
+        cfg.ReceiveEndpoint(EventBusConstants.NotificationEmailQueue, c =>
         {
             c.ConfigureConsumer<EmailNotificationConsumer>(ctx);
+        });
+        cfg.ReceiveEndpoint(EventBusConstants.NotificationSmsQueue, c =>
+        {
             c.ConfigureConsumer<SmsNotificationConsumer>(ctx);
         });
     });
 });
 builder.Services.AddMassTransitHostedService();
+
+var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -70,6 +76,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCookiePolicy();
 
 app.UseAuthorization();
 

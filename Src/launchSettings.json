@@ -18,7 +18,8 @@
         "user.grpc": "StartDebugging",
         "bank.api": "StartDebugging",
         "bank.grpc": "StartDebugging",
-        "view.grpc": "StartDebugging"
+        "view.grpc": "StartDebugging",
+        "notification.api": "StartDebugging"
       }
     }
   }

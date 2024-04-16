@@ -7,7 +7,7 @@ using Notification.API.Services.Interfaces;
 
 namespace Notification.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class NotificationsController : ControllerBase
     {

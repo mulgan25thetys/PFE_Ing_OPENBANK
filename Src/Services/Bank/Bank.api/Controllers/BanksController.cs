@@ -37,7 +37,10 @@ namespace Bank.api.Controllers
                 string message = bank.Code == 404 ? "OBP-30001: Bank not found. Please specify a valid value for BANK_ID." : bank.ErrorMessage;
                 return this.StatusCode(bank.Code, new MessageResponse() { Code = bank.Code, Message = message });
             }
-            return Ok(bank);
+            else
+            {
+                return Ok(bank);
+            }
         }
 
         [HttpDelete("{id}")]
@@ -94,7 +97,10 @@ namespace Bank.api.Controllers
             {
                 return this.StatusCode(bank.Code, new MessageResponse() { Code = bank.Code, Message = bank.ErrorMessage });
             }
-            return this.StatusCode(201, bank);
+            else
+            {
+                return this.StatusCode(201, bank);
+            }
         }
     }
 }

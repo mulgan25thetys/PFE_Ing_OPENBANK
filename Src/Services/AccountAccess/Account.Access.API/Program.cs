@@ -9,10 +9,12 @@ using Helper.Extensions;
 using Helper.Middlewares;
 using EventBus.Message.Common;
 using Bank.grpc.Protos;
+using User.grpc.Protos;
 //using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ApplyGdpr();
 // Add services to the container.
 
 //AutoMapper Configuration
@@ -20,6 +22,7 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<BankService>();
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddHttpClient<IAccountAccessService, AccountAccessService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
@@ -31,6 +34,10 @@ builder.Services.AddGrpcClient<AccountProtoService.AccountProtoServiceClient>(op
 builder.Services.AddGrpcClient<BankProtoService.BankProtoServiceClient>(options =>
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:BankUrl"]);
+});
+builder.Services.AddGrpcClient<UserProtoService.UserProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:UserUrl"]);
 });
 
 //RabbitMQ & Masstransit configuration
@@ -87,6 +94,8 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseMiddleware<JwtMiddleware>();
+
+app.UseCookiePolicy();
 
 app.UseAuthentication();
 

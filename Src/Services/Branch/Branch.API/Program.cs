@@ -10,6 +10,7 @@ using Bank.grpc.Protos;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ApplyGdpr();
 // Add services to the container.
 builder.Services.AddScoped<BankService>();
 
@@ -62,6 +63,8 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseMiddleware<JwtMiddleware>();
+
+app.UseCookiePolicy();
 
 app.UseAuthentication();
 

@@ -17,7 +17,7 @@ using Transaction.API.Utils.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 // bindings
-
+builder.Services.ApplyGdpr();
 //TransactionRequestType.Types = builder.Configuration.GetValue<List<string>>("Transaction:AllowedTypes") ?? new List<string>();
 
 // Add services to the container.
@@ -109,6 +109,8 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseMiddleware<JwtMiddleware>();
+
+app.UseCookiePolicy();
 
 app.UseAuthentication();
 

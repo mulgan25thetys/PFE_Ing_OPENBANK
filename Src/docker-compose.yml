@@ -1,10 +1,6 @@
 version: '3.4'
 
 services:
-
-  oracle_rest_data_service:
-    image: container-registry.oracle.com/database/free:latest
-
   identityDb:
     image: mcr.microsoft.com/mssql/server:2017-latest
 
@@ -25,12 +21,6 @@ services:
     build:
       context: .
       dockerfile: Services/Branch/Branch.API/Dockerfile
-
-  branch.grpc:
-    image: ${DOCKER_REGISTRY-}branchgrpc
-    build:
-      context: .
-      dockerfile: Services/Branch/Branch.GRPC/Dockerfile
 
   account.api:
     image: ${DOCKER_REGISTRY-}accountapi
@@ -56,12 +46,6 @@ services:
     build:
       context: .
       dockerfile: Services/Statement/Statement.API/Dockerfile
-
-  ocelotapigw:
-    image: ${DOCKER_REGISTRY-}ocelotapigw
-    build:
-      context: .
-      dockerfile: ApiGateways/OcelotApiGW/Dockerfile
 
   identity.api:
     image: ${DOCKER_REGISTRY-}identityapi
@@ -105,12 +89,28 @@ services:
       context: .
       dockerfile: Services/AccountAccess/View.grpc/Dockerfile
 
+  notification.api:
+    image: ${DOCKER_REGISTRY-}notificationapi
+    build:
+      context: .
+      dockerfile: Services/Notification/Notification.API/Dockerfile
+
+  branch.grpc:
+    image: ${DOCKER_REGISTRY-}branchgrpc
+    build:
+      context: .
+      dockerfile: Services/Branch/Branch.GRPC/Dockerfile
+
+  ocelotapigw:
+    image: ${DOCKER_REGISTRY-}ocelotapigw
+    build:
+      context: .
+      dockerfile: ApiGateways/OcelotApiGW/Dockerfile
+
 networks:
   elastic:
     driver: bridge
   rabbitmq_go_net:
-    driver: bridge
-  ords_net:
     driver: bridge
   gateway_net:
     driver: bridge
@@ -119,6 +119,8 @@ networks:
 volumes:
   elasticsearch-data:
   portainer_data:
+
+
 
 
 

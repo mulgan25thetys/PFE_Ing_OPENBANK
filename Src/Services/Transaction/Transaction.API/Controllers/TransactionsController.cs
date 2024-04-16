@@ -101,12 +101,29 @@ namespace Transaction.API.Controllers
             }
             string userId = HttpContext.Items["userId"].ToString();
 
+            var user = await _userService.GetUserDataAsync(userId);
+            if (user.UserId.Length == 0)
+            {
+                message = "OBP-20005: User not found. Please specify a valid value for USER_ID.";
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = message });
+            }
+
             IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanCreateAnyTransactionRequest" };
             string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
 
             if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
             {
-                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles: CanCreateAnyTransactionRequest", Code = 403 });
+                var account = await accountService.GetAccountDataAsync(account_id);
+                if (account.Id.Length == 0)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
+
+                if (account.Ownerid != userId)
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "User does not have owner access", Code = 403 });
+                }
+                //return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles: CanCreateAnyTransactionRequest", Code = 403 });
             }
 
             var view = await _viewService.GetViewDataAsync(view_id);
@@ -115,13 +132,6 @@ namespace Transaction.API.Controllers
             {
                 message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID.";
                 return this.StatusCode(404, new MessageResponse() { Code = 404, Message = message });
-            }
-
-            var user = await _userService.GetUserDataAsync(userId);
-            if (user.UserId.Length == 0)
-            {
-                message = "OBP-20005: User not found. Please specify a valid value for USER_ID.";
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = message });
             }
 
             var userAccess = await _viewService.GetViewAccessDataAsync(user.Provider, user.ProviderId, view.Id);

@@ -9,12 +9,9 @@ namespace EventBus.Message.Events
 {
     public class SendEmailEvent : IntegrationBaseEvent
     {
-        [Required(AllowEmptyStrings = false)]
         [EmailAddress]
         public string To { get; set; }
-        [Required(AllowEmptyStrings = false)]
         public string Subject { get; set; }
-        [Required(AllowEmptyStrings = false)]
         public string Body { get; set; }
     }
 }

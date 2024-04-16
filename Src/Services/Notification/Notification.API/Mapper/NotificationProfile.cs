@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using EventBus.Message.Events;
-using Notification.API.Features.Commands;
+using Notification.API.Models;
 
 namespace Notification.API.Mapper
 {
@@ -8,8 +8,8 @@ namespace Notification.API.Mapper
     {
         public NotificationProfile()
         {
-            CreateMap<SendSmsCmd, SendSmsEvent>().ReverseMap();
-            CreateMap<SendEmailCmd, SendEmailEvent>().ReverseMap();
+            CreateMap<IdentityMessage, SendSmsEvent>().ReverseMap();
+            CreateMap<Email, SendEmailEvent>().ReverseMap();
         }
     }
 }

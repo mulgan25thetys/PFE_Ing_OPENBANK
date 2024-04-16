@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Identity.API.Utils.Models;
 
 namespace Identity.API.Utils
 {
@@ -23,7 +24,7 @@ namespace Identity.API.Utils
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
 
         }
-        public async Task<string> GetToken(UserModel user)
+        public async Task<AuthResponse> GetToken(UserModel user)
         {
             var userRoles = await this._userManager.GetRolesAsync(user);
             var signingKey = new SymmetricSecurityKey
@@ -47,7 +48,7 @@ namespace Identity.API.Utils
                       signingCredentials: signingCredentials, expires: expirationDate);
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
-            return encodedJwt;
+            return new AuthResponse() { Message = "Connected!", Token = encodedJwt};
         }
         public async Task<string> GetNotAuthenticatedToken(UserModel user)
         {

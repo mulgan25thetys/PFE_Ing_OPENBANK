@@ -48,7 +48,7 @@ namespace Account.API.Services
             model.Id = ACCOUNT_ID;
             model.Bank_id = BANK_ID;
             model.Label = account.Label;
-            model.Type = account.Type;
+            model.Type = account.Type.ToUpper();
             model.AccNumber = generator.NextInt64(100000000000);
             model.Amount = 0;
             model.Currency = account.Balance.Currency.Trim().ToUpper(); 
@@ -121,7 +121,7 @@ namespace Account.API.Services
                 HasMore = list.HasMore, Count = list.Count};
             foreach (var item in list.Items)
             {
-                respList.Items.Add(await GetAccountResponseFromModel(item));
+                respList.Accounts.Add(await GetAccountResponseFromModel(item));
             }
             return respList;
         }
@@ -143,7 +143,7 @@ namespace Account.API.Services
                 };
                 foreach (var item in list.Items)
                 {
-                    respList.Items.Add(await GetAccountResponseFromModel(item));
+                    respList.Accounts.Add(await GetAccountResponseFromModel(item));
                 }
                 return respList;
             }
@@ -188,7 +188,8 @@ namespace Account.API.Services
                 Id = model.Id,
                 Label = model.Label,
                 Number = model.AccNumber,
-                Swift_bic = model.Swift_bic
+                Swift_bic = model.Swift_bic,
+                BankId = model.Bank_id
             };
             var user = await _userService.GetUserAsync(model.Owner_id);
             AccountOwnerModel ownerModel = new AccountOwnerModel() { Display_name = "", Id = user.UserId, Provider = user.Provider};

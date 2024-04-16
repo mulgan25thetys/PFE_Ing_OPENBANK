@@ -7,13 +7,13 @@ namespace Identity.API.Utils
     {
         public static UserModel GetUriProviderDetails(HttpRequest request, UserModel user)
         {
-            Uri uri = new Uri("http://localhost:5008");
+            Uri uri = new Uri("http://127.0.0.1:5008");
             if (request != null)
             {
                 uri = new Uri(request.Host.ToString());
             }
             user.Provider = uri.ToString();
-            user.Provider_id = uri.Host == null ? "localhost" : uri.Host.ToString();
+            user.Provider_id = uri.Host == null || uri.Host == "" ? "localhost" : uri.Host.ToString();
             return user;
         }
     }

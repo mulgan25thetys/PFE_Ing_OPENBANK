@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -23,6 +24,23 @@ namespace Helper.Utils
             foreach (var region in regions)
                 if (!SymbolsByCode.ContainsKey(region.ISOCurrencySymbol))
                     SymbolsByCode.Add(region.ISOCurrencySymbol, region.CurrencySymbol);
+        }
+        public static string getCurrencySymbol(string CurrencyCode)
+        {
+            string symbol = string.Empty;
+            CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.SpecificCultures);
+            IList Result = new ArrayList();
+            foreach (CultureInfo ci in cultures)
+            {
+                RegionInfo ri = new RegionInfo(ci.LCID);
+                if (ri.ISOCurrencySymbol == CurrencyCode)
+                {
+                    symbol = ri.CurrencySymbol;
+                    return symbol;
+                }
+            }
+            return symbol;
+
         }
     }
 }

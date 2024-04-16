@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Helper.Models;
+using MassTransit;
 
 namespace Account.Access.API.Controllers
 {
@@ -18,12 +19,36 @@ namespace Account.Access.API.Controllers
         private readonly IAccountAccessService _service;
         private readonly ILogger<AccountAccessController> _logger;
         private readonly AccountService _accountService;
+        private readonly UserService _userService;
 
-        public AccountAccessController(IAccountAccessService service, AccountService accountService, ILogger<AccountAccessController> logger)
+        public AccountAccessController(IAccountAccessService service, AccountService accountService,
+            ILogger<AccountAccessController> logger, UserService userService)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+        }
+
+        [HttpGet]
+        [ProducesResponseType(typeof(AccountAccessResponse), 200)]
+        [ProducesResponseType(typeof(AccountAccessResponse), 404)]
+        public async Task<IActionResult> GetAllViews()
+        {
+            if (HttpContext.Items["userId"] == null)
+            {
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+            }
+
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanGrantAccessToViews" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+            }
+
+            return Ok(await _service.GetAllViews());
         }
 
         //[Authorize]
@@ -66,6 +91,13 @@ namespace Account.Access.API.Controllers
             }
             else
             {
+                var owner = await _userService.GetUserAsync(account.Ownerid);
+                AccountAccessResponse response = await _service.GrantUserAccessToView(owner.Provider, owner.ProviderId, view.Id);
+                if (response.Code > 0)
+                {
+                    return this.StatusCode(response.Code, new MessageResponse() { Code = response.Code, Message = response.ErrorMessage });
+                }
+                return Ok(response);
                 return this.StatusCode(201, view);
             }
         }
@@ -132,7 +164,10 @@ namespace Account.Access.API.Controllers
             {
                 return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
             }
-            
+            if (accessResponse.Account_id != account.Id)
+            {
+                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
+            }
 
             if (accessResponse.Owner_id != HttpContext.Items["userId"].ToString())
             {
@@ -171,6 +206,11 @@ namespace Account.Access.API.Controllers
 
             AccountAccessResponse accessResponse = await _service.GetOneAccessAsync(view_id);
             if (accessResponse == null)
+            {
+                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
+            }
+
+            if (accessResponse.Account_id != account.Id)
             {
                 return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
             }
@@ -221,7 +261,10 @@ namespace Account.Access.API.Controllers
             {
                 return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
             }
-
+            if (accessResponse.Account_id != account.Id)
+            {
+                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
+            }
 
             if (accessResponse.Owner_id != HttpContext.Items["userId"].ToString())
             {
@@ -250,7 +293,7 @@ namespace Account.Access.API.Controllers
                 return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
             }
 
-            return Ok(await _service.GetAccountAccessForUser(provider, provider_id));
+            return Ok(await _service.GetAccountAccessForUser(provider.Replace("%"," ").Trim(), provider_id));
         }
     }
 }

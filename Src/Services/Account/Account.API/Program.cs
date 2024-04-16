@@ -2,7 +2,6 @@ using Account.API.EventBusConsumer;
 using Account.API.Services;
 using Account.API.Services.Grpc;
 using Account.API.Services.Interfaces;
-using Branch.GRPC.Protos;
 using EventBus.Message.Common;
 using MassTransit;
 using Serilog;
@@ -14,18 +13,15 @@ using Bank.grpc.Protos;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ApplyGdpr();
+
 // Add services to the container.
-builder.Services.AddScoped<BranchService>();
 builder.Services.AddScoped<BankService>();
 builder.Services.AddScoped<UserService>();
 
 builder.Services.AddHttpClient<IAccountService, AccountService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
 
-builder.Services.AddGrpcClient<BranchProtoService.BranchProtoServiceClient>(options =>
-{
-    options.Address = new Uri(builder.Configuration["GrpcSettings:BranchUrl"]);
-});
 builder.Services.AddGrpcClient<UserProtoService.UserProtoServiceClient>(options =>
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:UserUrl"]);
@@ -93,6 +89,8 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseMiddleware<JwtMiddleware>();
+
+app.UseCookiePolicy();
 
 app.UseAuthentication();
 

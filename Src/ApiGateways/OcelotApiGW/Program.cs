@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.WebHost
     .ConfigureAppConfiguration((hostContext, config) =>
     {
-        config.AddJsonFile($"ocelot.{hostContext.HostingEnvironment.EnvironmentName}.json", true, true);
+        config.AddJsonFile($"ocelot.Local.json", true, true);
     })
 
     .ConfigureLogging((hostingContext, loggingBuilder) =>

@@ -7,6 +7,7 @@ using Helper.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ApplyGdpr();
 // Add services to the container.
 
 builder.Services.AddScheduler(builder =>
@@ -71,6 +72,7 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseMiddleware<JwtMiddleware>();
+app.UseCookiePolicy();
 
 app.UseAuthentication();
 

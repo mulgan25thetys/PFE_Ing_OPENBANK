@@ -26,20 +26,19 @@ namespace Identity.API.Services
 
         public async Task<EntitlementResponse> AddEntitlementForUserAsync(string userId,EntitlementRequest request)
         {
-            bool checkIfRoleExist = await this._roleManager.RoleExistsAsync(request.Role_name);
-            if (checkIfRoleExist)
-            {
-                return GetEntitlementResponseFromModelAsync(await _roleManager.FindByNameAsync(request.Role_name));
-            }
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return new EntitlementResponse();
             }
-            Entitlement role = new Entitlement() { Bank_id = request.Bank_Id, Name = request.Role_name, NormalizedName = request.Role_name};
-            
-            await _roleManager.CreateAsync(role);
+
+            Entitlement role = new Entitlement() { Bank_id = request.Bank_Id, Name = request.Role_name, NormalizedName = request.Role_name };
             IEnumerable<string> roles = new List<string>() { role.Name };
+
+            bool checkIfRoleExist = await this._roleManager.RoleExistsAsync(request.Role_name);
+            if (!checkIfRoleExist) { 
+                await _roleManager.CreateAsync(role);
+            }
             await this._userManager.AddToRolesAsync(user, roles);
 
             return  GetEntitlementResponseFromModelAsync(await _roleManager.FindByNameAsync(role.Name));

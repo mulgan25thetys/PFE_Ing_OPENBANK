@@ -35,25 +35,24 @@ namespace Bank.api.Services
 
             var bankPost = JsonConvert.SerializeObject(model);
 
-            HttpResponseMessage response = new HttpResponseMessage();
+            var response = await _client.PostAsync(endPointUrl, new StringContent(bankPost, Encoding.UTF8, "application/json"));
             try
             {
-                response = await _client.PostAsync(endPointUrl, new StringContent(bankPost, Encoding.UTF8, "application/json"));
                 return GetBankResponseFromModel(await response.Content.ReadAsAsync<BankModel>());
             }
             catch (Exception ex)
             {
                 _logger.LogError("Creating bank", ex.Message);
-                return new BankResponse() { Code = (int)response.StatusCode, ErrorMessage = "OBP-50000: Unknown Error." };
+                return new BankResponse() { Code = 500, ErrorMessage = "OBP-50000: Unknown Error." };
             }
         }
 
         public async Task<bool> DeleteBankAsync(string id)
         {
-            HttpResponseMessage response = new HttpResponseMessage();
+            var response = await _client.DeleteAsync(endPointUrl + id);
             try
             {
-                response = await _client.DeleteAsync(endPointUrl + id);
+                response.EnsureSuccessStatusCode();
                 return true;
             }
             catch (Exception ex)
@@ -65,10 +64,9 @@ namespace Bank.api.Services
 
         public async Task<BankResponseList> GetAllBankAsync()
         {
-            HttpResponseMessage response = new HttpResponseMessage();
+            var response = await _client.GetAsync(endPointUrl);
             try
             {
-                response = await _client.GetAsync(endPointUrl);
                 BankList list = await response.Content.ReadAsAsync<BankList>();
                 if (list.Items.Count > 0)
                 {
@@ -96,10 +94,9 @@ namespace Bank.api.Services
 
         public async Task<BankResponse> GetBankAsync(string id)
         {
-            HttpResponseMessage response = new HttpResponseMessage();
+            var response = await _client.GetAsync(endPointUrl + id);
             try
             {
-                response = await _client.GetAsync(endPointUrl + id);
                 return GetBankResponseFromModel(await response.Content.ReadAsAsync<BankModel>());
             }catch (Exception ex)
             {

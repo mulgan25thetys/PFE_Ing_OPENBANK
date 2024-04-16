@@ -7,6 +7,7 @@ using Bank.api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ApplyGdpr();
 // Add services to the container.
 builder.Services.AddHttpClient<IBankServices, BankServices>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
@@ -51,6 +52,8 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseMiddleware<JwtMiddleware>();
+
+app.UseCookiePolicy();
 
 app.UseAuthentication();
 

@@ -76,7 +76,7 @@ namespace Identity.API.Controllers
             IdentityUser existedUser = await _userManager.FindByEmailAsync(user.Email);
             if (existedUser != null)
             {
-                return this.StatusCode(StatusCodes.Status409Conflict, "Email address is already in used!");
+                return this.StatusCode(StatusCodes.Status409Conflict, new MessageResponse() { Code = 409, Message = "Email address is already in used!" });
             }
 
             user.NormalizedEmail = user.Email;
@@ -86,7 +86,7 @@ namespace Identity.API.Controllers
 
             if (success.Succeeded)
             {
-                return await SendEmailTokenToConfirm(user, true, authDto.Password);
+                return await SendEmailTokenToConfirm(user,false, true, authDto.Password);
             }
             else
             {
@@ -106,12 +106,12 @@ namespace Identity.API.Controllers
             IdentityUser existedUser = await _userManager.FindByEmailAsync(user.Email);
             if (existedUser != null)
             {
-                return this.StatusCode(StatusCodes.Status409Conflict, "Email address is already in used!");
+                return this.StatusCode(StatusCodes.Status409Conflict, new MessageResponse() { Code= 409, Message = "Email address is already in used!" });
             }
 
             user.NormalizedEmail = user.Email;
             user.UserName = authDto.UserName;
-            user.First_name = authDto.Frist_name;
+            user.First_name = authDto.First_name;
             user.Last_name = authDto.Last_name;
             user.TwoFactorEnabled = true;
             user = UserProviderDetails.GetUriProviderDetails(Request, user);
@@ -120,7 +120,7 @@ namespace Identity.API.Controllers
 
             if (success.Succeeded)
             {  
-                return await SendEmailTokenToConfirm(user);
+                return await SendEmailTokenToConfirm(user, true);
             }
             else
             {
@@ -142,12 +142,12 @@ namespace Identity.API.Controllers
             {
                 if (!user.EmailConfirmed)
                 {
-                    return await SendEmailTokenToConfirm(user);
+                    return await SendEmailTokenToConfirm(user, true);
                 }
                 try
                 {
                     await SetTwoFactorAuthentication(user);
-                    return Ok(new AuthResponse() { Message = "Please check your phone number, a code has been sent to you by sms!", Token = await _jwtUtils.GetNotAuthenticatedToken(user) });
+                    return Ok(new AuthResponse() { Message = "Please check your phone number, a code has been sent to you by sms! or email!", Token = await _jwtUtils.GetNotAuthenticatedToken(user) });
                 }
                 catch (Exception ex)
                 {
@@ -157,7 +157,7 @@ namespace Identity.API.Controllers
             }
             else
             {
-                return this.StatusCode(StatusCodes.Status401Unauthorized, "Unauthorized: Bad Credentials!");
+                return this.StatusCode(StatusCodes.Status401Unauthorized, new MessageResponse() { Code = 401, Message = "Unauthorized: Bad Credentials!"});
             }
         }
         #endregion
@@ -172,10 +172,11 @@ namespace Identity.API.Controllers
             var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, request.Number);
             SendSmsEvent message = new SendSmsEvent
             {
+                Subject = "Please check your phone number",
                 Destination = request.Number,
-                Body = "Your security code is: " + code
+                Body = "Your security code is: " + code,
+                ToEmail = user.Email
             };
-            _logger.LogInformation("User: " + user.Id + " " + message.Body);
             // Send token
             await _publish.Publish(message);
             return Ok();
@@ -210,7 +211,7 @@ namespace Identity.API.Controllers
                     var token = await _userManager.GeneratePasswordResetTokenAsync(user);
                     string body = "<p>Hey " + user.UserName + ",</p>" +
                           "</br>" +
-                          "<p>A sign in attempt requires further verification. To complete the sign in, use the verification token.</p> " +
+                          "<p>A password reset request attempt requires further verification. To reset your password, use the verification token.</p> " +
                           "</br> " +
                           "<ul> " +
                           "<li>Token : " + token + "</li>" +
@@ -220,8 +221,12 @@ namespace Identity.API.Controllers
 
                     SendEmailEvent email = new SendEmailEvent() { Body = body, Subject = "Please verify your Email", To = user.Email };
                     await _publish.Publish(email);
+                    return this.StatusCode(StatusCodes.Status200OK, new MessageResponse() { Code = 200, Message = "Please verify your Email address!" });
                 }
-                return this.StatusCode(StatusCodes.Status404NotFound, user);
+                else
+                {
+                    return this.StatusCode(StatusCodes.Status404NotFound, new MessageResponse() { Code = 404, Message = "OBP-20005: User not found. Please specify a valid value for USER_ID." });
+                }
             }
             catch (Exception ex)
             {
@@ -284,10 +289,11 @@ namespace Identity.API.Controllers
                 var result = await _userManager.ConfirmEmailAsync(user, request.Token);
                 if (result.Succeeded)
                 {
-                    return Ok(new AuthenticationResponse() { Email = user.Email, Login = user.Email, UserName = user.UserName, Token = await _jwtUtils.GetToken(user) });
+                    AuthResponse authResponse = await _jwtUtils.GetToken(user);
+                    return Ok(new AuthenticationResponse() { Email = user.Email, Login = user.Email, UserName = user.UserName, Token = authResponse.Token });
                 }
 
-                return BadRequest("Email not confirmed successfully!");
+                return this.StatusCode(StatusCodes.Status400BadRequest, new MessageResponse() { Code = 400, Message = "Email not confirmed successfully!"});
             }
             catch (Exception ex)
             {
@@ -316,7 +322,7 @@ namespace Identity.API.Controllers
         #endregion
 
         #region Private methods
-        private async Task<IActionResult> SendEmailTokenToConfirm(UserModel user, bool? isAdminUser =false, string? password="" )
+        private async Task<IActionResult> SendEmailTokenToConfirm(UserModel user, bool isRegistration, bool? isAdminUser =false, string? password="")
         {
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             _logger.LogInformation("Sending email to address "+ user.Email+" with token :" + token);
@@ -338,7 +344,7 @@ namespace Identity.API.Controllers
 
             SendEmailEvent email = new SendEmailEvent() { Body = body, Subject = "Please verify your Email", To = user.Email };
             await _publish.Publish(email);
-            return Ok();
+            return Ok(new MessageResponse() { Code = 200, Message = isRegistration == true? "Please verify your Email!" : "User added successfully!" });
         }
 
         private async Task<bool> SetTwoFactorAuthentication(UserModel user)
@@ -346,10 +352,11 @@ namespace Identity.API.Controllers
             var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, user.PhoneNumber);
             SendSmsEvent message = new SendSmsEvent
             {
+                Subject = "Please check your phone number",
                 Destination = user.PhoneNumber,
-                Body = "Your security code is: " + code
+                Body = "Your security code is: " + code,
+                ToEmail = user.Email
             };
-            _logger.LogInformation("User: " + user.Id + " " +message.Body);
             await _publish.Publish(message);
             return true;
         }

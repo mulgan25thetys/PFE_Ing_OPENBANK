@@ -240,5 +240,26 @@ namespace Account.Access.API.Services
                 return new UserAccessList();
             }
         }
+
+        public async Task<AccountAccessResponseList> GetAllViews()
+        {
+            AccountAccessResponseList respList = new AccountAccessResponseList();
+            try
+            {
+                var response = await _client.GetAsync(endPointUrl);
+                AccountAccessResponseDbList list = await response.Content.ReadAsAsync<AccountAccessResponseDbList>();
+                respList.Count = list.Count;
+                respList.HasMore = list.HasMore;
+                respList.Offset = list.Offset;
+                respList.Limit = list.Limit;
+                respList.Views = list.Items;
+                return respList;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return respList; 
+            }
+        }
     }
 }

@@ -16,5 +16,6 @@ namespace Account.Access.API.Services.Interfaces
            provider_id, int view_id);
         public Task<UserAccessList> GetAccountAccessForUser(string provider, string
            provider_id);
+        public Task<AccountAccessResponseList> GetAllViews();
     }
 }

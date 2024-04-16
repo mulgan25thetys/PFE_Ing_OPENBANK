@@ -3,6 +3,7 @@ using EventBus.Message.Events;
 using MassTransit;
 using MediatR;
 using Notification.API.Features.Commands;
+using Notification.API.Models;
 
 namespace Notification.API.EventBusConsumer
 {
@@ -21,8 +22,8 @@ namespace Notification.API.EventBusConsumer
         public async Task Consume(ConsumeContext<SendSmsEvent> context)
         {
             _logger.LogInformation($"Sending sms to {context.Message.Destination}...");
-            var smsMessage = _mapper.Map<SendSmsCmd>(context.Message);
-            var success = await _sender.Send(smsMessage);
+            var smsMessage = _mapper.Map<IdentityMessage>(context.Message);
+            var success = await _sender.Send(new SendSmsCmd() { SmsMessage = smsMessage});
 
             if (success)
             {

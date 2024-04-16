@@ -8,6 +8,7 @@ using EventBus.Message.Events;
 using Grpc.Core;
 using Helper.Models;
 using Helper.Utils;
+using Helper.Utils.Models;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -103,11 +104,20 @@ namespace Account.API.Controllers
             }
             string ownerId = account.User_id == null ? HttpContext.Items["userId"].ToString() ?? "" : account.User_id;
 
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+            }
+
             AccountResponse model = await _service.GetAccountById(account_id, null);
             if (model.Id != null)
             {
                 return this.StatusCode(409, new MessageResponse() { Code = 409, Message = "OBP-30208: Account_ID already exists at the Bank." });
             }
+
             MessageResponse res = await ValidateData(account, ownerId, account_id, bank_id);
             if (res.Code == 200)
             {
@@ -153,14 +163,18 @@ namespace Account.API.Controllers
                 account = await _service.GetAccountById(account_id, null);
             }
 
-            if (account.Id != null)
+            if (account.Id == null)
             {
-                request.Id = account_id;
-                return Ok(await _service.UpdateAccount(request));
+                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+            }
+            else if (account.BankId != bank_id)
+            {
+                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
             }
             else
             {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                request.Id = account_id;
+                return Ok(await _service.UpdateAccount(request));
             }
         }
 
@@ -207,11 +221,8 @@ namespace Account.API.Controllers
                 return new MessageResponse() { Code = 404, Message = message };
             }
 
-            try
-            {
-                string currencySymbole = CurrencyCodeMapper.GetSymbol(account.Balance.Currency.ToUpper());
-            }
-            catch (Exception ex)
+            
+            if (!AvailablesCurrencies.Currencies.Contains(account.Balance.Currency.ToUpper()))
             {
                 message = "OBP-30105: Invalid Balance Currency.";
                 return new MessageResponse() { Code = 400, Message = message };

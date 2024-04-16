@@ -16,14 +16,31 @@ namespace Identity.API.Services
         private readonly RoleManager<Entitlement> _roleManager;
         private readonly IConfiguration _config;
         private readonly ILogger<UserService> _logger;
+        private readonly IdentityContext _context;
 
         public UserService(UserManager<UserModel> userManager, 
-            RoleManager<Entitlement> roleManager,IConfiguration config, ILogger<UserService> logger, IEntitlementService entitlementService)
+            RoleManager<Entitlement> roleManager,IConfiguration config, ILogger<UserService> logger, IEntitlementService entitlementService, IdentityContext context)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
             _config = config ?? throw new ArgumentNullException(nameof(_config));
             _logger = logger ?? throw new ArgumentNullException(nameof(_logger));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+        }
+
+        public async Task<UserResponseList> GetAllUsers()
+        {
+            var users = _context.Users.ToList();
+            UserResponseList list = new UserResponseList();
+            if (users.Count > 0)
+            {
+                foreach (var item in users)
+                {
+                    list.Users.Add(await GetUserResponseFromModel(item));
+                }
+                return list;
+            }
+            return list;
         }
 
         public async Task<UserResponse> GetUserAsync(string username)

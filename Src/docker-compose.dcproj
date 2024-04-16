@@ -10,6 +10,8 @@
     <DockerServiceName>eventbus.message</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Include=".env" />
+    <None Include=".env.dev" />
     <None Include="docker-compose.override.yml">
       <DependentUpon>docker-compose.yml</DependentUpon>
     </None>

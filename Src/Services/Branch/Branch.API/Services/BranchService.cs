@@ -46,7 +46,7 @@ namespace Branch.API.Services
                 ACCESSIBLE_VALUE = branch.Is_accessible, HAS_LOBBY = branch.Lobby, HAS_DRIVE_UP = branch.Drive_up,
                 ON_MONDAY = branch.Monday, ON_TUESDAY = branch.Tuesday, ON_THURSDAY = branch.Thursday, 
                     ON_WEDNESDAY = branch.Wednesday,
-                ON_FRIDAY = branch.Friday, ON_SATURDAY = branch.Saturday, ON_SUNDAY = branch.Saturday};
+                ON_FRIDAY = branch.Friday, ON_SATURDAY = branch.Saturday, ON_SUNDAY = branch.Sunday};
 
             model.CLOSING_TIME = DateTimeExtension.SetTime(DateTime.Now, branch.Closing_time.Hour, branch.Closing_time.Minute,0,0);
              

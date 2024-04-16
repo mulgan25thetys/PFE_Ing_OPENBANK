@@ -3,6 +3,7 @@ using EventBus.Message.Events;
 using MassTransit;
 using MediatR;
 using Notification.API.Features.Commands;
+using Notification.API.Models;
 
 namespace Notification.API.EventBusConsumer
 {
@@ -22,8 +23,8 @@ namespace Notification.API.EventBusConsumer
         public async Task Consume(ConsumeContext<SendEmailEvent> context)
         {
             _logger.LogInformation($"Sending email to {context.Message.To}...");
-            var smsMessage = _mapper.Map<SendEmailCmd>(context.Message);
-            var result = await _sender.Send(smsMessage);
+            var emailMessage = _mapper.Map<Email>(context.Message);
+            var result = await _sender.Send(new SendEmailCmd() { Emailrequest = emailMessage});
 
             if (result.Status == true)
             {
