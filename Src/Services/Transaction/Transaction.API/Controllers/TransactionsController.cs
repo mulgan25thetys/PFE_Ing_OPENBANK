@@ -55,7 +55,7 @@ namespace Transaction.API.Controllers
             }
             string userId = HttpContext.Items["userId"].ToString();
 
-            IList<string> requiredRole = new List<string> { "CanCreateAnyTransactionRequest" };
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanCreateAnyTransactionRequest" };
             string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
 
             if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())

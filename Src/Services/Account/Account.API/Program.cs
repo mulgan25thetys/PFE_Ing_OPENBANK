@@ -22,13 +22,13 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddHttpClient<IAccountService, AccountService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
 
-builder.Services.AddGrpcClient<UserProtoService.UserProtoServiceClient>(options =>
-{
-    options.Address = new Uri(builder.Configuration["GrpcSettings:UserUrl"]);
-});
 builder.Services.AddGrpcClient<BankProtoService.BankProtoServiceClient>(options =>
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:BankUrl"]);
+});
+builder.Services.AddGrpcClient<UserProtoService.UserProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:UserUrl"]);
 });
 
 builder.Services.AddAutoMapper(typeof(Program));
