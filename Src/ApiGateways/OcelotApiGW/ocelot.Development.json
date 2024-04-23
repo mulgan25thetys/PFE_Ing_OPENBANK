@@ -743,6 +743,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://ocelotapigw:80"
+    "BaseUrl": "http://localhost:5010"
   }
 }

@@ -1,7 +1,6 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Ocelot.Cache.CacheManager;
-using Helper.Middlewares;
 using Helper.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,8 +39,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
-
-app.UseMiddleware<RequestResponseLogging>();
 
 app.UseAuthentication();
 

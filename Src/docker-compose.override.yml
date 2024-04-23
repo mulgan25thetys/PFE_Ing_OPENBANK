@@ -321,7 +321,6 @@ services:
     restart: always
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "IdentityUrl=http://identity.api" 
     depends_on:
       - branch.api
       - account.api
