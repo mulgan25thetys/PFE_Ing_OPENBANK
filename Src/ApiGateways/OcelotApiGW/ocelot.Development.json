@@ -24,7 +24,7 @@
         }
       ],
       "UpstreamPathTemplate": "/banks/{id}",
-      "UpstreamHttpMethod": [ "GET", "DELETE" ],
+      "UpstreamHttpMethod": [ "DELETE" ],
       "FileCacheOptions": { "TtlSeconds": 30 }
     },
     //Branch API

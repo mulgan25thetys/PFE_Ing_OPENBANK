@@ -59,19 +59,6 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Branchs/{bank_id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8000"
-        }
-      ],
-      "UpstreamPathTemplate": "/branchs/{bank_id}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
-    },
-    {
       "DownstreamPathTemplate": "/api/v1/Branchs/GetBranch/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
