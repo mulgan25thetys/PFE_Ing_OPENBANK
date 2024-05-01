@@ -69,7 +69,7 @@ namespace Identity.API.Controllers
             UserModel user = new UserModel();
             user.Email = authDto.Email;
             user.Last_name = authDto.Last_name;
-            user.First_name = authDto.Frist_name;
+            user.First_name = authDto.First_name;
             user.UserName = authDto.Username;
             user = UserProviderDetails.GetUriProviderDetails(Request, user);
 

@@ -77,12 +77,13 @@ namespace Branch.API.Services
             try
             {
                 response.EnsureSuccessStatusCode();
-            }catch(Exception ex)
+                return true;
+            }
+            catch(Exception ex)
             {
                 _logger.LogError(ex.Message, ex);
                 return false;
             }
-            return true;
         }
 
         public async Task<BranchListResponse> GetAllBranches(string bank_id,int? page, int? size)
@@ -123,7 +124,9 @@ namespace Branch.API.Services
             }
             catch (Exception ex)
             {
-                return new BranchResponse() { Code = 500, ErrorMessage = "OBP-50000: Unknown Error." };
+                BranchResponse resp =  new BranchResponse() { Code = (int)result.StatusCode };
+                resp.ErrorMessage = resp.Code == 404 ? "OBP-300010: Branch not found. Please specify a valid value for BRANCH_ID. Or License may not be set. meta.license.id and meta.license.name can not be empty" : "OBP-50000: Unknown Error.";
+                return resp;
             }
         }
 

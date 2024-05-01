@@ -121,11 +121,11 @@ namespace Identity.API.Controllers
             return  this.StatusCode(201,await _service.AddEntitlementForUserAsync(user_id,request));
         }
 
-        [Route("[action]/{entitlement_id}", Name = "DeleteEntitlement")]
+        [Route("[action]/{userId}/{entitlement_id}", Name = "DeleteEntitlement")]
         [HttpDelete]
         [ProducesResponseType(typeof(string), 200)]
         [ProducesResponseType(typeof(string), 404)]
-        public async Task<IActionResult> DeleteEntitlement(string entitlement_id)
+        public async Task<IActionResult> DeleteEntitlement(string userId,string entitlement_id)
         {
             if (HttpContext.Items["userId"] == null)
             {
@@ -145,7 +145,7 @@ namespace Identity.API.Controllers
             {
                 return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30212: EntitlementId not found" });
             }
-            return Ok(await _service.DeleteEntitlementAsync(entitlement_id));
+            return Ok(await _service.DeleteEntitlementAsync(userId,entitlement_id));
         }
     }
 }

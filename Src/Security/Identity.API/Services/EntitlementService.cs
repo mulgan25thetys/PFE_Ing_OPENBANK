@@ -7,6 +7,7 @@ using Identity.API.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.VisualBasic;
 using System.Data;
+using Twilio.TwiML.Voice;
 
 namespace Identity.API.Services
 {
@@ -44,21 +45,18 @@ namespace Identity.API.Services
             return  GetEntitlementResponseFromModelAsync(await _roleManager.FindByNameAsync(role.Name));
         }
 
-        public async Task<bool> DeleteEntitlementAsync(string entitlement_id)
+        public async Task<bool> DeleteEntitlementAsync(string userId, string entitlement_id)
         {
-            var role = _context.Entitlements.Where( e => e.Id == entitlement_id && !SystemRoles.Roles.Contains(e.Name)).First();
+            var role = _context.UserRoles.Where( e => e.UserId == userId && e.RoleId == entitlement_id).First();
             if (role == null)
             {
                 return false;
             }
-       
-            IdentityResult result = await _roleManager.DeleteAsync(role);
-            //_userManager.rem
-            if (result.Succeeded)
-            {
-                return true;
-            }
-            return false;
+
+            //IdentityResult result = await _roleManager.DeleteAsync(role);
+            var result = _context.UserRoles.Remove(role);
+            _context.SaveChanges();
+            return  true;
         }
 
         public Entitlements GetAllEntitlements()

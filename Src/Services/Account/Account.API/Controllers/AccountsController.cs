@@ -43,7 +43,21 @@ namespace Account.API.Controllers
             _publish = publish ?? throw new ArgumentNullException(nameof(publish));
         }
 
-        [HttpGet("{bank_id}", Name = "GetAllAccounts")]
+        [HttpGet]
+        [ProducesResponseType(typeof(AccountMinimalListResponse), 200)]
+        public async Task<IActionResult> GetMyAccounts()
+        {
+            if (HttpContext.Items["userId"] == null)
+            {
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+            }
+            string ownerId = HttpContext.Items["userId"].ToString() ?? "";
+
+            return Ok(await _service.GetAllAccountsByUser(ownerId));
+        }
+
+        [Route("{bank_id}", Name = "GetAllAccounts")]
+        [HttpGet]
         [ProducesResponseType(typeof(AccountListResponse), 200)]
         public async Task<IActionResult> GetAllAccounts(string bank_id)
         {
@@ -66,10 +80,11 @@ namespace Account.API.Controllers
         }
 
 
-        [HttpGet("[action]/{id}", Name = "GetAccountById")]
+        [Route("[action]/{bank_id}/{account_id}", Name = "GetAccountById")]
+        [HttpGet]
         [ProducesResponseType(typeof(AccountResponse), 200)]
         [ProducesResponseType(typeof(AccountResponse), 404)]
-        public async Task<IActionResult> GetAccountById(string id)
+        public async Task<IActionResult> GetAccountById(string bank_id,string account_id)
         {
             if (HttpContext.Items["userId"] == null)
             {
@@ -84,11 +99,61 @@ namespace Account.API.Controllers
             }
 
             IList<string> noAdminRoles = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+
+            AccountResponse resp = new AccountResponse();
             if (!noAdminRoles.Intersect(userAuthorisations.Split(",").ToList()).Any())
             {
-                return Ok(await _service.GetAccountById(id, HttpContext.Items["userId"].ToString()));
+                resp = await _service.GetAccountById(bank_id,account_id, HttpContext.Items["userId"].ToString());
             }
-            return Ok(await _service.GetAccountById(id, null));
+            else
+            {
+                resp = await _service.GetAccountById(bank_id, account_id, null);
+            }
+
+            if (resp.Code > 0)
+            {
+                return this.StatusCode(resp.Code, new MessageResponse() { Code = resp.Code, Message = resp.ErrorMessage });
+            }
+            
+            return Ok(resp);
+        }
+
+        [Route("[action]/{bank_id}/{account_number}", Name = "GetAccountByNumber")]
+        [HttpGet]
+        [ProducesResponseType(typeof(AccountResponse), 200)]
+        [ProducesResponseType(typeof(AccountResponse), 404)]
+        public async Task<IActionResult> GetAccountByNumber(string bank_id, Int64 account_number)
+        {
+            if (HttpContext.Items["userId"] == null)
+            {
+                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+            }
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
+            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+            }
+
+            IList<string> noAdminRoles = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+
+            AccountResponse resp = new AccountResponse();
+            if (!noAdminRoles.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            {
+                resp = await _service.GetAccount(bank_id, account_number, HttpContext.Items["userId"].ToString());
+            }
+            else
+            {
+                resp = await _service.GetAccount(bank_id, account_number, null);
+            }
+
+            if (resp.Code > 0)
+            {
+                return this.StatusCode(resp.Code, new MessageResponse() { Code = resp.Code, Message = resp.ErrorMessage });
+            }
+
+            return Ok(resp);
         }
 
         [Route("{account_id}/{bank_id}")]
@@ -112,7 +177,7 @@ namespace Account.API.Controllers
                 return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
             }
 
-            AccountResponse model = await _service.GetAccountById(account_id, null);
+            AccountResponse model = await _service.GetAccountById(bank_id,account_id, null);
             if (model.Id != null)
             {
                 return this.StatusCode(409, new MessageResponse() { Code = 409, Message = "OBP-30208: Account_ID already exists at the Bank." });
@@ -138,7 +203,8 @@ namespace Account.API.Controllers
             }
         }
 
-        [HttpPut("{account_id}/{bank_id}")]
+        [Route("{account_id}/{bank_id}")]
+        [HttpPut]
         public async Task<IActionResult> UpdateAccountLabel(string account_id, string bank_id, UpdateLabelRequest request)
         {
             if (HttpContext.Items["userId"] == null)
@@ -156,11 +222,11 @@ namespace Account.API.Controllers
             IList<string> noAdminRoles = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
             if (!noAdminRoles.Intersect(userAuthorisations.Split(",").ToList()).Any())
             {
-                account = await _service.GetAccountById(account_id, HttpContext.Items["userId"].ToString());
+                account = await _service.GetAccountById(bank_id,account_id, HttpContext.Items["userId"].ToString());
             }
             else
             {
-                account = await _service.GetAccountById(account_id, null);
+                account = await _service.GetAccountById(bank_id, account_id, null);
             }
 
             if (account.Id == null)

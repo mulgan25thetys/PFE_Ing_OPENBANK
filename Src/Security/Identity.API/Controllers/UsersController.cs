@@ -36,7 +36,7 @@ namespace Identity.API.Controllers
             {
                 return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
             }
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanGetAnyUser" };
             string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
 
             if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
@@ -54,7 +54,7 @@ namespace Identity.API.Controllers
             {
                 return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
             }
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanGetAnyUser" };
             string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
 
             if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())

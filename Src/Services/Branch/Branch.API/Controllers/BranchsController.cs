@@ -95,11 +95,11 @@ namespace Branch.API.Controllers
             return this.StatusCode(201, response);
         }
 
-        [HttpDelete("{id}", Name = "DeleteBranchById")]
+        [HttpDelete("{bank_id}/{branch_id}", Name = "DeleteBranchById")]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(BranchModel), (int)HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> DeleteBranch(string id)
+        public async Task<IActionResult> DeleteBranch(string bank_id,string branch_id)
         {
             if (HttpContext.Items["userId"] == null)
             {
@@ -112,7 +112,22 @@ namespace Branch.API.Controllers
             {
                 return this.StatusCode(403, new MessageResponse() { Message = "OBP-30209: Insufficient authorisation to Create Branch. You do not have the role CanCreateBranch.", Code = 403 });
             }
-            return Ok(await _service.DeleteBranch(id));
+            var bank = await _bankService.GetBank(bank_id);
+
+            if (bank.Id.Length == 0)
+            {
+                string message = "OBP-30001: Bank not found. Please specify a valid value for BANK_ID.";
+                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = message });
+            }
+            BranchResponse response = await _service.GetBranch(branch_id);
+
+            if (response.Bank_id != bank.Id)
+            {
+                string message = "OBP-300010: Branch not found. Please specify a valid value for BRANCH_ID. Or License may not be set. meta.license.id and meta.license.name can not be empty";
+                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = message });
+            }
+
+            return Ok(await _service.DeleteBranch(branch_id));
         }
     }
 }

@@ -47,12 +47,6 @@ services:
       context: .
       dockerfile: Services/Statement/Statement.API/Dockerfile
 
-  identity.api:
-    image: ${DOCKER_REGISTRY-}identityapi
-    build:
-      context: .
-      dockerfile: Security/Identity.API/Dockerfile
-
   account.access.api:
     image: ${DOCKER_REGISTRY-}accountaccessapi
     build:
@@ -100,6 +94,12 @@ services:
     build:
       context: .
       dockerfile: Services/Branch/Branch.GRPC/Dockerfile
+
+  identity.api:
+    image: ${DOCKER_REGISTRY-}identityapi
+    build:
+      context: .
+      dockerfile: Security/Identity.API/Dockerfile
 
   ocelotapigw:
     image: ${DOCKER_REGISTRY-}ocelotapigw

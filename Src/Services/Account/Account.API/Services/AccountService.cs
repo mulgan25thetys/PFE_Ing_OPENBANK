@@ -72,34 +72,54 @@ namespace Account.API.Services
             }
             catch (Exception ex)
             {
-                return new AccountCreated() { Code = 500, ErrorMessage = "OBP-50000: Unknown Error." };
+                return new AccountCreated() { Code = (int)response.StatusCode, ErrorMessage = "OBP-50000: Unknown Error." };
             }
             
         }
 
-        public async Task<AccountResponse> GetAccount(Int64 accountNumber, string? ownerId = "")
+        public async Task<AccountResponse> GetAccount(string bank_id, Int64 accountNumber, string? ownerId = null)
         {
-            string filter = ownerId != "" ? "?q= { \"accnumber\":{ \"$eq\":\""+ accountNumber + "\" }, \"ownerid\" : { \"$eq\":\"" + ownerId + "\" }  }" : accountNumber.ToString();
+            string filter = ownerId != null ? "?q= { \"accnumber\":{ \"$eq\":\""+ accountNumber + "\" }, \"ownerid\" : { \"$eq\":\"" + ownerId + "\" }  }" : "?q= { \"accnumber\":{ \"$eq\":\"" + accountNumber + "\" } }";
             var response = await _client.GetAsync(endPointUrl + filter);
 
             try
             {
                 AccountList list = await response.Content.ReadAsAsync<AccountList>();
-                return await GetAccountResponseFromModel(list.Items.FirstOrDefault());
+                AccountModel model = list.Items.First();
+
+                if (model == null)
+                {
+                    return new AccountResponse() { Code = 404, ErrorMessage = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." };
+                }
+                if (model.Bank_id != bank_id)
+                {
+                    return new AccountResponse() { Code = 404, ErrorMessage = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." };
+                }
+                if (ownerId != null && model.Owner_id != ownerId)
+                {
+                    return new AccountResponse() { Code = 403, ErrorMessage = "OBP-50000: Unknown Error." };
+                }
+                return await GetAccountResponseFromModel(model);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return new AccountResponse() { Id = null };
+                AccountResponse resp = new AccountResponse() { Code = (int)response.StatusCode };
+                resp.ErrorMessage = resp.Code == 404 ? "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." : "OBP-50000: Unknown Error.";
+                return resp;
             }
         }
 
-        public async Task<AccountResponse> GetAccountById(string id, string? ownerId)
+        public async Task<AccountResponse> GetAccountById(string bank_id, string id, string? ownerId)
         {
             var response = await _client.GetAsync(endPointUrl + id);
             try
             {
                 AccountModel model = await response.Content.ReadAsAsync<AccountModel>();
-                if(ownerId != null && model.Owner_id != ownerId)
+                if (model.Bank_id != bank_id)
+                {
+                    return new AccountResponse() { Code = 404, ErrorMessage = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." };
+                }
+                if (ownerId != null && model.Owner_id != ownerId)
                 {
                     return new AccountResponse() { Code = 403, ErrorMessage = "OBP-50000: Unknown Error." };
                 }
@@ -107,7 +127,9 @@ namespace Account.API.Services
             }
             catch(Exception ex)
             {
-                return new AccountResponse() { Code = 500, ErrorMessage = "OBP-50000: Unknown Error." };
+                AccountResponse resp = new AccountResponse() { Code = (int)response.StatusCode};
+                resp.ErrorMessage = resp.Code == 404 ? "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." : "OBP-50000: Unknown Error.";
+                return resp;
             } 
         }
 
@@ -177,26 +199,6 @@ namespace Account.API.Services
             }
             return await Task.FromResult(true);
         }
-
-        private async Task<AccountResponse> GetAccountResponseFromModel(AccountModel model)
-        {
-            AccountResponse resp = new AccountResponse()
-            {
-                Type = model.Type,
-                Balance = new BalanceModel() { Amount = model.Amount, Currency = model.Currency },
-                IBAN = model.Iban,
-                Id = model.Id,
-                Label = model.Label,
-                Number = model.AccNumber,
-                Swift_bic = model.Swift_bic,
-                BankId = model.Bank_id
-            };
-            var user = await _userService.GetUserAsync(model.Owner_id);
-            AccountOwnerModel ownerModel = new AccountOwnerModel() { Display_name = "", Id = user.UserId, Provider = user.Provider};
-            resp.Owners.Add(ownerModel);
-            return resp;
-        }
-
         public async Task<MessageSuccess> UpdateAccount(UpdateLabelRequest request)
         {
             AccountModel model = await _client.GetAsync(endPointUrl + request.Id).Result.Content.ReadAsAsync<AccountModel>();
@@ -216,6 +218,55 @@ namespace Account.API.Services
                 _logger.LogInformation("Updating account label failed!");
                 return new MessageSuccess() { Success = "Failed" };
             }
+        }
+
+        public async Task<AccountMinimalListResponse> GetAllAccountsByUser(string userId)
+        {
+            string filter = "?q= {\"owner_id\" : { \"$eq\":\"" + userId + "\" } }";
+            var response = await _client.GetAsync(endPointUrl + filter);
+
+            AccountList list = await response.Content.ReadAsAsync<AccountList>();
+            AccountMinimalListResponse respList = new AccountMinimalListResponse()
+            {
+                Offset = list.Offset,
+                Limit = list.Limit,
+                HasMore = list.HasMore,
+                Count = list.Count
+            };
+            foreach (var item in list.Items)
+            {
+                respList.Accounts.Add(GetAccountMinimalFromModel(item));
+            }
+            return respList;
+        }
+
+        private async Task<AccountResponse> GetAccountResponseFromModel(AccountModel model)
+        {
+            AccountResponse resp = new AccountResponse()
+            {
+                Type = model.Type,
+                Balance = new BalanceModel() { Amount = model.Amount, Currency = model.Currency },
+                IBAN = model.Iban,
+                Id = model.Id,
+                Label = model.Label,
+                Number = model.AccNumber,
+                Swift_bic = model.Swift_bic,
+                BankId = model.Bank_id
+            };
+            var user = await _userService.GetUserAsync(model.Owner_id);
+            AccountOwnerModel ownerModel = new AccountOwnerModel() { Display_name = "", Id = user.UserId, Provider = user.Provider };
+            resp.Owners.Add(ownerModel);
+            return resp;
+        }
+
+        private AccountMinimal GetAccountMinimalFromModel(AccountModel model)
+        {
+            AccountMinimal resp = new AccountMinimal()
+            {
+                Bank_id = model.Bank_id,
+                Account_id = model.Id
+            };
+            return resp;
         }
     }
 }

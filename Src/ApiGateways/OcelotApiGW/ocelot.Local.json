@@ -29,7 +29,7 @@
     },
     //Branch API
     {
-      "DownstreamPathTemplate": "/api/v1/Branchs",
+      "DownstreamPathTemplate": "/api/v1/Branchs/{bank_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -37,7 +37,7 @@
           "Port": "8000"
         }
       ],
-      "UpstreamPathTemplate": "/branchs",
+      "UpstreamPathTemplate": "/branchs/{bank_id}",
       "UpstreamHttpMethod": [ "GET" ],
       "FileCacheOptions": { "TtlSeconds": 30 }
     },
@@ -71,7 +71,7 @@
       "UpstreamHttpMethod": [ "GET" ]
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Branchs/{id}",
+      "DownstreamPathTemplate": "/api/v1/Branchs/{bank_id}/{branch_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -79,7 +79,7 @@
           "Port": "8000"
         }
       ],
-      "UpstreamPathTemplate": "/branchs/{id}",
+      "UpstreamPathTemplate": "/branchs/{bank_id}/{branch_id}",
       "UpstreamHttpMethod": [ "DELETE" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
@@ -87,6 +87,23 @@
       }
     },
     //Account API
+    {
+      "DownstreamPathTemplate": "/api/v1/Accounts",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8002"
+        }
+      ],
+      "UpstreamPathTemplate": "/accounts",
+      "UpstreamHttpMethod": [ "GET" ],
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
     {
       "DownstreamPathTemplate": "/api/v1/Accounts/{bank_id}",
       "DownstreamScheme": "http",
@@ -105,7 +122,7 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Accounts/GetAccountById/{id}",
+      "DownstreamPathTemplate": "/api/v1/Accounts/GetAccountById/{bank_id}/{account_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -113,7 +130,7 @@
           "Port": "8002"
         }
       ],
-      "UpstreamPathTemplate": "/accounts/get-account-by-id/{id}",
+      "UpstreamPathTemplate": "/accounts/get-account-by-id/{bank_id}/{account_id}",
       "UpstreamHttpMethod": [ "GET" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
       "AuthenticationOptions": {
@@ -139,7 +156,7 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Accounts/{account_number}",
+      "DownstreamPathTemplate": "/api/v1/Accounts/GetAccountByNumber/{bank_id}/{account_number}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -147,7 +164,7 @@
           "Port": "8002"
         }
       ],
-      "UpstreamPathTemplate": "/accounts/custom/{account_number}",
+      "UpstreamPathTemplate": "/accounts/get-account-by-number/{bank_id}/{account_number}",
       "UpstreamHttpMethod": [ "GET" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
@@ -191,23 +208,6 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Transactions/CreateTransactionRequest/{account_id}/{bank_id}/{counterparty}/{view_id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8004"
-        }
-      ],
-      "UpstreamPathTemplate": "/transactions/create-transaction-request/{account_id}/{bank_id}/{counterparty}/{view_id}",
-      "UpstreamHttpMethod": [ "POST" ],
-      "FileCacheOptions": { "TtlSeconds": 30 },
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
       "DownstreamPathTemplate": "/api/v1/Transactions/AnswerTransactionRequest/{account_id}/{bank_id}/{transaction_request_id}/{transaction_request_type}/{view_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -219,6 +219,120 @@
       "UpstreamPathTemplate": "/transactions/answer-transaction-request/{account_id}/{bank_id}/{transaction_request_id}/{transaction_request_type}/{view_id}",
       "UpstreamHttpMethod": [ "PUT" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+
+    //Account Access API
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8006"
+        }
+      ],
+      "UpstreamPathTemplate": "/views",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/GetAccountAccessForUser/{account_id}/{bank_id}/{provider}/{provider_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8006"
+        }
+      ],
+      "UpstreamPathTemplate": "/views/get-account-access-for-user/{account_id}/{bank_id}/{provider}/{provider_id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/RevokeAccessToOneView/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8006"
+        }
+      ],
+      "UpstreamPathTemplate": "/views/revoke-access-to-one-view/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/GrantUserAccessToView/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8006"
+        }
+      ],
+      "UpstreamPathTemplate": "/views/grant-user-access-to-view/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
+      "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/DeleteView/{account_id}/{bank_id}/{view_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8006"
+        }
+      ],
+      "UpstreamPathTemplate": "/views/delete-view/{account_id}/{bank_id}/{view_id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/{account_id}/{bank_id}/{view_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8006"
+        }
+      ],
+      "UpstreamPathTemplate": "/views/{account_id}/{bank_id}/{view_id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/AccountAccess/{account_id}/{bank_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8006"
+        }
+      ],
+      "UpstreamPathTemplate": "/views/{account_id}/{bank_id}",
+      "UpstreamHttpMethod": [ "POST" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
@@ -311,115 +425,7 @@
         "AllowedScopes": []
       }
     },
-    //Account Access API
-    {
-      "DownstreamPathTemplate": "/api/v1/AccountAccess",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8006"
-        }
-      ],
-      "UpstreamPathTemplate": "/views",
-      "UpstreamHttpMethod": [ "GET" ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/AccountAccess/GetAccountAccessForUser/{account_id}/{bank_id}/{provider}/{provider_id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8006"
-        }
-      ],
-      "UpstreamPathTemplate": "/account-access/get-account-access-for-user/{account_id}/{bank_id}/{provider}/{provider_id}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/AccountAccess/RevokeAccessToOneView/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8006"
-        }
-      ],
-      "UpstreamPathTemplate": "/account-access/revoke-access-to-one-view/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
-      "UpstreamHttpMethod": [ "DELETE" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/AccountAccess/GrantUserAccessToView/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8006"
-        }
-      ],
-      "UpstreamPathTemplate": "/account-access/grant-user-access-to-view/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}",
-      "UpstreamHttpMethod": [ "POST" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/AccountAccess/DeleteView/{account_id}/{bank_id}/{view_id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8006"
-        }
-      ],
-      "UpstreamPathTemplate": "/account-access/delete-view/{account_id}/{bank_id}/{view_id}",
-      "UpstreamHttpMethod": [ "DELETE" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/AccountAccess/{account_id}/{bank_id}/{view_id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8006"
-        }
-      ],
-      "UpstreamPathTemplate": "/account-access/{account_id}/{bank_id}/{view_id}",
-      "UpstreamHttpMethod": [ "PUT" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/AccountAccess/{account_id}/{bank_id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8006"
-        }
-      ],
-      "UpstreamPathTemplate": "/account-access/{account_id}/{bank_id}",
-      "UpstreamHttpMethod": [ "POST" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
+
     //Agreement API
 
     {
@@ -704,7 +710,7 @@
       "UpstreamHttpMethod": [ "POST" ]
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Entitlements/DeleteEntitlement/{entitlement_id}",
+      "DownstreamPathTemplate": "/api/v1/Entitlements/DeleteEntitlement/{userId}/{entitlement_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -712,7 +718,7 @@
           "Port": "8008"
         }
       ],
-      "UpstreamPathTemplate": "/entitlements/delete-entitlement/{entitlement_id}",
+      "UpstreamPathTemplate": "/entitlements/delete-entitlement/{userId}/{entitlement_id}",
       "UpstreamHttpMethod": [ "DELETE" ]
     },
 
@@ -743,6 +749,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://host.docker.internal:8010"
+    "BaseUrl": "http://host.docker.internal:5010"
   }
 }

@@ -126,7 +126,7 @@ services:
     ports:
       - "8003:80"
     networks:
-      - gateway_net 
+      - gateway_net
 
   transaction.api:
     container_name: transaction.api
@@ -173,28 +173,6 @@ services:
       - elastic
       - rabbitmq_go_net
       - gateway_net
-
-  identity.api:
-    container_name: identity.api
-    restart: always
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
-      - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
-      - "ConnectionStrings:AuthConnectionString=Server=identityDb;Database=UserDb;User Id=sa;Password=Identity2024@Pass;"
-      - "GrpcSettings:BankUrl=http://bank.grpc"
-    depends_on:
-      - identityDb
-      - elasticsearch
-      - rabbitmq
-    ports:
-      - "8008:80"
-    networks:
-      - identity_net
-      - elastic
-      - gateway_net
-      - rabbitmq_go_net
-
 
   account.access.api:
     container_name: account.access.api
@@ -315,6 +293,27 @@ services:
       - elastic
       - rabbitmq_go_net
       - gateway_net
+
+  identity.api:
+    container_name: identity.api
+    restart: always
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "ElasticConfiguration:Uri=http://elasticsearch:9200"
+      - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
+      - "ConnectionStrings:AuthConnectionString=Server=identityDb;Database=UserDb;User Id=sa;Password=Identity2024@Pass;"
+      - "GrpcSettings:BankUrl=http://bank.grpc"
+    depends_on:
+      - identityDb
+      - elasticsearch
+      - rabbitmq
+    ports:
+      - "8008:80"
+    networks:
+      - identity_net
+      - elastic
+      - gateway_net
+      - rabbitmq_go_net
 
   ocelotapigw:
     container_name: ocelotapigw
