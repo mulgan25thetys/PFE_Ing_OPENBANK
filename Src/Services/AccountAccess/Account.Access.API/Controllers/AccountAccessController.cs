@@ -35,20 +35,28 @@ namespace Account.Access.API.Controllers
         [ProducesResponseType(typeof(AccountAccessResponse), 404)]
         public async Task<IActionResult> GetAllViews()
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
+
+                IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanGrantAccessToViews" };
+                string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+                if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                }
+
+                return Ok(await _service.GetAllViews());
             }
-
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanGrantAccessToViews" };
-            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
-
-            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            catch(Exception ex)
             {
-                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
-
-            return Ok(await _service.GetAllViews());
         }
 
         //[Authorize]
@@ -58,47 +66,55 @@ namespace Account.Access.API.Controllers
         [ProducesResponseType(typeof(AddViewRequest), 400)]
         public async Task<IActionResult> CreateView(string account_id, string bank_id, AddViewRequest request)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse () { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            var account = await _accountService.GetAccountDataAsync(account_id);
-            if (account.Id.Length == 0)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
-            if( account.Bankid != bank_id) 
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
-            IList<string> alias = new List<string>() { "public", "private", ""};
-            if (!alias.Contains(request.Alias.ToLower()))
-            {
-                return this.StatusCode(400, new MessageResponse() { Code = 400, Message = "The Alias value must be in '" + String.Join(",", alias) + "'" });
-            }
-
-            string ownerId = HttpContext.Items["userId"].ToString();
-
-            if (account.Ownerid != ownerId)
-            {
-                return this.StatusCode(403, new MessageResponse () { Message = "User does not have owner access" , Code = 403});
-            }
-
-            var view = await _service.CreateView(account.Id, account.Bankid, request, ownerId);
-            if (view.Code > 0)
-            {
-                return this.StatusCode(view.Code, new MessageResponse() { Code = view.Code, Message = view.ErrorMessage });
-            }
-            else
-            {
-                var owner = await _userService.GetUserAsync(account.Ownerid);
-                AccountAccessResponse response = await _service.GrantUserAccessToView(owner.Provider, owner.ProviderId, view.Id);
-                if (response.Code > 0)
+                if (HttpContext.Items["userId"] == null)
                 {
-                    return this.StatusCode(response.Code, new MessageResponse() { Code = response.Code, Message = response.ErrorMessage });
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
                 }
-                return Ok(response);
-                return this.StatusCode(201, view);
+                var account = await _accountService.GetAccountDataAsync(account_id);
+                if (account.Id.Length == 0)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
+                if (account.Bankid != bank_id)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
+                IList<string> alias = new List<string>() { "public", "private", "" };
+                if (!alias.Contains(request.Alias.ToLower()))
+                {
+                    return this.StatusCode(400, new MessageResponse() { Code = 400, Message = "The Alias value must be in '" + String.Join(",", alias) + "'" });
+                }
+
+                string ownerId = HttpContext.Items["userId"].ToString();
+
+                if (account.Ownerid != ownerId)
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "User does not have owner access", Code = 403 });
+                }
+
+                var view = await _service.CreateView(account.Id, account.Bankid, request, ownerId);
+                if (view.Code > 0)
+                {
+                    return this.StatusCode(view.Code, new MessageResponse() { Code = view.Code, Message = view.ErrorMessage });
+                }
+                else
+                {
+                    var owner = await _userService.GetUserAsync(account.Ownerid);
+                    AccountAccessResponse response = await _service.GrantUserAccessToView(owner.Provider, owner.ProviderId, view.Id);
+                    if (response.Code > 0)
+                    {
+                        return this.StatusCode(response.Code, new MessageResponse() { Code = response.Code, Message = response.ErrorMessage });
+                    }
+                    return Ok(response);
+                    return this.StatusCode(201, view);
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
         }
 
@@ -108,35 +124,43 @@ namespace Account.Access.API.Controllers
         [ProducesResponseType(typeof(AddViewRequest), 400)]
         public async Task<IActionResult> UpdateView(string account_id, string bank_id, int view_id, UpdateViewRequest request)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            var account = await _accountService.GetAccountDataAsync(account_id);
-            if (account.Id.Length == 0)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
-            if (account.Bankid != bank_id)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
+                var account = await _accountService.GetAccountDataAsync(account_id);
+                if (account.Id.Length == 0)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
+                if (account.Bankid != bank_id)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
 
-            if (await _service.GetOneAccessAsync(view_id) == null)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
+                if (await _service.GetOneAccessAsync(view_id) == null)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
+                }
+                IList<string> alias = new List<string>() { "public", "private", "" };
+                if (!alias.Contains(request.Alias.ToLower()))
+                {
+                    return this.StatusCode(400, new MessageResponse() { Code = 400, Message = "The Alias value must be in '" + String.Join(",", alias) + "'" });
+                }
+                string ownerId = HttpContext.Items["userId"].ToString() ?? "";
+                if (account.Ownerid != ownerId)
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "User does not have owner access", Code = 403 });
+                }
+                return Ok(await _service.UpdateView(account.Id, account.Bankid, view_id, request));
             }
-            IList<string> alias = new List<string>() { "public", "private", "" };
-            if (!alias.Contains(request.Alias.ToLower()))
+            catch(Exception ex)
             {
-                return this.StatusCode(400, new MessageResponse() { Code = 400, Message = "The Alias value must be in '" + String.Join(",", alias) + "'" });
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
-            string ownerId = HttpContext.Items["userId"].ToString() ?? "";
-            if (account.Ownerid != ownerId)
-            {
-                return this.StatusCode(403, new MessageResponse() { Message = "User does not have owner access", Code = 403 });
-            }
-            return Ok(await _service.UpdateView(account.Id, account.Bankid, view_id, request));
         }
 
         [HttpDelete("[action]/{account_id}/{bank_id}/{view_id}")]
@@ -145,36 +169,44 @@ namespace Account.Access.API.Controllers
         [ProducesResponseType(typeof(AddViewRequest), 400)]
         public async Task<IActionResult> DeleteView(string account_id, string bank_id, int view_id)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            var account = await _accountService.GetAccountDataAsync(account_id);
-            if (account.Id.Length == 0)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
-            if (account.Bankid != bank_id)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
+                var account = await _accountService.GetAccountDataAsync(account_id);
+                if (account.Id.Length == 0)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
+                if (account.Bankid != bank_id)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
 
-            AccountAccessResponse accessResponse = await _service.GetOneAccessAsync(view_id);
-            if (accessResponse == null)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
-            }
-            if (accessResponse.Account_id != account.Id)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
-            }
+                AccountAccessResponse accessResponse = await _service.GetOneAccessAsync(view_id);
+                if (accessResponse == null)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
+                }
+                if (accessResponse.Account_id != account.Id)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
+                }
 
-            if (accessResponse.Owner_id != HttpContext.Items["userId"].ToString())
-            {
-                return this.StatusCode(403, new MessageResponse() { Message = "User does not have access to owner view on accounts", Code = 403 });
+                if (accessResponse.Owner_id != HttpContext.Items["userId"].ToString())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "User does not have access to owner view on accounts", Code = 403 });
+                }
+                await _service.DeleteViewAsync(account.Id, account.Bankid, view_id);
+                return Ok();
             }
-            await _service.DeleteViewAsync(account.Id, account.Bankid, view_id);
-            return Ok();
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
+            }
         }
 
         [HttpPost("[action]/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}")]
@@ -182,51 +214,59 @@ namespace Account.Access.API.Controllers
         [ProducesResponseType(typeof(AccountAccessResponse), 404)]
         public async Task<IActionResult> GrantUserAccessToView(string account_id, string bank_id,string provider,string provider_id, int view_id)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
 
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanGrantAccessToViews" };
-            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+                IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanGrantAccessToViews" };
+                string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
 
-            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
-            {
-                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
-            }
-            var account = await _accountService.GetAccountDataAsync(account_id);
-            if (account.Id.Length == 0)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
-            if (account.Bankid != bank_id)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
+                if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                }
+                var account = await _accountService.GetAccountDataAsync(account_id);
+                if (account.Id.Length == 0)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
+                if (account.Bankid != bank_id)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
 
-            AccountAccessResponse accessResponse = await _service.GetOneAccessAsync(view_id);
-            if (accessResponse == null)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
-            }
+                AccountAccessResponse accessResponse = await _service.GetOneAccessAsync(view_id);
+                if (accessResponse == null)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
+                }
 
-            if (accessResponse.Account_id != account.Id)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
-            }
+                if (accessResponse.Account_id != account.Id)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
+                }
 
 
-            if (accessResponse.Owner_id != HttpContext.Items["userId"].ToString())
-            {
-                return this.StatusCode(403, new MessageResponse() { Message = "User does not have access to owner view on account", Code = 403 });
-            }
+                if (accessResponse.Owner_id != HttpContext.Items["userId"].ToString())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "User does not have access to owner view on account", Code = 403 });
+                }
 
-            AccountAccessResponse response = await _service.GrantUserAccessToView(provider, provider_id, view_id);
-            if (response.Code > 0)
-            {
-                return this.StatusCode(response.Code, new MessageResponse() { Code = response.Code, Message = response.ErrorMessage });
+                AccountAccessResponse response = await _service.GrantUserAccessToView(provider, provider_id, view_id);
+                if (response.Code > 0)
+                {
+                    return this.StatusCode(response.Code, new MessageResponse() { Code = response.Code, Message = response.ErrorMessage });
+                }
+                return Ok(response);
             }
-            return Ok(response);
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
+            }
         }
 
         [HttpDelete("[action]/{account_id}/{bank_id}/{provider}/{provider_id}/{view_id}")]
@@ -234,44 +274,52 @@ namespace Account.Access.API.Controllers
         [ProducesResponseType(typeof(AccountAccessResponse), 404)]
         public async Task<IActionResult> RevokeAccessToOneView(string account_id, string bank_id, string provider, string provider_id, int view_id)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
 
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanGrantAccessToViews" };
-            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+                IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanGrantAccessToViews" };
+                string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
 
-            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
-            {
-                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
-            }
-            var account = await _accountService.GetAccountDataAsync(account_id);
-            if (account.Id.Length == 0)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
-            if (account.Bankid != bank_id)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
+                if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                }
+                var account = await _accountService.GetAccountDataAsync(account_id);
+                if (account.Id.Length == 0)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
+                if (account.Bankid != bank_id)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
 
-            AccountAccessResponse accessResponse = await _service.GetOneAccessAsync(view_id);
-            if (accessResponse == null)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
-            }
-            if (accessResponse.Account_id != account.Id)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
-            }
+                AccountAccessResponse accessResponse = await _service.GetOneAccessAsync(view_id);
+                if (accessResponse == null)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
+                }
+                if (accessResponse.Account_id != account.Id)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID" });
+                }
 
-            if (accessResponse.Owner_id != HttpContext.Items["userId"].ToString())
-            {
-                return this.StatusCode(403, new MessageResponse() { Message = "User does not have access to owner view on account", Code = 403 });
-            }
+                if (accessResponse.Owner_id != HttpContext.Items["userId"].ToString())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "User does not have access to owner view on account", Code = 403 });
+                }
 
-            return Ok(await _service.RevokeAccessToOneView(provider, provider_id, view_id));
+                return Ok(await _service.RevokeAccessToOneView(provider, provider_id, view_id));
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
+            }
         }
 
         [HttpGet("[action]/{account_id}/{bank_id}/{provider}/{provider_id}")]
@@ -279,21 +327,29 @@ namespace Account.Access.API.Controllers
         [ProducesResponseType(typeof(AccountAccessResponse), 404)]
         public async Task<IActionResult> GetAccountAccessForUser(string account_id, string bank_id, string provider, string provider_id)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            var account = await _accountService.GetAccountDataAsync(account_id);
-            if (account.Id.Length == 0)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
-            if (account.Bankid != bank_id)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
+                var account = await _accountService.GetAccountDataAsync(account_id);
+                if (account.Id.Length == 0)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
+                if (account.Bankid != bank_id)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
 
-            return Ok(await _service.GetAccountAccessForUser(provider.Replace("%"," ").Trim(), provider_id));
+                return Ok(await _service.GetAccountAccessForUser(provider.Replace("%", " ").Trim(), provider_id));
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
+            }
         }
     }
 }

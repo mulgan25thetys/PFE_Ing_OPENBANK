@@ -5,10 +5,15 @@ import "google/protobuf/timestamp.proto";
 
 service AccountProtoService {
 	rpc GetAccount (GetAccountRequest) returns (AccountObject);
+	rpc GetAccountsForUser (GetAccountsForUserRequest) returns (AccountObjectList);
 }
 
 message GetAccountRequest {
 	string id = 1;
+}
+
+message GetAccountsForUserRequest{
+	string userId=1;
 }
 
 message AccountObject {
@@ -19,4 +24,8 @@ message AccountObject {
 	string iban=5;
 	string bankid=6;
 	string ownerid=7;
+}
+
+message AccountObjectList {
+	repeated AccountObject items=1;
 }

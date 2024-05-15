@@ -78,10 +78,15 @@ namespace Transaction.API.Services
 
             double meanAmount = _config.GetValue<double>("Transaction:MeanAmount");
             request.Status = request.Amount <= meanAmount ? "COMPLETED" : "INITIATED";
+            request.Transfert_type = request.Amount < 0 ? "WITHDRAWAL" : "DEPOSIT";
 
             if(request.Status == "INITIATED")
             {
                 await CreateTransactionChallenge(request, transactionIds);
+            }
+            else
+            {
+                await CreateTransaction(new TransactionModel() { Completed = DateTime.Now, Posted = request.Start_date, Id = request.Transaction_ids });
             }
 
             var requestPost = JsonConvert.SerializeObject(request);
@@ -200,8 +205,9 @@ namespace Transaction.API.Services
                 Future_date = model.Furture_Date,
                 Transfert_type = model.Transfert_type,
                 Value = new TransactionValue() {Amount = model.Amount, Currency = model.Currency },
-                
+                To = new ToAccountDetail() { Bank_id = model.To_bank_id, Account_id = model.To_account_id },
             };
+
             response.Details = new TransactionRequestDetails() { To_transfert_to_account = to_Transfert_To };
             response.Transaction_ids.Add(model.Transaction_ids);
             response.Status = model.Status;
@@ -279,6 +285,19 @@ namespace Transaction.API.Services
                 detail.Value = new TransactionValue() { Amount = fromAccount.Amount, Currency = fromAccount.Currency, Account_id = fromAccount.Id };
             }
             return detail;
+        }
+
+        private async Task CreateTransaction(TransactionModel transaction)
+        {
+            var requestPost = JsonConvert.SerializeObject(transaction);
+            try
+            {
+                response = await _client.PostAsync(endPointUrl, new StringContent(requestPost, Encoding.UTF8, "application/json"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+            }
         }
         #endregion
     }

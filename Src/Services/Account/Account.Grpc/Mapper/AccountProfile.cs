@@ -9,6 +9,7 @@ namespace Account.Grpc.Mapper
         public AccountProfile()
         {
             CreateMap<AccountModel, AccountObject>().ReverseMap();
+            CreateMap<AccountModelList, AccountObjectList>().ReverseMap();
         }
     }
 }

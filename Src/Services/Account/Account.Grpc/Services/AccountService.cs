@@ -40,6 +40,23 @@ namespace Account.Grpc.Services
 
         }
 
+        public async Task<AccountModelList> GetAccountsForAsync(string userId)
+        {
+            string filter = "?q={\"$eq\": { \"owner_id\":\"" + userId+"\"}}";
+            var response = await _client.GetAsync(endPointUrl + filter);
+
+            try
+            {
+                AccountModelList list = await response.Content.ReadAsAsync<AccountModelList>();
+                return list;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return new AccountModelList();
+            }
+        }
+
         private async Task<AccountList> GetAllFilteringAccounts(string filter)
         {
             try

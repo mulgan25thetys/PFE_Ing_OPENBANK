@@ -16,5 +16,11 @@ namespace Statement.API.Services.Grpc
             var getAccountRequest = new GetAccountRequest() { Id = id };
             return await _grpcClient.GetAccountAsync(getAccountRequest);
         }
+
+        public async Task<AccountObjectList> GetAccountObjectListAsync(string userId)
+        {
+            var getAccountListRequest = new GetAccountsForUserRequest() { UserId = userId };
+            return await _grpcClient.GetAccountsForUserAsync(getAccountListRequest);
+        }
     }
 }

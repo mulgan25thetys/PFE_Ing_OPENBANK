@@ -49,5 +49,20 @@ namespace View.grpc.Services
             }
 
         }
+
+        public override async Task<ViewObjectList> GetViewsForAccount(GetViewsForAccountRequest request, ServerCallContext context)
+        {
+            var views = await _service.GetViewsForAccount(request.AccountId);
+            if (views.Items.Count() > 0)
+            {
+                _logger.LogInformation($"No view available for account by id {request.AccountId}");
+                return _mapper.Map<ViewObjectList>(views);
+            }
+            else
+            {
+                _logger.LogInformation($"Views is retrieved by account by id {request.AccountId}");
+                return _mapper.Map<ViewObjectList>(views);
+            }
+        }
     }
 }

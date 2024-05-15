@@ -31,13 +31,14 @@ namespace Identity.API.Controllers
         private readonly SignInManager<UserModel> _signInManager;
         private readonly IJwtUtils _jwtUtils;
         private readonly IPublishEndpoint _publish;
+        private readonly ITokenManager _tokenManager;
 
         public IdentityController(UserManager<UserModel> userManager, IJwtUtils jwtUtils,
             IWebHostEnvironment webHostEnvironment,
             IConfiguration configuration,
             RoleManager<Entitlement> roleManager,
             ILogger<IdentityController> logger, SignInManager<UserModel> signInManager,
-            IPublishEndpoint publish)
+            IPublishEndpoint publish, ITokenManager tokenManager)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
@@ -47,6 +48,7 @@ namespace Identity.API.Controllers
             _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
             _jwtUtils = jwtUtils ?? throw new ArgumentNullException(nameof(jwtUtils));
             _publish = publish ?? throw new ArgumentNullException(nameof(publish));
+            _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
         }
 
         #region ADD USer
@@ -54,43 +56,66 @@ namespace Identity.API.Controllers
         [HttpPost]
         public async Task<IActionResult> AddUser([FromBody] AddUserRequest authDto)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
+
+                IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+                string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+                if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                }
+                UserModel user = new UserModel();
+                user.Email = authDto.Email;
+                user.Last_name = authDto.Last_name;
+                user.First_name = authDto.First_name;
+                user.UserName = authDto.Username;
+                user = UserProviderDetails.GetUriProviderDetails(Request, user);
+
+                IdentityUser existedUser = await _userManager.FindByEmailAsync(user.Email);
+                if (existedUser != null)
+                {
+                    return this.StatusCode(StatusCodes.Status409Conflict, new MessageResponse() { Code = 409, Message = "Email address is already in used!" });
+                }
+
+                user.NormalizedEmail = user.Email;
+                user.TwoFactorEnabled = true;
+
+                var success = await this._userManager.CreateAsync(user, authDto.Password);
+
+                if (success.Succeeded)
+                {
+                    Entitlement adminRole = new Entitlement { Bank_id = "", Name = _configuration.GetValue<string>("AppRoles:AdminRole") };
+                    adminRole.NormalizedName = adminRole.Name;
+
+                    if (!await _roleManager.RoleExistsAsync(adminRole.Name))
+                    {
+                        await _roleManager.CreateAsync(adminRole);
+                    }
+
+                    IEnumerable<string> roles = new List<string>() { adminRole.Name ?? "ADMIN" };
+                    user = await _userManager.FindByNameAsync(user.UserName);
+
+                    if (user != null)
+                    {
+                        await _userManager.AddToRolesAsync(user, roles);
+                    }
+                    return await SendEmailTokenToConfirm(user, false, true, authDto.Password);
+                }
+                else
+                {
+                    return BadRequest(success.Errors);
+                }
             }
-
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
-            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
-
-            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+            catch(Exception ex)
             {
-                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
-            }
-            UserModel user = new UserModel();
-            user.Email = authDto.Email;
-            user.Last_name = authDto.Last_name;
-            user.First_name = authDto.First_name;
-            user.UserName = authDto.Username;
-            user = UserProviderDetails.GetUriProviderDetails(Request, user);
-
-            IdentityUser existedUser = await _userManager.FindByEmailAsync(user.Email);
-            if (existedUser != null)
-            {
-                return this.StatusCode(StatusCodes.Status409Conflict, new MessageResponse() { Code = 409, Message = "Email address is already in used!" });
-            }
-
-            user.NormalizedEmail = user.Email;
-            user.TwoFactorEnabled = true;
-
-            var success = await this._userManager.CreateAsync(user, authDto.Password);
-
-            if (success.Succeeded)
-            {
-                return await SendEmailTokenToConfirm(user,false, true, authDto.Password);
-            }
-            else
-            {
-                return BadRequest(success.Errors);
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
         }
         #endregion 
@@ -100,31 +125,54 @@ namespace Identity.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] RegisterRequest authDto)
         {
-            UserModel user = new UserModel();
-            user.Email = authDto.Email;
-
-            IdentityUser existedUser = await _userManager.FindByEmailAsync(user.Email);
-            if (existedUser != null)
+            try
             {
-                return this.StatusCode(StatusCodes.Status409Conflict, new MessageResponse() { Code= 409, Message = "Email address is already in used!" });
+                UserModel user = new UserModel();
+                user.Email = authDto.Email;
+
+                IdentityUser existedUser = await _userManager.FindByEmailAsync(user.Email);
+                if (existedUser != null)
+                {
+                    return this.StatusCode(StatusCodes.Status409Conflict, new MessageResponse() { Code = 409, Message = "Email address is already in used!" });
+                }
+
+                user.NormalizedEmail = user.Email;
+                user.UserName = authDto.UserName;
+                user.First_name = authDto.First_name;
+                user.Last_name = authDto.Last_name;
+                user.TwoFactorEnabled = true;
+                user = UserProviderDetails.GetUriProviderDetails(Request, user);
+
+                var success = await this._userManager.CreateAsync(user, authDto.Password);
+
+                if (success.Succeeded)
+                {
+                    Entitlement customerRole = new Entitlement { Bank_id = "", Name = _configuration.GetValue<string>("AppRoles:CustomerRole") };
+                    customerRole.NormalizedName = customerRole.Name;
+
+                    if (!await _roleManager.RoleExistsAsync(customerRole.Name))
+                    {
+                        await _roleManager.CreateAsync(customerRole);
+                    }
+
+                    IEnumerable<string> roles = new List<string>() { customerRole.Name ?? "CUSTOMER" };
+                    user = await _userManager.FindByNameAsync(user.UserName);
+
+                    if (user != null)
+                    {
+                        await _userManager.AddToRolesAsync(user, roles);
+                    }
+                    return await SendEmailTokenToConfirm(user, true);
+                }
+                else
+                {
+                    return BadRequest(success.Errors);
+                }
             }
-
-            user.NormalizedEmail = user.Email;
-            user.UserName = authDto.UserName;
-            user.First_name = authDto.First_name;
-            user.Last_name = authDto.Last_name;
-            user.TwoFactorEnabled = true;
-            user = UserProviderDetails.GetUriProviderDetails(Request, user);
-
-            var success = await this._userManager.CreateAsync(user, authDto.Password);
-
-            if (success.Succeeded)
-            {  
-                return await SendEmailTokenToConfirm(user, true);
-            }
-            else
+            catch(Exception ex)
             {
-                return BadRequest(success.Errors);
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
         }
         #endregion 
@@ -134,30 +182,38 @@ namespace Identity.API.Controllers
         [Route("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest authDto)
         {
-            UserModel user = await _userManager.FindByNameAsync(authDto.Login);
-
-            user = user == null ? await _userManager.FindByEmailAsync(authDto.Login) : user;
-
-            if (user != null && await _userManager.CheckPasswordAsync(user, authDto.Password))
+            try
             {
-                if (!user.EmailConfirmed)
+                UserModel user = await _userManager.FindByNameAsync(authDto.Login);
+
+                user = user == null ? await _userManager.FindByEmailAsync(authDto.Login) : user;
+
+                if (user != null && await _userManager.CheckPasswordAsync(user, authDto.Password))
                 {
-                    return await SendEmailTokenToConfirm(user, true);
+                    if (!user.EmailConfirmed)
+                    {
+                        return await SendEmailTokenToConfirm(user, true);
+                    }
+                    try
+                    {
+                        await SetTwoFactorAuthentication(user);
+                        return Ok(new AuthResponse() { Message = "Please check your phone number, a code has been sent to you by sms! or email!", Token = await _jwtUtils.GetNotAuthenticatedToken(user) });
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError("Two factor authentication: sending sms failed! " + ex.Message);
+                        return this.Ok(await _jwtUtils.GetToken(user));
+                    }
                 }
-                try
+                else
                 {
-                    await SetTwoFactorAuthentication(user);
-                    return Ok(new AuthResponse() { Message = "Please check your phone number, a code has been sent to you by sms! or email!", Token = await _jwtUtils.GetNotAuthenticatedToken(user) });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError("Two factor authentication: sending sms failed! " + ex.Message);
-                    return this.Ok(await _jwtUtils.GetToken(user));
+                    return this.StatusCode(StatusCodes.Status401Unauthorized, new MessageResponse() { Code = 401, Message = "Unauthorized: Bad Credentials!" });
                 }
             }
-            else
+            catch(Exception ex)
             {
-                return this.StatusCode(StatusCodes.Status401Unauthorized, new MessageResponse() { Code = 401, Message = "Unauthorized: Bad Credentials!"});
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
         }
         #endregion
@@ -168,33 +224,49 @@ namespace Identity.API.Controllers
         [Route("add-phone-number")]
         public async Task<IActionResult> AddPhoneNumber(AddPhoneNumberRequest request)
         {
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);
-            var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, request.Number);
-            SendSmsEvent message = new SendSmsEvent
+            try
             {
-                Subject = "Please check your phone number",
-                Destination = request.Number,
-                Body = "Your security code is: " + code,
-                ToEmail = user.Email
-            };
-            // Send token
-            await _publish.Publish(message);
-            return Ok();
+                var user = await _userManager.FindByNameAsync(User.Identity.Name);
+                var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, request.Number);
+                SendSmsEvent message = new SendSmsEvent
+                {
+                    Subject = "Please check your phone number",
+                    Destination = request.Number,
+                    Body = "Your security code is: " + code,
+                    ToEmail = user.Email
+                };
+                // Send token
+                await _publish.Publish(message);
+                return Ok();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
+            }
         }
         [HttpPut]
         [Authorize]
         [Route("verify-phone-number")]
         public async Task<IActionResult> VerifyPhoneNumber(VerifyPhoneNumberRequest request)
         {
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);
-            var result = await _userManager.ChangePhoneNumberAsync(user, request.PhoneNumber, request.Code);
-
-            if (result.Succeeded)
+            try
             {
-                return Ok(await _jwtUtils.GetToken(user));
+                var user = await _userManager.FindByNameAsync(User.Identity.Name);
+                var result = await _userManager.ChangePhoneNumberAsync(user, request.PhoneNumber, request.Code);
+
+                if (result.Succeeded)
+                {
+                    return Ok(await _jwtUtils.GetToken(user));
+                }
+                _logger.LogError($"Phone verification failed Number: {request.PhoneNumber}");
+                return Problem();
             }
-            _logger.LogError($"Phone verification failed Number: {request.PhoneNumber}");
-            return Problem();
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
+            }
         }
         #endregion
 
@@ -262,7 +334,7 @@ namespace Identity.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return Problem(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
         }
         #endregion
@@ -298,7 +370,7 @@ namespace Identity.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return Problem(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
         }
         #endregion
@@ -310,13 +382,13 @@ namespace Identity.API.Controllers
         {
             try
             {
-                await _signInManager.SignOutAsync();
+                await _tokenManager.DeactivateCurrentAsync();
                 return this.StatusCode(StatusCodes.Status200OK, "You are logged out!");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-                return Problem(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
         }
         #endregion

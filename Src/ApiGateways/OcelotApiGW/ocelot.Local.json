@@ -29,6 +29,18 @@
     },
     //Branch API
     {
+      "DownstreamPathTemplate": "/api/v1/Branchs/GetBranch/{branch_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8000"
+        }
+      ],
+      "UpstreamPathTemplate": "/branchs/get-branch/{branch_id}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
       "DownstreamPathTemplate": "/api/v1/Branchs/{bank_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -59,18 +71,6 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Branchs/GetBranch/{id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8000"
-        }
-      ],
-      "UpstreamPathTemplate": "/branchs/get-branch-by-id/{id}",
-      "UpstreamHttpMethod": [ "GET" ]
-    },
-    {
       "DownstreamPathTemplate": "/api/v1/Branchs/{bank_id}/{branch_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -87,6 +87,39 @@
       }
     },
     //Account API
+    {
+      "DownstreamPathTemplate": "/api/v1/Accounts/GetAccountById/{bank_id}/{account_id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8002"
+        }
+      ],
+      "UpstreamPathTemplate": "/accounts/get-account-by-id/{bank_id}/{account_id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "FileCacheOptions": { "TtlSeconds": 30 },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Accounts/GetAccountByNumber/{bank_id}/{account_number}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "host.docker.internal",
+          "Port": "8002"
+        }
+      ],
+      "UpstreamPathTemplate": "/accounts/get-account-by-number/{bank_id}/{account_number}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
+    },
     {
       "DownstreamPathTemplate": "/api/v1/Accounts",
       "DownstreamScheme": "http",
@@ -122,23 +155,6 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/v1/Accounts/GetAccountById/{bank_id}/{account_id}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8002"
-        }
-      ],
-      "UpstreamPathTemplate": "/accounts/get-account-by-id/{bank_id}/{account_id}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "FileCacheOptions": { "TtlSeconds": 30 },
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
       "DownstreamPathTemplate": "/api/v1/Accounts/{account_id}/{bank_id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -150,22 +166,6 @@
       "UpstreamPathTemplate": "/accounts/{account_id}/{bank_id}",
       "UpstreamHttpMethod": [ "POST", "PUT" ],
       "FileCacheOptions": { "TtlSeconds": 30 },
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Accounts/GetAccountByNumber/{bank_id}/{account_number}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8002"
-        }
-      ],
-      "UpstreamPathTemplate": "/accounts/get-account-by-number/{bank_id}/{account_number}",
-      "UpstreamHttpMethod": [ "GET" ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
@@ -341,7 +341,7 @@
     //Statement API
 
     {
-      "DownstreamPathTemplate": "/api/v1/Statements/{account_number}",
+      "DownstreamPathTemplate": "/api/v1/Statements",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -349,77 +349,8 @@
           "Port": "8005"
         }
       ],
-      "UpstreamPathTemplate": "/statements/{account_number}",
+      "UpstreamPathTemplate": "/statements",
       "UpstreamHttpMethod": [ "GET" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Statements/ByStartDate/{account_number}/{start_date}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8005"
-        }
-      ],
-      "UpstreamPathTemplate": "/statements/by-start-date/{account_number}/{start_date}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "RateLimitOptions": {
-        "ClientWhitelist": [],
-        "EnableRateLimiting": true,
-        "Period": "5s",
-        "PeriodTimespan": 1,
-        "Limit": 1
-      },
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Statements/ByEndDate/{account_number}/{end_date}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8005"
-        }
-      ],
-      "UpstreamPathTemplate": "/statements/by-end-date/{account_number}/{end_date}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "RateLimitOptions": {
-        "ClientWhitelist": [],
-        "EnableRateLimiting": true,
-        "Period": "5s",
-        "PeriodTimespan": 1,
-        "Limit": 1
-      },
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      }
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/Statements/BetweenDates/{account_number}/{start_date}/{end_date}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "host.docker.internal",
-          "Port": "8005"
-        }
-      ],
-      "UpstreamPathTemplate": "/statements/between-dates/{account_number}/{start_date}/{end_date}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "RateLimitOptions": {
-        "ClientWhitelist": [],
-        "EnableRateLimiting": true,
-        "Period": "5s",
-        "PeriodTimespan": 1,
-        "Limit": 1
-      },
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
@@ -749,6 +680,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://host.docker.internal:5010"
+    "BaseUrl": "http://host.docker.internal:8010"
   }
 }

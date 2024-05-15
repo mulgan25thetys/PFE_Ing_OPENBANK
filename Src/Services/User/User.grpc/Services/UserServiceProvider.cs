@@ -33,11 +33,11 @@ namespace User.grpc.Services
             {
                 UserData data = new UserData()
                 {
-                    userId = model.ID,
-                    userName = model.UserName,
-                    provider = model.Provider,
-                    providerId = model.Provider_id,
-                    email = model.Email
+                    userId = model.ID ?? "",
+                    userName = model.UserName ?? "",
+                    provider = model.Provider ?? "" ,
+                    providerId = model.Provider_id ?? "",
+                    email = model.Email ?? ""
                 };
                 var response = _mapper.Map<UserResponse>(data);
                 return await Task.FromResult(response);

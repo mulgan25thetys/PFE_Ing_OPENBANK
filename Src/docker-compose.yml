@@ -3,6 +3,9 @@ version: '3.4'
 services:
   identityDb:
     image: mcr.microsoft.com/mssql/server:2017-latest
+  
+  cacheDb:
+    image: redis:alpine
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.9.2
@@ -16,6 +19,36 @@ services:
   portainer:
     image: portainer/portainer-ce
 
+  user.grpc:
+    image: ${DOCKER_REGISTRY-}usergrpc
+    build:
+      context: .
+      dockerfile: Services/User/User.grpc/Dockerfile
+
+  bank.grpc:
+    image: ${DOCKER_REGISTRY-}bankgrpc
+    build:
+      context: .
+      dockerfile: Services/Bank/Bank.grpc/Dockerfile
+
+  view.grpc:
+    image: ${DOCKER_REGISTRY-}viewgrpc
+    build:
+      context: .
+      dockerfile: Services/AccountAccess/View.grpc/Dockerfile
+
+  branch.grpc:
+    image: ${DOCKER_REGISTRY-}branchgrpc
+    build:
+      context: .
+      dockerfile: Services/Branch/Branch.GRPC/Dockerfile
+
+  account.grpc:
+    image: ${DOCKER_REGISTRY-}accountgrpc
+    build:
+      context: .
+      dockerfile: Services/Account/Account.Grpc/Dockerfile
+
   branch.api:
     image: ${DOCKER_REGISTRY-}branchapi
     build:
@@ -27,13 +60,6 @@ services:
     build:
       context: .
       dockerfile: Services/Account/Account.API/Dockerfile
-
-
-  account.grpc:
-    image: ${DOCKER_REGISTRY-}accountgrpc
-    build:
-      context: .
-      dockerfile: Services/Account/Account.Grpc/Dockerfile
 
   transaction.api:
     image: ${DOCKER_REGISTRY-}transactionapi
@@ -59,41 +85,17 @@ services:
       context: .
       dockerfile: Services/Agreement/Agreement.API/Dockerfile
 
-  user.grpc:
-    image: ${DOCKER_REGISTRY-}usergrpc
-    build:
-      context: .
-      dockerfile: Services/User/User.grpc/Dockerfile
-
-  bank.api:
-    image: ${DOCKER_REGISTRY-}bankapi
-    build:
-      context: .
-      dockerfile: Services/Bank/Bank.api/Dockerfile
-
-  bank.grpc:
-    image: ${DOCKER_REGISTRY-}bankgrpc
-    build:
-      context: .
-      dockerfile: Services/Bank/Bank.grpc/Dockerfile
-
-  view.grpc:
-    image: ${DOCKER_REGISTRY-}viewgrpc
-    build:
-      context: .
-      dockerfile: Services/AccountAccess/View.grpc/Dockerfile
-
   notification.api:
     image: ${DOCKER_REGISTRY-}notificationapi
     build:
       context: .
       dockerfile: Services/Notification/Notification.API/Dockerfile
 
-  branch.grpc:
-    image: ${DOCKER_REGISTRY-}branchgrpc
+  bank.api:
+    image: ${DOCKER_REGISTRY-}bankapi
     build:
       context: .
-      dockerfile: Services/Branch/Branch.GRPC/Dockerfile
+      dockerfile: Services/Bank/Bank.api/Dockerfile
 
   identity.api:
     image: ${DOCKER_REGISTRY-}identityapi

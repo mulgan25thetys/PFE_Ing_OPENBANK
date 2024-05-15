@@ -30,10 +30,12 @@ namespace Transaction.API.Controllers
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
         private readonly IPublishEndpoint _publisher;
+        private readonly ILogger<TransactionsController> _logger;
         
 
         public TransactionsController(AccountService accountService, IMapper mapper, UserService userService,
-            IMediator mediator, IPublishEndpoint publishEndpoint, BankService bankService,ViewService viewService)
+            IMediator mediator, IPublishEndpoint publishEndpoint, BankService bankService,ViewService viewService, 
+            ILogger<TransactionsController> logger)
         {
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             this.accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
@@ -42,106 +44,122 @@ namespace Transaction.API.Controllers
             _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
             _viewService = viewService ?? throw new ArgumentNullException(nameof(viewService));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         [HttpPost("[action]/{account_id}/{bank_id}/{transaction_request_type}/{view_id}", Name = "AddTransactionRequest")]
         public async Task<IActionResult> AddTransactionRequest(string account_id,string bank_id, string transaction_request_type,
            int view_id, [FromBody] TransactionRequestReq request)
         {
-            
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            string userId = HttpContext.Items["userId"].ToString();
-
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanCreateAnyTransactionRequest" };
-            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
-
-            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
-            {
-                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles: CanCreateAnyTransactionRequest", Code = 403 });
-            }
-
-            if (!TransactionRequestType.Types.Contains(transaction_request_type))
-            {
-                return this.StatusCode(400, new MessageResponse() { Message = "OBP-40001: Invalid value for TRANSACTION_REQUEST_TYPE", Code = 400 });
-            }
-
-            To toAccount = request.To;
-            MessageResponse message = await ValidateData(request.Value,toAccount, account_id, bank_id, view_id, userId);
-            if (message.Code == 200)
-            {
-                var response = await _mediator.Send(new TransactionCmd()
+                if (HttpContext.Items["userId"] == null)
                 {
-                    Request = request,
-                    AccountId = account_id,
-                    BankId = bank_id,
-                    Type = transaction_request_type
-                });
-                if (response.Code > 0)
-                {
-                    return this.StatusCode(response.Code, new MessageResponse() { Message = response.ErrorMessage, Code = response.Code });
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
                 }
-                return Ok();
+                string userId = HttpContext.Items["userId"].ToString();
+
+                IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanCreateAnyTransactionRequest" };
+                string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+                if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles: CanCreateAnyTransactionRequest", Code = 403 });
+                }
+
+                if (!TransactionRequestType.Types.Contains(transaction_request_type))
+                {
+                    return this.StatusCode(400, new MessageResponse() { Message = "OBP-40001: Invalid value for TRANSACTION_REQUEST_TYPE", Code = 400 });
+                }
+
+                To toAccount = request.To;
+                MessageResponse message = await ValidateData(request.Value, toAccount, account_id, bank_id, view_id, userId);
+                if (message.Code == 200)
+                {
+                    var response = await _mediator.Send(new TransactionCmd()
+                    {
+                        Request = request,
+                        AccountId = account_id,
+                        BankId = bank_id,
+                        Type = transaction_request_type
+                    });
+                    if (response.Code > 0)
+                    {
+                        return this.StatusCode(response.Code, new MessageResponse() { Message = response.ErrorMessage, Code = response.Code });
+                    }
+                    return Ok();
+                }
+                else
+                {
+                    return this.StatusCode(message.Code, message);
+                }
             }
-            else
+            catch(Exception ex)
             {
-                return this.StatusCode(message.Code, message);
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
         }
 
         [HttpGet("[action]/{account_id}/{bank_id}/{view_id}", Name = "GetTransactionRequests")]
         public async Task<IActionResult> GetTransactionRequests(string account_id, string bank_id, int view_id)
         {
-            string message = string.Empty;
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            string userId = HttpContext.Items["userId"].ToString();
-
-            var user = await _userService.GetUserDataAsync(userId);
-            if (user.UserId.Length == 0)
-            {
-                message = "OBP-20005: User not found. Please specify a valid value for USER_ID.";
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = message });
-            }
-
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanCreateAnyTransactionRequest" };
-            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
-
-            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
-            {
-                var account = await accountService.GetAccountDataAsync(account_id);
-                if (account.Id.Length == 0)
+                string message = string.Empty;
+                if (HttpContext.Items["userId"] == null)
                 {
-                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
+                string userId = HttpContext.Items["userId"].ToString();
+
+                var user = await _userService.GetUserDataAsync(userId);
+                if (user.UserId.Length == 0)
+                {
+                    message = "OBP-20005: User not found. Please specify a valid value for USER_ID.";
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = message });
                 }
 
-                if (account.Ownerid != userId)
+                IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanCreateAnyTransactionRequest" };
+                string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+                if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
                 {
-                    return this.StatusCode(403, new MessageResponse() { Message = "User does not have owner access", Code = 403 });
+                    var account = await accountService.GetAccountDataAsync(account_id);
+                    if (account.Id.Length == 0)
+                    {
+                        return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                    }
+
+                    if (account.Ownerid != userId)
+                    {
+                        return this.StatusCode(403, new MessageResponse() { Message = "User does not have owner access", Code = 403 });
+                    }
+                    //return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles: CanCreateAnyTransactionRequest", Code = 403 });
                 }
-                //return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles: CanCreateAnyTransactionRequest", Code = 403 });
+
+                var view = await _viewService.GetViewDataAsync(view_id);
+
+                if (view.Id == 0)
+                {
+                    message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID.";
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = message });
+                }
+
+                var userAccess = await _viewService.GetViewAccessDataAsync(user.Provider, user.ProviderId, view.Id);
+                if (userAccess.Id == 0)
+                {
+                    message = "OBP-20017: Current user does not have access to the view. Please specify a valid value for VIEW_ID.";
+                    return this.StatusCode(403, new MessageResponse() { Code = 403, Message = message });
+                }
+
+                return Ok(await _mediator.Send(new GetTransactionRequestsCmd() { AccountId = account_id, BankId = bank_id }));
             }
-
-            var view = await _viewService.GetViewDataAsync(view_id);
-
-            if (view.Id == 0)
+            catch(Exception ex)
             {
-                message = "OBP-30005: View not found for Account. Please specify a valid value for VIEW_ID.";
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = message });
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
-
-            var userAccess = await _viewService.GetViewAccessDataAsync(user.Provider, user.ProviderId, view.Id);
-            if (userAccess.Id == 0)
-            {
-                message = "OBP-20017: Current user does not have access to the view. Please specify a valid value for VIEW_ID.";
-                return this.StatusCode(403, new MessageResponse() { Code = 403, Message = message });
-            }
-
-            return Ok(await _mediator.Send(new GetTransactionRequestsCmd() { AccountId = account_id, BankId = bank_id }));
         }
 
         private async Task<MessageResponse> ValidateData(AmountValue value, To toAccount, string account_id, string bank_id, 

@@ -14,6 +14,8 @@ using Microsoft.EntityFrameworkCore;
 using Identity.API.Applications.Models.Entities;
 using Identity.API.Services.Grpc;
 using Bank.grpc.Protos;
+using Identity.API.Utils.Interfaces;
+using Identity.API.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,10 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
 });
 
 // Add services to the container.
+builder.Services.AddTransient<TokenManagerMiddleware>();
+builder.Services.AddTransient<ITokenManager, TokenManager>();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddDistributedRedisCache(r => r.Configuration = builder.Configuration["redis:connectionString"]  );
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -122,6 +128,7 @@ await app.CreateSuperAdmin<IdentityContext>((context, services) => { });
 app.UseRouting();
 
 app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<TokenManagerMiddleware>();
 
 app.UseCookiePolicy();
 

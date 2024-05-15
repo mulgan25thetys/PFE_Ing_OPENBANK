@@ -10,6 +10,7 @@ using Helper.Extensions;
 using Helper.Middlewares;
 using User.grpc.Protos;
 using Bank.grpc.Protos;
+using View.grpc.Protos;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ builder.Services.ApplyGdpr();
 // Add services to the container.
 builder.Services.AddScoped<BankService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ViewService>();
 
 builder.Services.AddHttpClient<IAccountService, AccountService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
@@ -29,6 +31,11 @@ builder.Services.AddGrpcClient<BankProtoService.BankProtoServiceClient>(options 
 builder.Services.AddGrpcClient<UserProtoService.UserProtoServiceClient>(options =>
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:UserUrl"]);
+});
+
+builder.Services.AddGrpcClient<ViewProtoService.ViewProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:AccountAccessUrl"]);
 });
 
 builder.Services.AddAutoMapper(typeof(Program));

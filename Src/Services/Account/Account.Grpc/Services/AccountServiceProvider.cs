@@ -33,5 +33,20 @@ namespace Account.Grpc.Services
             }
             
         }
+
+        public override async Task<AccountObjectList> GetAccountsForUser(GetAccountsForUserRequest request, ServerCallContext context)
+        {
+            var accounts = await _service.GetAccountsForAsync(request.UserId);
+            if (accounts.Items.Count == 0)
+            {
+                _logger.LogInformation($"No account to retrieve for user id {request.UserId}");
+                return new AccountObjectList();
+            }
+            else
+            {
+                _logger.LogInformation($"Accounts is retrieved by user id {request.UserId}");
+                return _mapper.Map<AccountObjectList>(accounts);
+            }
+        }
     }
 }

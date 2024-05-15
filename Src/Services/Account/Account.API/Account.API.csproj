@@ -40,6 +40,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Protobuf Include="..\..\AccountAccess\View.grpc\Protos\View.proto" GrpcServices="Client">
+      <Link>Protos\View.proto</Link>
+    </Protobuf>
     <Protobuf Include="..\..\Bank\Bank.grpc\Protos\Bank.proto" GrpcServices="Client">
       <Link>Protos\Bank.proto</Link>
     </Protobuf>

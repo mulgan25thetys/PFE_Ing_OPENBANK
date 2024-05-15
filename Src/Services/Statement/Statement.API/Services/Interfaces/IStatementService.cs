@@ -1,9 +1,10 @@
 ﻿using Statement.API.Models;
+using Statement.API.Models.Responses;
 
 namespace Statement.API.Services.Interfaces
 {
     public interface IStatementService
     {
-        public Task<StatementModel> GetStatementAsync(Int64 account_number, string? date_filter);
+        public Task<StatementModel> GetStatementAsync(string userId);
     }
 }

@@ -47,13 +47,21 @@ namespace Account.API.Controllers
         [ProducesResponseType(typeof(AccountMinimalListResponse), 200)]
         public async Task<IActionResult> GetMyAccounts()
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            string ownerId = HttpContext.Items["userId"].ToString() ?? "";
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
+                string ownerId = HttpContext.Items["userId"].ToString() ?? "";
 
-            return Ok(await _service.GetAllAccountsByUser(ownerId));
+                return Ok(await _service.GetAllAccountsByUser(ownerId));
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
+            }
         }
 
         [Route("{bank_id}", Name = "GetAllAccounts")]
@@ -61,22 +69,30 @@ namespace Account.API.Controllers
         [ProducesResponseType(typeof(AccountListResponse), 200)]
         public async Task<IActionResult> GetAllAccounts(string bank_id)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
-            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
+                IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+                string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
 
-            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
-            {
-                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                }
+                if (HttpContext.Request.Query.Count > 0 && HttpContext.Request.Query["q"].ToString() != null)
+                {
+                    return Ok(await _service.GetAllFilteringAccounts(HttpContext.Request.Query["q"].ToString()));
+                }
+                return Ok(await _service.GetAllAccounts(bank_id));
             }
-            if (HttpContext.Request.Query.Count > 0 && HttpContext.Request.Query["q"].ToString() != null)
+            catch(Exception ex)
             {
-                return Ok(await _service.GetAllFilteringAccounts(HttpContext.Request.Query["q"].ToString()));
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
-            return Ok(await _service.GetAllAccounts(bank_id));
         }
 
 
@@ -86,36 +102,44 @@ namespace Account.API.Controllers
         [ProducesResponseType(typeof(AccountResponse), 404)]
         public async Task<IActionResult> GetAccountById(string bank_id,string account_id)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
-            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
+                IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
+                string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
 
-            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
-            {
-                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
-            }
+                if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                }
 
-            IList<string> noAdminRoles = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+                IList<string> noAdminRoles = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
 
-            AccountResponse resp = new AccountResponse();
-            if (!noAdminRoles.Intersect(userAuthorisations.Split(",").ToList()).Any())
-            {
-                resp = await _service.GetAccountById(bank_id,account_id, HttpContext.Items["userId"].ToString());
-            }
-            else
-            {
-                resp = await _service.GetAccountById(bank_id, account_id, null);
-            }
+                AccountResponse resp = new AccountResponse();
+                if (!noAdminRoles.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    resp = await _service.GetAccountById(bank_id, account_id, HttpContext.Items["userId"].ToString());
+                }
+                else
+                {
+                    resp = await _service.GetAccountById(bank_id, account_id, null);
+                }
 
-            if (resp.Code > 0)
-            {
-                return this.StatusCode(resp.Code, new MessageResponse() { Code = resp.Code, Message = resp.ErrorMessage });
+                if (resp.Code > 0)
+                {
+                    return this.StatusCode(resp.Code, new MessageResponse() { Code = resp.Code, Message = resp.ErrorMessage });
+                }
+
+                return Ok(resp);
             }
-            
-            return Ok(resp);
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
+            }
         }
 
         [Route("[action]/{bank_id}/{account_number}", Name = "GetAccountByNumber")]
@@ -124,36 +148,44 @@ namespace Account.API.Controllers
         [ProducesResponseType(typeof(AccountResponse), 404)]
         public async Task<IActionResult> GetAccountByNumber(string bank_id, Int64 account_number)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
-            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
+                IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
+                string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
 
-            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                }
+
+                IList<string> noAdminRoles = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+
+                AccountResponse resp = new AccountResponse();
+                if (!noAdminRoles.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    resp = await _service.GetAccount(bank_id, account_number, HttpContext.Items["userId"].ToString());
+                }
+                else
+                {
+                    resp = await _service.GetAccount(bank_id, account_number, null);
+                }
+
+                if (resp.Code > 0)
+                {
+                    return this.StatusCode(resp.Code, new MessageResponse() { Code = resp.Code, Message = resp.ErrorMessage });
+                }
+
+                return Ok(resp);
+            }
+            catch(Exception ex)
             {
-                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
-
-            IList<string> noAdminRoles = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
-
-            AccountResponse resp = new AccountResponse();
-            if (!noAdminRoles.Intersect(userAuthorisations.Split(",").ToList()).Any())
-            {
-                resp = await _service.GetAccount(bank_id, account_number, HttpContext.Items["userId"].ToString());
-            }
-            else
-            {
-                resp = await _service.GetAccount(bank_id, account_number, null);
-            }
-
-            if (resp.Code > 0)
-            {
-                return this.StatusCode(resp.Code, new MessageResponse() { Code = resp.Code, Message = resp.ErrorMessage });
-            }
-
-            return Ok(resp);
         }
 
         [Route("{account_id}/{bank_id}")]
@@ -163,43 +195,61 @@ namespace Account.API.Controllers
         
         public async Task<IActionResult> AddAccount(string account_id, string bank_id, [FromBody] AccountRequest account)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            string ownerId = account.User_id == null ? HttpContext.Items["userId"].ToString() ?? "" : account.User_id;
-
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
-            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
-
-            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
-            {
-                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
-            }
-
-            AccountResponse model = await _service.GetAccountById(bank_id,account_id, null);
-            if (model.Id != null)
-            {
-                return this.StatusCode(409, new MessageResponse() { Code = 409, Message = "OBP-30208: Account_ID already exists at the Bank." });
-            }
-
-            MessageResponse res = await ValidateData(account, ownerId, account_id, bank_id);
-            if (res.Code == 200)
-            {
-                AccountRequest request = new AccountRequest() { Balance = account.Balance, Label = account.Label, Type = account.Type };
-                AccountCreated response = await _service.AddAccount(account_id, bank_id, request, ownerId);
-                if (response.Code > 0)
+                if (HttpContext.Items["userId"] == null)
                 {
-                    return this.StatusCode(response.Code, new MessageResponse () { Code = response.Code, Message = response.ErrorMessage});
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
                 }
-                //Notify Client after account creation through RabbitMQ
-                await _publish.Publish(new CreationAccountEvent() { AccountId = account_id, BankId = bank_id,
-                    OwnerId = ownerId});
-                return this.StatusCode(201, response);
+                string ownerId = account.User_id == null ? HttpContext.Items["userId"].ToString() ?? "" : account.User_id;
+
+                IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
+                string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+
+                if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                }
+
+                AccountResponse model = await _service.GetAccountById(bank_id, account_id, null);
+                if (model.Id != null)
+                {
+                    return this.StatusCode(409, new MessageResponse() { Code = 409, Message = "OBP-30208: Account_ID already exists at the Bank." });
+                }
+
+                MessageResponse res = await ValidateData(account, ownerId, account_id, bank_id);
+                if (res.Code == 200)
+                {
+                    AccountRequest request = new AccountRequest() { Balance = account.Balance, Label = account.Label, Type = account.Type };
+                    AccountCreated response = await _service.AddAccount(account_id, bank_id, request, ownerId);
+                    if (response.Code > 0)
+                    {
+                        return this.StatusCode(response.Code, new MessageResponse() { Code = response.Code, Message = response.ErrorMessage });
+                    }
+                    //Notify Client after account creation through RabbitMQ
+                    try
+                    {
+                        await _publish.Publish(new CreationAccountEvent()
+                        {
+                            AccountId = account_id,
+                            BankId = bank_id,
+                            OwnerId = ownerId
+                        });
+                    }catch (Exception ex)
+                    {
+                        _logger.LogInformation(ex.Message);
+                    }
+                    return this.StatusCode(201, response);
+                }
+                else
+                {
+                    return this.StatusCode(res.Code, res);
+                }
             }
-            else
+            catch(Exception ex)
             {
-                return this.StatusCode(res.Code, res);
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
         }
 
@@ -207,40 +257,48 @@ namespace Account.API.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateAccountLabel(string account_id, string bank_id, UpdateLabelRequest request)
         {
-            if (HttpContext.Items["userId"] == null)
+            try
             {
-                return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
-            }
-            IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
-            string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
+                if (HttpContext.Items["userId"] == null)
+                {
+                    return this.StatusCode(401, new MessageResponse() { Code = 401, Message = "OBP-20001: User not logged in. Authentication is required!" });
+                }
+                IList<string> requiredRole = new List<string> { "SUPERADMIN", "CanQueryOtherUser", "CanCreateAccount" };
+                string userAuthorisations = (string)(HttpContext.Items["userRoles"] ?? "");
 
-            if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
-            {
-                return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
-            }
-            AccountResponse account = new AccountResponse();
-            IList<string> noAdminRoles = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
-            if (!noAdminRoles.Intersect(userAuthorisations.Split(",").ToList()).Any())
-            {
-                account = await _service.GetAccountById(bank_id,account_id, HttpContext.Items["userId"].ToString());
-            }
-            else
-            {
-                account = await _service.GetAccountById(bank_id, account_id, null);
-            }
+                if (!requiredRole.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    return this.StatusCode(403, new MessageResponse() { Message = "OBP-20006: User is missing one or more roles:", Code = 403 });
+                }
+                AccountResponse account = new AccountResponse();
+                IList<string> noAdminRoles = new List<string> { "SUPERADMIN", "CanQueryOtherUser" };
+                if (!noAdminRoles.Intersect(userAuthorisations.Split(",").ToList()).Any())
+                {
+                    account = await _service.GetAccountById(bank_id, account_id, HttpContext.Items["userId"].ToString());
+                }
+                else
+                {
+                    account = await _service.GetAccountById(bank_id, account_id, null);
+                }
 
-            if (account.Id == null)
-            {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                if (account.Id == null)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
+                else if (account.BankId != bank_id)
+                {
+                    return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
+                }
+                else
+                {
+                    request.Id = account_id;
+                    return Ok(await _service.UpdateAccount(request));
+                }
             }
-            else if (account.BankId != bank_id)
+            catch(Exception ex)
             {
-                return this.StatusCode(404, new MessageResponse() { Code = 404, Message = "OBP-30018: Bank Account not found. Please specify valid values for BANK_ID and ACCOUNT_ID." });
-            }
-            else
-            {
-                request.Id = account_id;
-                return Ok(await _service.UpdateAccount(request));
+                _logger.LogError(ex.Message);
+                return this.StatusCode(500, new MessageResponse() { Code = 500, Message = "OBP-50000: Unknown Error." });
             }
         }
 

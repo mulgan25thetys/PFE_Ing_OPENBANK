@@ -7,11 +7,16 @@ service ViewProtoService {
   // Sends a view
   rpc GetView (GetViewRequest) returns (ViewObject);
   rpc GetUserView (GetUserViewRequest) returns (ViewAccess);
+  rpc GetViewsForAccount (GetViewsForAccountRequest) returns (ViewObjectList);
 }
 
 // The request message containing the user's name.
 message GetViewRequest {
   int32 id = 1;
+}
+
+message GetViewsForAccountRequest {
+	string accountId = 1;
 }
 
 message GetUserViewRequest {
@@ -58,4 +63,8 @@ message ViewAccess {
   int32 view_id = 2;
   string provider =3;
   string provider_id=4;
+}
+
+message ViewObjectList {
+	repeated ViewObject items=1;
 }

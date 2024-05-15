@@ -61,5 +61,21 @@ namespace View.grpc.Services
                 return new ViewModel() { Id = 0 };
             }
         }
+
+        public async Task<ViewModelList> GetViewsForAccount(string accountId)
+        {
+            string filter = "?q={ \"account_id\":{ \"$eq\" : \"" + accountId+"\"} }";
+            
+            try
+            {
+                var response = await _client.GetAsync(endPointUrl + filter);
+                return await response.Content.ReadAsAsync<ViewModelList>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return new ViewModelList();
+            }
+        }
     }
 }

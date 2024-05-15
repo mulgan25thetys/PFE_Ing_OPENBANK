@@ -59,37 +59,37 @@ namespace Identity.API.Extensions
                                                    HttpRequest request)
                                                    where TContext : IdentityContext
         {
-            var adminUser = await userManager.FindByNameAsync(_configuration.GetValue<string>("AppRoles:AdminRole:name"));
+            var adminUser = await userManager.FindByNameAsync(_configuration.GetValue<string>("AppRoles:SuperAdminRole:name"));
 
             if (adminUser == null)
             {
                 UserModel admin = new UserModel()
                 {
-                    Email = _configuration.GetValue<string>("AppRoles:AdminRole:email"),
+                    Email = _configuration.GetValue<string>("AppRoles:SuperAdminRole:email"),
                     EmailConfirmed = true,
-                    PhoneNumber = _configuration.GetValue<string>("AppRoles:AdminRole:phoneNumber"),
+                    PhoneNumber = _configuration.GetValue<string>("AppRoles:SuperAdminRole:phoneNumber"),
                     PhoneNumberConfirmed = true,
-                    AccessFailedCount = _configuration.GetValue<int>("AppRoles:AdminRole:AccessFailedCount"),
-                    LockoutEnabled = _configuration.GetValue<bool>("AppRoles:AdminRole:LockoutEnabled"),
+                    AccessFailedCount = _configuration.GetValue<int>("AppRoles:SuperAdminRole:AccessFailedCount"),
+                    LockoutEnabled = _configuration.GetValue<bool>("AppRoles:SuperAdminRole:LockoutEnabled"),
                     TwoFactorEnabled = true,
-                    UserName = _configuration.GetValue<string>("AppRoles:AdminRole:name"),
+                    UserName = _configuration.GetValue<string>("AppRoles:SuperAdminRole:name"),
                 
                 };
                 admin = UserProviderDetails.GetUriProviderDetails(request, admin);
                 admin.NormalizedEmail = admin.Email;
-                var success = await userManager.CreateAsync(admin, _configuration.GetValue<string>("AppRoles:AdminRole:password"));
+                var success = await userManager.CreateAsync(admin, _configuration.GetValue<string>("AppRoles:SuperAdminRole:password"));
 
                 if (success.Succeeded)
                 {
-                    Entitlement adminRole = new Entitlement { Bank_id = "", Name = _configuration.GetValue<string>("AppRoles:AdminRole:name") };
-                    adminRole.NormalizedName = adminRole.Name;
+                    Entitlement superAdminRole = new Entitlement { Bank_id = "", Name = _configuration.GetValue<string>("AppRoles:SuperAdminRole:name") };
+                    superAdminRole.NormalizedName = superAdminRole.Name;
 
-                    if (!await roleManager.RoleExistsAsync(adminRole.Name))
+                    if (!await roleManager.RoleExistsAsync(superAdminRole.Name))
                     {
-                        await roleManager.CreateAsync(adminRole);
+                        await roleManager.CreateAsync(superAdminRole);
                     }
 
-                    IEnumerable<string> roles = new List<string>() { adminRole.Name };
+                    IEnumerable<string> roles = new List<string>() { superAdminRole.Name ?? "SUPERADMIN" };
                     admin = await userManager.FindByNameAsync(admin.UserName);
 
                     if (admin != null)

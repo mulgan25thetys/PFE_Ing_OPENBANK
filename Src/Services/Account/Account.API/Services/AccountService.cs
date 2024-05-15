@@ -21,10 +21,11 @@ namespace Account.API.Services
         private string endPointUrl = "";
         private readonly IPublishEndpoint _publishEndpoint;
         private readonly UserService _userService;
+        private readonly ViewService _viewService;
 
         public AccountService(ILogger<AccountService> logger, IMapper mapper,
             IPublishEndpoint publishEndpoint,UserService userService,
-            IConfiguration configuration, HttpClient httpClient)
+            IConfiguration configuration, HttpClient httpClient, ViewService viewService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _config = configuration ?? throw new ArgumentNullException(nameof(configuration));
@@ -33,6 +34,7 @@ namespace Account.API.Services
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _publishEndpoint = publishEndpoint ?? throw new ArgumentNullException(nameof(publishEndpoint));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _viewService = viewService ?? throw new ArgumentNullException(nameof(viewService));
 
             //Setting endPoint
             endPointUrl = $"/ords/{_config.GetValue<string>("OracleSettings:DatabaseUser")}" +
@@ -256,6 +258,7 @@ namespace Account.API.Services
             var user = await _userService.GetUserAsync(model.Owner_id);
             AccountOwnerModel ownerModel = new AccountOwnerModel() { Display_name = "", Id = user.UserId, Provider = user.Provider };
             resp.Owners.Add(ownerModel);
+            resp.Views_available = await _viewService.GetViewsForAccount(model.Owner_id);
             return resp;
         }
 

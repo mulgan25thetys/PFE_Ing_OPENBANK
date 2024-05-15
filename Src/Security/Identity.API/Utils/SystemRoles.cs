@@ -2,6 +2,6 @@
 {
     public static class SystemRoles
     {
-        public static IList<string> Roles { get; set; } = new List<string>() { "SUPERADMIN", "CUSTOMER", "PROVIDER"};
+        public static IList<string> Roles { get; set; } = new List<string>() { "SUPERADMIN", "ADMIN", "CUSTOMER" };
     }
 }
