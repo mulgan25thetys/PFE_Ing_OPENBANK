@@ -8,6 +8,7 @@ using Notification.API.Services.Interfaces;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using Helper.Extensions;
+using Helper.Applications.Performances.Performances;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,7 @@ builder.Services.AddTransient<ISenderService, SenderService>();
 builder.Services.AddMediatR(typeof(Program));
 builder.Services.AddAutoMapper(typeof(Program));
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<LogRequestTimeFilterAttribute>());
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

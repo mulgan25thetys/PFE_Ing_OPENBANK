@@ -7,16 +7,24 @@ using MassTransit;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using Helper.Extensions;
+using Helper.Utils.Interfaces;
 using Helper.Middlewares;
 using User.grpc.Protos;
 using Bank.grpc.Protos;
 using View.grpc.Protos;
+using Helper.Utils;
+using Helper.Applications.Performances.Performances;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ApplyGdpr();
 
 // Add services to the container.
+builder.Services.AddTransient<TokenManagerMiddleware>();
+builder.Services.AddTransient<ITokenManager, TokenManager>();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddDistributedRedisCache(r => r.Configuration = builder.Configuration["redis:connectionString"]);
+
 builder.Services.AddScoped<BankService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ViewService>();
@@ -55,7 +63,8 @@ builder.Services.AddMassTransit(config =>
 
 builder.Services.AddMassTransitHostedService();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<LogRequestTimeFilterAttribute>());
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -96,6 +105,7 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<TokenManagerMiddleware>();
 
 app.UseCookiePolicy();
 

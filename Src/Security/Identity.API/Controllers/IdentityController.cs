@@ -383,7 +383,7 @@ namespace Identity.API.Controllers
             try
             {
                 await _tokenManager.DeactivateCurrentAsync();
-                return this.StatusCode(StatusCodes.Status200OK, "You are logged out!");
+                return this.StatusCode(StatusCodes.Status200OK, new MessageResponse() { Code = 200, Message = "You are logged out!" });
             }
             catch (Exception ex)
             {

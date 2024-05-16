@@ -7,12 +7,20 @@ using Serilog.Sinks.Elasticsearch;
 using Helper.Extensions;
 using Branch.API.Services.Grpc;
 using Bank.grpc.Protos;
+using Helper.Utils.Interfaces;
+using Helper.Utils;
+using Helper.Applications.Performances.Performances;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ApplyGdpr();
 // Add services to the container.
 builder.Services.AddScoped<BankService>();
+
+builder.Services.AddTransient<TokenManagerMiddleware>();
+builder.Services.AddTransient<ITokenManager, TokenManager>();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddDistributedRedisCache(r => r.Configuration = builder.Configuration["redis:connectionString"]);
 
 builder.Services.AddHttpClient<IBranchService, BranchService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
@@ -22,7 +30,7 @@ builder.Services.AddGrpcClient<BankProtoService.BankProtoServiceClient>(options 
     options.Address = new Uri(builder.Configuration["GrpcSettings:BankUrl"]);
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<LogRequestTimeFilterAttribute>());
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -63,6 +71,7 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<TokenManagerMiddleware>();
 
 app.UseCookiePolicy();
 

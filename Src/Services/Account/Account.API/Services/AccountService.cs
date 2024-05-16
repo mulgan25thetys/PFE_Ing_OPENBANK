@@ -258,7 +258,8 @@ namespace Account.API.Services
             var user = await _userService.GetUserAsync(model.Owner_id);
             AccountOwnerModel ownerModel = new AccountOwnerModel() { Display_name = "", Id = user.UserId, Provider = user.Provider };
             resp.Owners.Add(ownerModel);
-            resp.Views_available = await _viewService.GetViewsForAccount(model.Owner_id);
+            var views_available = await _viewService.GetViewsForAccount(model.Id);
+            resp.Views_available = views_available.Items;
             return resp;
         }
 

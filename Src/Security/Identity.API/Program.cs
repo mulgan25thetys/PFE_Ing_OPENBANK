@@ -16,6 +16,7 @@ using Identity.API.Services.Grpc;
 using Bank.grpc.Protos;
 using Identity.API.Utils.Interfaces;
 using Identity.API.Utils;
+using Identity.API.Applications.Performances.Performances;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,7 +36,7 @@ builder.Services.AddTransient<ITokenManager, TokenManager>();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddDistributedRedisCache(r => r.Configuration = builder.Configuration["redis:connectionString"]  );
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<LogRequestTimeFilterAttribute>());
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -94,12 +95,17 @@ builder.Host.UseSerilog((context, configuration) =>
 builder.Services.AddMassTransit(config =>
 {
     config.AddConsumer<CreationAccountConsumer>();
+    config.AddConsumer<GrantEntitlementConsumer>();
     config.UsingRabbitMq((ctx, cfg) =>
     {
         cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
         cfg.ReceiveEndpoint(EventBusConstants.CreationAccountQueue, c =>
         {
             c.ConfigureConsumer<CreationAccountConsumer>(ctx);
+        });
+        cfg.ReceiveEndpoint(EventBusConstants.GrantEntitlementQueue, c =>
+        {
+            c.ConfigureConsumer<GrantEntitlementConsumer>(ctx);
         });
     });
 });

@@ -55,7 +55,7 @@ namespace Statement.API.Services
                     account.Transactions = await GetTransactionsMinimalFromRequest(item.Id, item.Bankid);
                     accountMinimals.Add(account);
                 }
-                return new StatementModel() { Accounts = accountMinimals };
+                return new StatementModel() { Accounts = accountMinimals.Where( am => am.Transactions.Count() > 0).ToList() };
             }
             return new StatementModel();
         }

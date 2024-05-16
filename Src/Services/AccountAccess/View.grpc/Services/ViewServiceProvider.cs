@@ -53,9 +53,9 @@ namespace View.grpc.Services
         public override async Task<ViewObjectList> GetViewsForAccount(GetViewsForAccountRequest request, ServerCallContext context)
         {
             var views = await _service.GetViewsForAccount(request.AccountId);
-            if (views.Items.Count() > 0)
+            if (views.Items.Count() == 0)
             {
-                _logger.LogInformation($"No view available for account by id {request.AccountId}");
+                _logger.LogWarning($"No view available for account by id {request.AccountId}");
                 return _mapper.Map<ViewObjectList>(views);
             }
             else

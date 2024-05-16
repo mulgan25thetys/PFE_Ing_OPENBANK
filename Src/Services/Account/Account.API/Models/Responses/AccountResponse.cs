@@ -14,7 +14,7 @@ namespace Account.API.Models.Responses
         public string Swift_bic { get; set; }
         [JsonIgnore]
         public string BankId { get; set; }
-        public ViewModelList Views_available { get; set; }
+        public IList<ViewModel> Views_available { get; set; } = new List<ViewModel>();
         [JsonIgnore]
         public int Code { get; set; }
         [JsonIgnore]

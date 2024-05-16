@@ -18,7 +18,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - identity_net
+      - gateway_net
 
   elasticsearch:
     container_name: elasticsearch
@@ -145,10 +145,12 @@ services:
       - "OracleSettings:OrdsDatabaseUrl=http://${EXTERNAL_IP}:8081"
       - "OracleSettings:DatabaseUser=ordsuser"
       - "OracleSettings:DatabaseTableName=branch"
+      - "redis:connectionString=cacheDb:6379"
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
       - "GrpcSettings:BankUrl=http://bank.grpc"
     depends_on:
       - elasticsearch
+      - cacheDb
     ports:
       - "8000:80"
     networks:
@@ -163,6 +165,7 @@ services:
       - "OracleSettings:OrdsDatabaseUrl=http://${EXTERNAL_IP}:8081"
       - "OracleSettings:DatabaseUser=ordsuser"
       - "OracleSettings:DatabaseTableName=account"
+      - "redis:connectionString=cacheDb:6379"
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
       - "GrpcSettings:BankUrl=http://bank.grpc"
@@ -173,6 +176,7 @@ services:
     depends_on:
       - elasticsearch
       - rabbitmq
+      - cacheDb
     networks:
       - elastic
       - rabbitmq_go_net
@@ -187,6 +191,7 @@ services:
       - "OracleSettings:OrdsDatabaseUrl=http://${EXTERNAL_IP}:8081"
       - "OracleSettings:DatabaseUser=ordsuser"
       - "OracleSettings:DatabaseTableName=transaction"
+      - "redis:connectionString=cacheDb:6379"
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
       - "GrpcSettings:AccountUrl=http://account.grpc"
@@ -198,6 +203,7 @@ services:
     depends_on:
       - elasticsearch
       - rabbitmq
+      - cacheDb
     networks:
       - elastic
       - rabbitmq_go_net
@@ -211,6 +217,7 @@ services:
       - "OracleSettings:OrdsDatabaseUrl=http://${EXTERNAL_IP}:8081"
       - "OracleSettings:DatabaseUser=ordsuser"
       - "OracleSettings:DatabaseTableName=transaction"
+      - "redis:connectionString=cacheDb:6379"
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
       - "GrpcSettings:BranchUrl=http://branch.grpc"
@@ -220,6 +227,7 @@ services:
     depends_on:
       - elasticsearch
       - rabbitmq
+      - cacheDb
     networks:
       - elastic
       - rabbitmq_go_net
@@ -233,6 +241,7 @@ services:
       - "OracleSettings:OrdsDatabaseUrl=http://${EXTERNAL_IP}:8081"
       - "OracleSettings:DatabaseUser=ordsuser"
       - "OracleSettings:DatabaseTableName=account_access"
+      - "redis:connectionString=cacheDb:6379"
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
       - "EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672/"
       - "GrpcSettings:AccountUrl=http://account.grpc"
@@ -243,6 +252,7 @@ services:
     depends_on:
       - elasticsearch
       - rabbitmq
+      - cacheDb
     networks:
       - elastic
       - gateway_net
@@ -256,12 +266,14 @@ services:
       - "OracleSettings:OrdsDatabaseUrl=http://${EXTERNAL_IP}:8081"
       - "OracleSettings:DatabaseUser=ordsuser"
       - "OracleSettings:DatabaseTableName=account_access"
+      - "redis:connectionString=cacheDb:6379"
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
       - "GrpcSettings:AccountUrl=http://account.grpc"
     ports:
       - "8007:80"
     depends_on:
       - elasticsearch
+      - cacheDb
     networks:
       - elastic
       - gateway_net
@@ -273,15 +285,17 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - "OracleSettings:OrdsDatabaseUrl=http://${EXTERNAL_IP}:8081"
       - "OracleSettings:DatabaseUser=ordsuser"
+      - "redis:connectionString=cacheDb:6379"
       - "OracleSettings:DatabaseTableName=bank"
       - "ElasticConfiguration:Uri=http://elasticsearch:9200"
     ports:
       - "8011:80"
     depends_on:
       - elasticsearch
+      - cacheDb
     networks:
        - elastic
-       - gateway_net 
+       - gateway_net
 
   notification.api:
     container_name: notification.api

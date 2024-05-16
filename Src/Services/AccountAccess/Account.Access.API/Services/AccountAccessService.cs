@@ -95,6 +95,7 @@ namespace Account.Access.API.Services
 
             try
             {
+                await _publishEndpoint.Publish(new GrantEntitlementEvent() { BankId = model.Bank_id, EntitlementName = "CanGrantAccessToViews",UserId=model.Owner_id });
                 return await result.Content.ReadAsAsync<AccountAccessResponse>();
             }
             catch (Exception ex)

@@ -8,5 +8,6 @@
         public const string CreationAccountQueue = "creation-account-queue";
         public const string NotificationEmailQueue = "notification-email-queue";
         public const string NotificationSmsQueue = "notification-sms-queue";
+        public const string GrantEntitlementQueue = "grant-entitlement-queue";
     }
 }

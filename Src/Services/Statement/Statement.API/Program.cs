@@ -7,6 +7,9 @@ using Statement.API.Services.Grpc;
 using Statement.API.Services.Interfaces;
 using Helper.Extensions;
 using Helper.Middlewares;
+using Helper.Utils.Interfaces;
+using Helper.Utils;
+using Helper.Applications.Performances.Performances;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +17,11 @@ builder.Services.ApplyGdpr();
 // Add services to the container.
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<BranchService>();
+
+builder.Services.AddTransient<TokenManagerMiddleware>();
+builder.Services.AddTransient<ITokenManager, TokenManager>();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddDistributedRedisCache(r => r.Configuration = builder.Configuration["redis:connectionString"]);
 
 builder.Services.AddHttpClient<IStatementService, StatementService>(c =>
                 c.BaseAddress = new Uri(builder.Configuration["OracleSettings:OrdsDatabaseUrl"]));
@@ -30,7 +38,7 @@ builder.Services.AddGrpcClient<AccountProtoService.AccountProtoServiceClient>(op
 
 builder.Services.AddAutoMapper(typeof(Program));
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<LogRequestTimeFilterAttribute>());
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -70,6 +78,7 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<TokenManagerMiddleware>();
 
 app.UseCookiePolicy();
 
